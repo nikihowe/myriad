@@ -36,7 +36,7 @@ def collocation_experiment(hp: HParams, cfg: Config) -> None:
       @wraps(fn)
       def wrapper(variables: np.ndarray):
         xu = unravel(variables)
-        x, u = xu[:,:4], xu[:,4:]
+        x, u = xu[:,:-1], xu[:,-1:]
         return reduce(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
       return wrapper
     return _vmapreduce
