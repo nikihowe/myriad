@@ -5,3 +5,4 @@ numpy==1.18.5
 matplotlib
 pandas
 seaborn
+simple-parsing
