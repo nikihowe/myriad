@@ -9,6 +9,7 @@ from scipy.optimize import minimize
 
 from .config import Config, HParams, SolutionType
 from .systems import get_system
+from .utils import integrate_fwd
 
 
 def experiment(hp: HParams, cfg: Config) -> None:
@@ -26,8 +27,11 @@ def collocation_experiment(hp: HParams, cfg: Config) -> None:
   h = system.T / N # Segment length
 
   # Initial collocation guess
-  x_guess = np.linspace(system.x_0, 1, num=N+1) * system.x_T
-  u_guess = np.zeros((N+1,1))
+  u_guess = np.zeros((N+1,1)) + system.bounds[-1].mean()
+  if system.x_T is not None:
+    x_guess = np.linspace(system.x_0, system.x_T, num=N+1)
+  else:
+    x_guess = integrate_fwd(system.dynamics, system.x_0, u_guess, h, N)
   guess, unravel = ravel_pytree(np.hstack((x_guess, u_guess)))
 
   # Shared decorator for objective and constraint
@@ -57,7 +61,8 @@ def collocation_experiment(hp: HParams, cfg: Config) -> None:
   bounds = onp.empty((N+1,*system.bounds.shape))
   bounds[:,:,:] = system.bounds # State and control bounds
   bounds[0,0:-1,:] = np.expand_dims(system.x_0, 1) # Starting state
-  bounds[-1,0:-1,:] = np.expand_dims(system.x_T, 1) # Ending state
+  if system.x_T is not None:
+    bounds[-1,0:-1,:] = np.expand_dims(system.x_T, 1) # Ending state
   # Prepare for scipy.optimize.minimize
   bounds = bounds.reshape((-1,2))
   bounds = np.array(bounds)
@@ -74,7 +79,10 @@ def collocation_experiment(hp: HParams, cfg: Config) -> None:
     }],
     bounds=bounds,
     jac=jit(grad(objective)),
-    options={'disp': cfg.verbose},
+    options={
+      'maxiter': hp.slsqp_maxiter,
+      'disp': cfg.verbose
+    },
   )
   _t2 = time.time()
   print(f'Solved in {_t2 - _t1} seconds.')

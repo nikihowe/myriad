@@ -1,21 +1,24 @@
 from dataclasses import dataclass
-from source.config import DynamicsType, HParams
+from typing import Optional
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+from .config import DynamicsType, HParams
+
 
 @dataclass
 class FiniteHorizonControlSystem(object):
   x_0: np.array # state at time 0
-  x_T: np.array # state at time T
+  x_T: Optional[np.array] # state at time T
   T: np.float64 # duration of trajectory
   bounds: np.ndarray # State and control bounds
 
   def __post_init__(self):
-    assert self.x_0.shape == self.x_T.shape
+    if self.x_T is not None:
+      assert self.x_0.shape == self.x_T.shape
     assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
     assert self.T > 0
 
@@ -34,11 +37,13 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return CartPole()
   elif hp.dynamics == DynamicsType.VANDERPOL:
     return VanDerPol()
+  elif hp.dynamics == DynamicsType.SEIR:
+    return SEIR()
   else:
     raise KeyError
 
 
-class CartPole(FiniteHorizonControlSystem, object):
+class CartPole(FiniteHorizonControlSystem):
   def __init__(self):
     # Physical parameters for the cart-pole example (Table 3)
     self.m1 = 1.0 #kg mass of cart
@@ -108,7 +113,7 @@ class CartPole(FiniteHorizonControlSystem, object):
     plt.show()
 
 
-class VanDerPol(FiniteHorizonControlSystem, object):
+class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
     super().__init__(
       x_0 = np.array([0., 1.]),
@@ -128,7 +133,7 @@ class VanDerPol(FiniteHorizonControlSystem, object):
     return np.asarray([_x0, _x1])
   
   def cost(self, x_t: np.ndarray, u_t: np.float64) -> np.float64:
-    return np.dot(x_t, x_t) + u_t ** 2
+    return x_t.T @ x_t + u_t ** 2
 
   def plot_solution(self, x: np.ndarray) -> None:
     x = pd.DataFrame(x, columns=['x0','x1','u'])
@@ -142,6 +147,70 @@ class VanDerPol(FiniteHorizonControlSystem, object):
     plt.subplot(1,2,2)
     plt.plot(np.linspace(0, self.T, x['u'].shape[0]), x['u'])
     plt.xlabel('time (s)')
+
+    plt.tight_layout()
+    plt.show()
+
+
+class SEIR(FiniteHorizonControlSystem):
+  def __init__(self):
+    self.b = 0.525
+    self.d = 0.5
+    self.c = 0.0001
+    self.e = 0.5
+
+    self.g = 0.1
+    self.a = 0.2
+
+    self.S_0 = 1000
+    self.E_0 = 100
+    self.I_0 = 50
+    self.R_0 = 15
+    self.N_0 = self.S_0 + self.E_0 + self.I_0 + self.R_0
+
+    self.A = 0.1
+    self.M = 1000
+
+    super().__init__(
+      x_0 = np.array([self.S_0, self.E_0, self.I_0, self.N_0], dtype=np.float64),
+      x_T = None,
+      T = 20,
+      bounds = np.array([
+        [np.nan, np.nan],
+        [np.nan, np.nan],
+        [np.nan, np.nan],
+        [np.nan, np.nan],
+        [0.0, 1.0],
+      ]),
+    )
+
+  def dynamics(self, y_t: np.ndarray, u_t: np.float64) -> np.ndarray:
+    S, E, I, N = y_t
+
+    Ṡ = np.squeeze(self.b*N - self.d*S - self.c*S*I - u_t*S)
+    Ė = np.squeeze(self.c*S*I - (self.e+self.d)*E)
+    İ = np.squeeze(self.e*E - (self.g+self.a+self.d)*I)
+    Ṅ = np.squeeze((self.b-self.d)*N - self.a*I)
+
+    ẏ_t = np.array([Ṡ, Ė, İ, Ṅ])
+    return ẏ_t
+  
+  def cost(self, y_t: np.ndarray, u_t: np.float64) -> np.float64:
+    return self.A * y_t[2] + u_t ** 2
+
+  def plot_solution(self, x: np.ndarray) -> None:
+    sns.set()
+    plt.figure(figsize=(10,3))
+
+    plt.subplot(151)
+    plt.title('applied control')
+    plt.plot(x[:, -1])
+    plt.ylim(-0.1, 1.01)
+
+    for idx, title in enumerate(['S', 'E', 'I', 'N']):
+      plt.subplot(1,5,idx+2)
+      plt.title(title)
+      plt.plot(x[:, idx])
 
     plt.tight_layout()
     plt.show()
