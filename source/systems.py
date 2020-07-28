@@ -32,6 +32,8 @@ class FiniteHorizonControlSystem(object):
 def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   if hp.dynamics == DynamicsType.CARTPOLE:
     return CartPole()
+  elif hp.dynamics == DynamicsType.VANDERPOL:
+    return VanDerPol()
   else:
     raise KeyError
 
@@ -102,5 +104,44 @@ class CartPole(FiniteHorizonControlSystem, object):
     plt.ylim(-20,10)
 
     plt.xlabel('time (s)')
+    plt.tight_layout()
+    plt.show()
+
+
+class VanDerPol(FiniteHorizonControlSystem, object):
+  def __init__(self):
+    super().__init__(
+      x_0 = np.array([0., 1.]),
+      x_T = np.zeros(2),
+      T = 10.0,
+      bounds = np.array([
+        [np.nan, np.nan],
+        [np.nan, np.nan],
+        [-0.75, 1.0],
+      ]),
+    )
+
+  def dynamics(self, x_t: np.ndarray, u_t: np.float64) -> np.ndarray:
+    x0, x1 = x_t
+    _x0 = np.squeeze((1. - x1**2) * x0 - x1 + u_t)
+    _x1 = np.squeeze(x0)
+    return np.asarray([_x0, _x1])
+  
+  def cost(self, x_t: np.ndarray, u_t: np.float64) -> np.float64:
+    return np.dot(x_t, x_t) + u_t ** 2
+
+  def plot_solution(self, x: np.ndarray) -> None:
+    x = pd.DataFrame(x, columns=['x0','x1','u'])
+
+    sns.set(style='darkgrid')
+    plt.figure(figsize=(9,4))
+
+    plt.subplot(1,2,1)
+    plt.plot(x['x0'], x['x1'])
+    
+    plt.subplot(1,2,2)
+    plt.plot(np.linspace(0, self.T, x['u'].shape[0]), x['u'])
+    plt.xlabel('time (s)')
+
     plt.tight_layout()
     plt.show()

@@ -4,6 +4,7 @@ from enum import Enum
 
 class DynamicsType(Enum):
   CARTPOLE = "CARTPOLE"
+  VANDERPOL = "VANDERPOL"
 
 
 class SolutionType(Enum):
