@@ -26,3 +26,4 @@ class HParams:
 @dataclass(eq=True, frozen=True)
 class Config():
   verbose: bool = True
+  plot_results: bool = True

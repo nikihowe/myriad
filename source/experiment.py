@@ -1,6 +1,7 @@
 from functools import wraps
 import time
 
+import jax
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
 import jax.numpy as np
@@ -12,14 +13,15 @@ from .systems import get_system
 from .utils import integrate_fwd
 
 
-def experiment(hp: HParams, cfg: Config) -> None:
+def experiment(hp: HParams, cfg: Config) -> np.ndarray:
+  jax.config.update("jax_enable_x64", True)
   if hp.solution == SolutionType.COLLOCATION:
-    collocation_experiment(hp, cfg)
+    return collocation_experiment(hp, cfg)
   else:
     raise KeyError
 
 
-def collocation_experiment(hp: HParams, cfg: Config) -> None:
+def collocation_experiment(hp: HParams, cfg: Config) -> np.ndarray:
   system = get_system(hp)
   
   # Trapezoidal collocation parameters
@@ -88,4 +90,7 @@ def collocation_experiment(hp: HParams, cfg: Config) -> None:
   print(f'Solved in {_t2 - _t1} seconds.')
 
   x = unravel(solution.x)
-  system.plot_solution(x)
+  if cfg.plot_results:
+    system.plot_solution(x)
+
+  return x
