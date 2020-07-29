@@ -67,7 +67,7 @@ def integrate_fwd(us):
 def objective(us):
   final_state, xs = integrate_fwd(us)
   all_costs = vector_c(xs, us)
-  return jnp.sum(all_costs) + jnp.dot(x0, x0) + 1000 * (final_state - xf) @ (final_state - xf)
+  return jnp.sum(all_costs) + jnp.dot(x0, x0) + a_big_constant * (final_state - xf) @ (final_state - xf)
 
 # In this formulation, we treat it as an unconstrained problem
 # (except for the control bounds)
