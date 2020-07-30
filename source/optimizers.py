@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import time
-from typing import Callable
+from typing import Callable, Tuple
 
 import jax
 from jax import grad, jacrev, jit, vmap
@@ -14,17 +14,6 @@ from .systems import FiniteHorizonControlSystem
 from .utils import integrate
 
 
-def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) -> np.ndarray:
-  jax.config.update("jax_enable_x64", True)
-  if hp.optimizer == OptimizerType.COLLOCATION:
-    optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
-  elif hp.optimizer == OptimizerType.SHOOTING:
-    optimizer = MultipleShootingOptimizer(hp, cfg, system)
-  else:
-    raise KeyError
-  return optimizer
-
-
 @dataclass
 class TrajectoryOptimizer(object):
   hp: HParams
@@ -33,7 +22,7 @@ class TrajectoryOptimizer(object):
   constraints: Callable[[np.ndarray], np.ndarray]
   bounds: np.ndarray
   guess: np.ndarray
-  unravel: Callable
+  unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
 
   def __post_init__(self):
     if self.cfg.verbose:
@@ -44,7 +33,7 @@ class TrajectoryOptimizer(object):
       print(f"u_bounds.shape = {self.u_bounds.shape}")
       print(f"bounds.shape = {self.bounds.shape}")
 
-  def solve(self) -> np.ndarray:
+  def solve(self) -> Tuple[np.ndarray, np.ndarray]:
     _t1 = time.time()
     solution = minimize(
       fun=jit(self.objective) if self.cfg.jit else self.objective,
@@ -68,6 +57,17 @@ class TrajectoryOptimizer(object):
 
     x, u = self.unravel(solution.x)
     return x, u
+
+
+def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) -> TrajectoryOptimizer:
+  jax.config.update("jax_enable_x64", True)
+  if hp.optimizer == OptimizerType.COLLOCATION:
+    optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
+  elif hp.optimizer == OptimizerType.SHOOTING:
+    optimizer = MultipleShootingOptimizer(hp, cfg, system)
+  else:
+    raise KeyError
+  return optimizer
 
 
 class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
