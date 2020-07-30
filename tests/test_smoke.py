@@ -1,22 +1,26 @@
 import random
+from source.systems import get_system
 import unittest
 
 import numpy as onp
 
-from source.config import Config, DynamicsType, HParams
-from source.experiment import experiment
+from source.config import Config, SystemType, HParams, OptimizerType
+from source.optimizers import get_optimizer
 
 
 # Test that experiments run without raising exceptions
 class SmokeTest(unittest.TestCase):
   def test_smoke(self):
-    for dynamics in DynamicsType:
-      with self.subTest(dynamics=dynamics.name):
-        hp = HParams(dynamics=dynamics, slsqp_maxiter=100)
-        cfg = Config(verbose=False, plot_results=False)
-        random.seed(hp.seed)
-        onp.random.seed(hp.seed)
-        experiment(hp, cfg)
+    for system in SystemType:
+      for optimizer in OptimizerType:
+        with self.subTest(system=system.name, optimizer=optimizer.name):
+          hp = HParams(system=system, optimizer=optimizer, slsqp_maxiter=100)
+          cfg = Config(verbose=False, plot_results=False)
+          random.seed(hp.seed)
+          onp.random.seed(hp.seed)
+          _system = get_system(hp)
+          optimizer = get_optimizer(hp, cfg, _system)
+          optimizer.solve()
 
 
 if __name__=='__main__':
