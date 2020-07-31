@@ -3,12 +3,15 @@
 ## Directory structure
 ```
 ├── notebooks
-    └── ...
+    └── ...             # Unstructured one-off notebooks and scripts
 ├── source
-    └── ...
+    ├── config.py       # Configuration and data types
+    ├── optimizers.py   # Trajectory optimization algorithms
+    ├── systems.py      # Dynamical systems
+    └── utils.py        # Helper methods
 ├── tests
-    └── ...
-└── run.py    # Entry point for all experiments
+    └── ...             # Automated tests
+└── run.py              # Entry point for all experiments
 ```
 
 ## Environment setup
