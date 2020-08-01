@@ -105,7 +105,8 @@ class CartPole(FiniteHorizonControlSystem):
 
     plt.subplot(3,1,3)
     plt.ylabel('force (N)')
-    plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
+    # plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
+    plt.step(ts_u, u, where="post", clip_on=False)
     plt.xlim(0,2)
     plt.ylim(-20,10)
 
@@ -113,7 +114,7 @@ class CartPole(FiniteHorizonControlSystem):
     plt.tight_layout()
     plt.show()
 
-
+    
 class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
     super().__init__(
@@ -147,7 +148,8 @@ class VanDerPol(FiniteHorizonControlSystem):
     plt.plot(x['x0'], x['x1'])
     
     plt.subplot(1,2,2)
-    plt.plot(ts_u, u)
+    print("u shape", u.shape)
+    plt.step(ts_u, u, where="post")
     plt.xlabel('time (s)')
 
     plt.tight_layout()
