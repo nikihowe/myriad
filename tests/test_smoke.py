@@ -15,12 +15,13 @@ class SmokeTest(unittest.TestCase):
       for optimizer in OptimizerType:
         with self.subTest(system=system.name, optimizer=optimizer.name):
           hp = HParams(system=system, optimizer=optimizer, slsqp_maxiter=100)
-          cfg = Config(verbose=False, plot_results=False)
+          cfg = Config(verbose=True, plot_results=True)
           random.seed(hp.seed)
           onp.random.seed(hp.seed)
           _system = get_system(hp)
           optimizer = get_optimizer(hp, cfg, _system)
-          optimizer.solve()
+          x, u = optimizer.solve()
+          _system.plot_solution(x, u)
 
 
 if __name__=='__main__':
