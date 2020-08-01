@@ -4,7 +4,8 @@ import numpy as onp
 import simple_parsing
 
 from source.config import Config, HParams
-from source.experiment import experiment
+from source.optimizers import get_optimizer
+from source.systems import get_system
 
 
 if __name__=='__main__':
@@ -24,4 +25,9 @@ if __name__=='__main__':
   onp.random.seed(hp.seed)
 
   # Run experiment
-  experiment(hp, cfg)
+  system = get_system(hp)
+  optimizer = get_optimizer(hp, cfg, system)
+  x, u = optimizer.solve()
+
+  if cfg.plot_results:
+    system.plot_solution(x, u)
