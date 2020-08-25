@@ -2,7 +2,6 @@ from dataclasses import dataclass
 import time
 from typing import Callable, Tuple
 
-import jax
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
 import jax.numpy as np
@@ -59,7 +58,6 @@ class TrajectoryOptimizer(object):
 
 
 def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) -> TrajectoryOptimizer:
-  jax.config.update("jax_enable_x64", True)
   if hp.optimizer == OptimizerType.COLLOCATION:
     optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.SHOOTING:
