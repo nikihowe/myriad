@@ -6,6 +6,7 @@ class SystemType(Enum):
   CARTPOLE="CARTPOLE"
   VANDERPOL="VANDERPOL"
   SEIR="SEIR"
+  TUMOUR="TUMOUR"
 
 
 class OptimizerType(Enum):

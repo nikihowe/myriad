@@ -39,6 +39,8 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return VanDerPol()
   elif hp.system == SystemType.SEIR:
     return SEIR()
+  elif hp.system == SystemType.TUMOUR:
+    return Tumour()
   else:
     raise KeyError
 
@@ -217,6 +219,76 @@ class SEIR(FiniteHorizonControlSystem):
       plt.subplot(1,5,idx+2)
       plt.title(title)
       plt.plot(ts_x, x[:, idx])
+
+    plt.tight_layout()
+    plt.show()
+
+
+class Tumour(FiniteHorizonControlSystem):
+  # Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 8.17)
+  def __init__(self):
+    # Parameters
+    self.ξ = 0.084 # per day (tumour growth)
+    self.b = 5.85 # per day (birth rate)
+    self.d = 0.00873 # per mm^2 per day (death rate)
+    self.G = 0.15 # kg per mg of dose per day (antiangiogenic killing)
+    self.mu = 0.02 # per day (loss of endothelial cells due to natural causes)
+    t_F = 1.2 # days
+    # State and Control Bounds
+    a = 75 # maximum instantaneous dosage
+    A = 15 # maximum cumulative dosage
+    p_ = q_ = ((self.b-self.mu)/self.d)**(3/2) # asymptotically stable focus
+    # Initial State
+    p_0 = p_ / 2 # Initial tumour volume
+    q_0 = q_ / 4 # Initial vascular capacity
+    y_0 = 0 # Initial cumulative dosage
+    assert p_0 >= q_0 # condition for well-posed problem
+    super().__init__(
+      x_0 = np.array([p_0, q_0, y_0]),
+      x_T = None,
+      T = t_F,
+      bounds = np.array([
+        [0, p_], # p
+        [0, q_], # q
+        [0, A], # y
+        [0, a], # control
+      ]),
+    )
+
+  def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
+    p, q, y = x_t
+    _p = np.squeeze(-self.ξ * p * np.log(p/q))
+    _q = np.squeeze(q * (self.b - (self.mu + self.d * p**(2/3) + self.G * u_t)))
+    _y = np.squeeze(u_t)
+    return np.asarray([_p, _q, _y])
+  
+  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+    p, q, y = x_t
+    return p
+
+  def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
+    x = pd.DataFrame(x, columns=['p','q','y'])
+
+    sns.set(style='darkgrid')
+    plt.figure(figsize=(9,4))
+    ts_x = np.linspace(0, self.T, x.shape[0])
+    ts_u = np.linspace(0, self.T, u.shape[0])
+
+    plt.subplot(1,4,1)
+    plt.plot(ts_x, x['p'])
+    plt.xlabel('time (days)')
+    
+    plt.subplot(1,4,2)
+    plt.step(ts_x, x['q'], where="post")
+    plt.xlabel('time (days)')
+
+    plt.subplot(1,4,3)
+    plt.step(ts_x, x['y'], where="post")
+    plt.xlabel('time (days)')
+
+    plt.subplot(1,4,4)
+    plt.step(ts_u, u, where="post")
+    plt.xlabel('time (days)')
 
     plt.tight_layout()
     plt.show()
