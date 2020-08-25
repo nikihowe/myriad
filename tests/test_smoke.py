@@ -14,7 +14,7 @@ class SmokeTest(unittest.TestCase):
     for system in SystemType:
       for optimizer in OptimizerType:
         with self.subTest(system=system.name, optimizer=optimizer.name):
-          hp = HParams(system=system, optimizer=optimizer, slsqp_maxiter=100)
+          hp = HParams(system=system, optimizer=optimizer, ipopt_max_iter=100)
           cfg = Config(verbose=True, plot_results=True)
           random.seed(hp.seed)
           onp.random.seed(hp.seed)

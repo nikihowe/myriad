@@ -15,6 +15,17 @@
 ```
 
 ## Environment setup
+### IPOPT (Linux)
+```bash
+apt install coinor-libipopt-dev
+```
+
+### IPOPT (Mac OS)
+```bash
+brew install ipopt
+brew install pkg-config
+```
+
 ```bash
 python3 -m venv env
 source env/bin/activate
@@ -28,7 +39,7 @@ source env/bin/activate
 python run.py --system=CARTPOLE --optimizer=COLLOCATION
 python run.py --system=CARTPOLE --optimizer=SHOOTING --intervals=50
 python run.py --system=VANDERPOL --optimizer=SHOOTING --intervals=1 --controls_per_interval=50
-python run.py --system=SEIR --optimizer=SHOOTING --slsqp_maxiter=500
+python run.py --system=SEIR --optimizer=SHOOTING --ipopt_max_iter=500
 # etc.
 ```
 
