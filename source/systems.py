@@ -273,26 +273,22 @@ class Tumour(FiniteHorizonControlSystem):
     return p
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
-    x = pd.DataFrame(x, columns=['p','q','y'])
+    colnames = ['p','q','y']
+    x = pd.DataFrame(x, columns=colnames)
 
     sns.set(style='darkgrid')
-    plt.figure(figsize=(9,4))
+    plt.figure(figsize=(10,3))
     ts_x = np.linspace(0, self.T, x.shape[0])
     ts_u = np.linspace(0, self.T, u.shape[0])
 
-    plt.subplot(1,4,1)
-    plt.plot(ts_x, x['p'])
-    plt.xlabel('time (days)')
-    
-    plt.subplot(1,4,2)
-    plt.step(ts_x, x['q'], where="post")
-    plt.xlabel('time (days)')
-
-    plt.subplot(1,4,3)
-    plt.step(ts_x, x['y'], where="post")
-    plt.xlabel('time (days)')
+    for idx, title in enumerate(colnames):
+      plt.subplot(1,4,idx+1)
+      plt.title(title)
+      plt.plot(ts_x, x[title])
+      plt.xlabel('time (days)')
 
     plt.subplot(1,4,4)
+    plt.title('u')
     plt.step(ts_u, u, where="post")
     plt.xlabel('time (days)')
 
