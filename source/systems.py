@@ -17,8 +17,10 @@ class FiniteHorizonControlSystem(object):
   bounds: np.ndarray # State and control bounds
 
   def __post_init__(self):
+    self.x_0 = self.x_0.astype(np.float64)
     if self.x_T is not None:
       assert self.x_0.shape == self.x_T.shape
+      self.x_T = self.x_T.astype(np.float64)
     assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
     assert self.T > 0
 
@@ -150,7 +152,6 @@ class VanDerPol(FiniteHorizonControlSystem):
     plt.plot(x['x0'], x['x1'])
     
     plt.subplot(1,2,2)
-    print("u shape", u.shape)
     plt.step(ts_u, u, where="post")
     plt.xlabel('time (s)')
 
@@ -178,7 +179,7 @@ class SEIR(FiniteHorizonControlSystem):
     self.M = 1000
 
     super().__init__(
-      x_0 = np.array([self.S_0, self.E_0, self.I_0, self.N_0], dtype=np.float64),
+      x_0 = np.array([self.S_0, self.E_0, self.I_0, self.N_0]),
       x_T = None,
       T = 20,
       bounds = np.array([

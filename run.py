@@ -1,5 +1,6 @@
 import random
 
+import jax
 import numpy as onp
 import simple_parsing
 
@@ -9,6 +10,8 @@ from source.systems import get_system
 
 
 if __name__=='__main__':
+  jax.config.update("jax_enable_x64", True)
+
   # Prepare experiment settings
   parser = simple_parsing.ArgumentParser()
   parser.add_arguments(HParams, dest="hparams")

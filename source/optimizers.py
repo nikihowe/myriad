@@ -2,12 +2,11 @@ from dataclasses import dataclass
 import time
 from typing import Callable, Tuple
 
-import jax
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
 import jax.numpy as np
 import numpy as onp
-from scipy.optimize import minimize
+from ipopt import minimize_ipopt as minimize
 
 from .config import Config, HParams, OptimizerType
 from .systems import FiniteHorizonControlSystem
@@ -47,9 +46,8 @@ class TrajectoryOptimizer(object):
       bounds=self.bounds,
       jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
       options={
-        'maxiter': self.hp.slsqp_maxiter,
-        'disp': self.cfg.verbose
-      },
+        'max_iter': self.hp.ipopt_max_iter,
+      }
     )
     _t2 = time.time()
     if self.cfg.verbose:
@@ -60,7 +58,6 @@ class TrajectoryOptimizer(object):
 
 
 def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) -> TrajectoryOptimizer:
-  jax.config.update("jax_enable_x64", True)
   if hp.optimizer == OptimizerType.COLLOCATION:
     optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.SHOOTING:

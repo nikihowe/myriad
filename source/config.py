@@ -21,8 +21,7 @@ class HParams:
   system: SystemType = SystemType.CARTPOLE
   optimizer: OptimizerType = OptimizerType.COLLOCATION
   # Solver
-  slsqp_maxiter: int = 1000
-  slsqp_ftol: float = 1e-6
+  ipopt_max_iter: int = 3000
   # Trajectory Optimizer
   intervals: int = 25 # collocation and shooting
   controls_per_interval: int = 5 # multiple shooting

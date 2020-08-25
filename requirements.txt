@@ -6,3 +6,5 @@ matplotlib
 pandas
 seaborn
 simple-parsing
+cython
+ipopt
