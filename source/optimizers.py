@@ -84,7 +84,10 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
       def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float) -> float:
         return (h/2) * (system.cost(x_t1, u_t1) + system.cost(x_t2, u_t2))
       x, u = unravel(variables)
-      return np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
+      if system.terminal_cost:
+        return system.cost(x[-1], u[-1])
+      else:
+        return np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
 
     def constraints(variables: np.ndarray) -> np.ndarray:
       def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float) -> np.ndarray:
@@ -127,7 +130,10 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       _, u = unravel(variables)
       _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
       x = x[1:]
-      return h_u * np.sum(vmap(system.cost)(x, u))
+      if system.terminal_cost:
+        return system.cost(x[-1], u[-1])
+      else:
+        return h_u * np.sum(vmap(system.cost)(x, u))
     
     def constraints(variables: np.ndarray) -> np.ndarray:
       x, u = unravel(variables)

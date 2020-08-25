@@ -15,6 +15,7 @@ class FiniteHorizonControlSystem(object):
   x_T: Optional[np.array] # state at time T
   T: np.float64 # duration of trajectory
   bounds: np.ndarray # State and control bounds
+  terminal_cost: bool # Whether only the final state and control are inputs to the cost
 
   def __post_init__(self):
     self.x_0 = self.x_0.astype(np.float64)
@@ -69,6 +70,7 @@ class CartPole(FiniteHorizonControlSystem):
         [np.nan, np.nan],
         [-self.u_max, self.u_max], # Control bounds (Eq. 6.8)
       ]),
+      terminal_cost = False,
     )
 
   # Cart-Pole Example: System Dynamics (Section 6.1)
@@ -130,6 +132,7 @@ class VanDerPol(FiniteHorizonControlSystem):
         [np.nan, np.nan],
         [-0.75, 1.0],
       ]),
+      terminal_cost = False,
     )
 
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
@@ -189,6 +192,7 @@ class SEIR(FiniteHorizonControlSystem):
         [np.nan, np.nan],
         [0.0, 1.0],
       ]),
+      terminal_cost = False,
     )
 
   def dynamics(self, y_t: np.ndarray, u_t: np.float64) -> np.ndarray:
@@ -254,6 +258,7 @@ class Tumour(FiniteHorizonControlSystem):
         [0, A], # y
         [0, a], # control
       ]),
+      terminal_cost = True,
     )
 
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
