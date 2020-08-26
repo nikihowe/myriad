@@ -4,6 +4,8 @@
 ```
 ├── notebooks
     └── ...             # Unstructured one-off notebooks and scripts
+├── paper
+    └── ...             # ICLR 2021 paper draft
 ├── source
     ├── config.py       # Configuration and data types
     ├── optimizers.py   # Trajectory optimization algorithms
