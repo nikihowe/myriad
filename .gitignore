@@ -139,3 +139,7 @@ cython_debug/
 
 # VS Code
 .vscode/
+
+# Paper
+paper/*.pdf
+paper/*.synctex.gz
