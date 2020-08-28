@@ -15,7 +15,8 @@
 % as long as the \iclrfinalcopy macro remains commented out below.
 % Non-anonymous submissions will be rejected without review.
 
-\author{Antiquus S.~Hippocampus, Natalia Cerebro \& Amelie P. Amygdale \thanks{ Use footnote for providing further information
+\author{Antiquus S.~Hippocampus, Natalia Cerebro \& Amelie P. Amygdale
+\thanks{ Use footnote for providing further information
 about author (webpage, alternative address)---\emph{not} for acknowledging
 funding agencies.  Funding acknowledgements go at the end of the paper.} \\
 Department of Computer Science\\
@@ -53,58 +54,193 @@ Address \\
 \maketitle
 
 \begin{abstract}
-The abstract paragraph should be indented 1/2~inch (3~picas) on both left and
-right-hand margins. Use 10~point type, with a vertical spacing of 11~points.
-The word \textsc{Abstract} must be centered, in small caps, and in point size 12. Two
-line spaces precede the abstract. The abstract must be limited to one
-paragraph.
+% The abstract paragraph should be indented 1/2~inch (3~picas) on both left and
+% right-hand margins. Use 10~point type, with a vertical spacing of 11~points.
+% The word \textsc{Abstract} must be centered, in small caps, and in point size 12. Two
+% line spaces precede the abstract. The abstract must be limited to one
+% paragraph.
+We perform end-to-end model-based learning of dynamical systems.
+We use a Neural ODE to model system dynamics, and direct multpile shooting methods
+to select an optimal policy. We train the Neural ODE by using the IFT to propagate
+gradient information through the KKT conditions of the optimization problem.
+We demonstrate the effectiveness of this approach on the classical cartpole swing-upper
+and Van der Pol domains, as well as in the Tumour Anti-angiogenesis model proposed
+by Ledzewicz and Schättler (ref). In bla domains, our approach outperforms/underperforms
+the standard MLE approach.
 \end{abstract}
 
-\section{Submission of conference papers to ICLR 2021}
+% \section{Submission of conference papers to ICLR 2021}
 
-ICLR requires electronic submissions, processed by
-\url{https://openreview.net/}. See ICLR's website for more instructions.
+% ICLR requires electronic submissions, processed by
+% \url{https://openreview.net/}. See ICLR's website for more instructions.
 
-If your paper is ultimately accepted, the statement {\tt
-  {\textbackslash}iclrfinalcopy} should be inserted to adjust the
-format to the camera ready requirements.
+% If your paper is ultimately accepted, the statement {\tt
+%   {\textbackslash}iclrfinalcopy} should be inserted to adjust the
+% format to the camera ready requirements.
 
-The format for the submissions is a variant of the NeurIPS format.
-Please read carefully the instructions below, and follow them
-faithfully.
+% The format for the submissions is a variant of the NeurIPS format.
+% Please read carefully the instructions below, and follow them
+% faithfully.
 
-\subsection{Style}
+% \subsection{Style}
 
-Papers to be submitted to ICLR 2021 must be prepared according to the
-instructions presented here.
+% Papers to be submitted to ICLR 2021 must be prepared according to the
+% instructions presented here.
 
-%% Please note that we have introduced automatic line number generation
-%% into the style file for \LaTeXe. This is to help reviewers
-%% refer to specific lines of the paper when they make their comments. Please do
-%% NOT refer to these line numbers in your paper as they will be removed from the
-%% style file for the final version of accepted papers.
+% %% Please note that we have introduced automatic line number generation
+% %% into the style file for \LaTeXe. This is to help reviewers
+% %% refer to specific lines of the paper when they make their comments. Please do
+% %% NOT refer to these line numbers in your paper as they will be removed from the
+% %% style file for the final version of accepted papers.
 
-Authors are required to use the ICLR \LaTeX{} style files obtainable at the
-ICLR website. Please make sure you use the current files and
-not previous versions. Tweaking the style files may be grounds for rejection.
+% Authors are required to use the ICLR \LaTeX{} style files obtainable at the
+% ICLR website. Please make sure you use the current files and
+% not previous versions. Tweaking the style files may be grounds for rejection.
 
-\subsection{Retrieval of style files}
+% \subsection{Retrieval of style files}
 
-The style files for ICLR and other conference information are available online at:
-\begin{center}
-   \url{http://www.iclr.cc/}
-\end{center}
-The file \verb+iclr2021_conference.pdf+ contains these
-instructions and illustrates the
-various formatting requirements your ICLR paper must satisfy.
-Submissions must be made using \LaTeX{} and the style files
-\verb+iclr2021_conference.sty+ and \verb+iclr2021_conference.bst+ (to be used with \LaTeX{}2e). The file
-\verb+iclr2021_conference.tex+ may be used as a ``shell'' for writing your paper. All you
-have to do is replace the author, title, abstract, and text of the paper with
-your own.
+% The style files for ICLR and other conference information are available online at:
+% \begin{center}
+%    \url{http://www.iclr.cc/}
+% \end{center}
+% The file \verb+iclr2021_conference.pdf+ contains these
+% instructions and illustrates the
+% various formatting requirements your ICLR paper must satisfy.
+% Submissions must be made using \LaTeX{} and the style files
+% \verb+iclr2021_conference.sty+ and \verb+iclr2021_conference.bst+ (to be used with \LaTeX{}2e). The file
+% \verb+iclr2021_conference.tex+ may be used as a ``shell'' for writing your paper. All you
+% have to do is replace the author, title, abstract, and text of the paper with
+% your own.
 
-The formatting instructions contained in these style files are summarized in
-sections \ref{gen_inst}, \ref{headings}, and \ref{others} below.
+% The formatting instructions contained in these style files are summarized in
+% sections \ref{gen_inst}, \ref{headings}, and \ref{others} below.
+
+\section{Introduction}
+
+We are interested in continuous-state continuous-time domains where the system dynamics
+are described by ordinary differential equations (ODEs). The stardard approaches in these
+settings come from optimal control theory, and include direct methods such as multilple
+shooting and collocation, and indirect methods such as (forward-backward sweep?).
+Of course, the application of these optimal
+control methods requires access to the equations describing the system dynamics.
+
+In settings where the system dynamics are unknown, RL techniques use a reward signal to
+learn how to behave optimally. Model-free RL, in which a policy is learned more or less directly,
+has shown strong performance across many domains. However, model-free RL usually requires
+a large number of training epsodes to perform well, and might have difficulty generalizing.
+Model-based RL but is difficult because (why is it difficult), but offers better sample complexity
+and generalization.
+
+Previous work has merged elements of optimal control and machine learning, such as including 
+an ODE solver in a neural network (optnet), and using MPC in an RL setting (diff mpc). (talk a
+but more about what's already been done)
+
+Like diff mpc, we use techniques from optimal control to select actions based on a model which
+approximates the dynamics of the environment. Unlike diff mpc, we do not restrict ourselves to 
+quadratic cost function, instead allowing application. (talk more about how we're different from
+diff mpc)
+
+\section{Background}
+
+Does anyone feel like writing this section? :p
+I think we need to talk about what other people have done.
+
+\section{End-to-end learning}
+
+Our end-to-end learning routine is based on two intercorrected pieces:
+solution of the optimal control problem by direct multiple shooting, and
+propagation of the gradient information to train the neural ODE.
+
+\subsection{Direct multiple shooting}
+
+Direct multiple shooting is a direct method for solving optimal control problems.
+It works by discretizing the problem at a number of \emph{knot points}, and then
+performing numerical integration between the knot points. The problem is solved 
+as a non-linear program (NLP), using some cost (which in general may be nonlinear),
+subject to constraints imposed by the dynamics at the knot points, as well as 
+bounds on the control and state values.
+
+An optimal control problem is defined as:
+
+\begin{align*}
+\text{minimize} \quad &\int_0^T c(x, u, t) \; dt \\
+\text{subject to} \quad &g(x, u) \leq 0 \\
+\text{and} \quad &h(x, u) = 0,
+\end{align*}
+
+where $c$ is an instantaneous cost function, and $g$ and $h$ are
+constraint functions on the states and parameters.
+
+In the case of direct multiple shooting, we discretize the problem into
+$N$ shooting intervals, evenly spaced between $0$ and $T$. Furthermore,
+we divide each shooting interval into $K$ timesteps. In this way, the
+control function that we're trying to learn is discretized as $u_{0:N \cdot K-1}$, and we
+perform zero-order interpolation to recover the function.
+
+The decision variables in the resulting NLP are $u_{0:N \cdot K-1}$ and $x_{1:N}$.
+They must satisfy the following equalities:
+
+\begin{equation*}
+\varphi(x_i, u_{(i-1)\cdot K:i \cdot K - 1}, t) = x_{i+1} \quad \text{for } i=1, \ldots, N
+\end{equation*}
+where $\varphi(a, b, t)$ is a function which starts in state $a$ and applies vector of controls $b$
+to integrate forwards.
+
+(will need to have more here. perhaps a diagram?)
+
+\subsection{Neural ode}
+
+Neural ODE is the idea of using a neural network to learn differential system dynamics.
+Traditionally, Neural ODE is trained using the imitation loss from trajectories
+which are sampled from the true system dynamics. Trajectories are generated from the
+Neural ODE by using a numerical integration technique, such as 4th order Runge Kutta.
+The gradient of the loss is calculated by backpropagating through the numerical integration.
+This can be done using either the discrete or continuous adjoint methods, each of which
+has their advantages. For now, we use the discrete method, which amounts to AD.
+
+Say we have some $f_{\theta}$ which is a dynamics-approximating neural network paramatrized by $\theta$. We want to train it to match the true dynamics $f$.
+
+Say we are given a control function $u$, a starting state $x_0$, and an ending time $T$. Given two functions $f_1$ and $f_2$, we define their "difference" as:
+
+\begin{equation*}
+\| \phi(f_1, x_0, u) - \phi(f_2, x_0, u)\|_{L^2, [0,T]},
+\end{equation*}
+
+where $\| \bullet \|_{L^2, [0, T]}$ denotes the $L^2$ norm, with $\phi$ resticted to the domain $[0, T]$.
+
+We want to find $\theta$ to minimize the difference between $f$ and $f_{\theta}$. In other words, we want:
+
+\begin{equation*}
+\arg \min_{\theta} \| \phi(f, x_0, u) - \phi(f_{\theta}, x_0, u)\|_{L^2, [0,T]}.
+\end{equation*}
+
+We can do this by performing gradient descent on $\theta$, with an update step like
+
+\begin{equation*}
+\theta \gets \theta - \alpha \nabla_{\theta} \| \phi(f, x_0, u) - \phi(f_{\theta}, x_0, u)\|_{L^2, [0,T]},
+\end{equation*}
+
+where $\alpha$ is the learning rate.
+
+\subsection{end-to-end learning}
+Let us have some system dynamics $f$, a start state $x_0$, and a final time $T$.
+
+Say there is a control function $v$ that we want to imitate. We can define how far a control function $u$ is from $v$ by defining the loss:
+
+\begin{equation*}
+J(f, v, u, x_0, T) = \| \phi(f, x_0, v) - \phi(f, x_0, u)\|_{L^2, [0,T]}.
+\end{equation*}
+
+Now we want to combine the two problems: simultaneously learn a model $f_{\theta} \approx f$ and learn an optimal control function $u^{\star}(f, c, x_0, T)$ (in practice we'll learn $u_{0:T,h}^{\star}(f, c, x_0, T)$). Assume we have some optimal controller which gives us a control function $v$. Then we do this using the following algorithm
+
+\begin{align*}
+& \text{initialize } \theta \\
+& \text{do until $\theta$ stops changing:} \\
+& \quad u_{0:T,h} \gets \arg \min_{u_{0:T,h}} C(\phi(f_{\theta}, x_0, g_h(u_{0:T,h})), g_h(u_{0:T,h}), T) \qquad (1) \\
+& \quad \theta \gets \theta - \eta \nabla_{\theta}J(f, v, g_h(u_{0:T,h}), x_0, T) \qquad (2) \\
+\end{align*}
+
+where $\eta$ is the learning rate.
 
 \section{General formatting instructions}
 \label{gen_inst}
