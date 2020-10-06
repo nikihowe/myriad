@@ -30,7 +30,7 @@ if __name__=='__main__':
   # Run experiment
   system = get_system(hp)
   optimizer = get_optimizer(hp, cfg, system)
-  x, u = optimizer.solve()
+  x, u, adj = optimizer.solve()  # TODO: accomodate for when solve does not return an adjoint (direct methods)
 
   if cfg.plot_results:
-    system.plot_solution(x, u)
+    system.plot_solution(x, u, adj)

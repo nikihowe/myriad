@@ -7,11 +7,13 @@ class SystemType(Enum):
   VANDERPOL="VANDERPOL"
   SEIR="SEIR"
   TUMOUR="TUMOUR"
+  LENHART1="LENHART1"
 
 
 class OptimizerType(Enum):
   COLLOCATION="COLLOCATION"
   SHOOTING="SHOOTING"
+  FBSM="FBSM"
 
 
 # Hyperparameters which change experiment results
@@ -25,6 +27,9 @@ class HParams:
   # Trajectory Optimizer
   intervals: int = 25 # collocation and shooting
   controls_per_interval: int = 5 # multiple shooting
+
+  #Indirect method optimizer
+  steps: int = 1000
 
 
 # Secondary configurations which should not change experiment results

@@ -10,7 +10,7 @@ from ipopt import minimize_ipopt as minimize
 
 from .config import Config, HParams, OptimizerType
 from .systems import FiniteHorizonControlSystem
-from .utils import integrate
+from .utils import integrate, integrate_v2
 
 
 @dataclass
@@ -62,6 +62,8 @@ def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) 
     optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.SHOOTING:
     optimizer = MultipleShootingOptimizer(hp, cfg, system)
+  elif hp.optimizer == OptimizerType.FBSM:
+    optimizer = FBSM(hp, cfg, system)
   else:
     raise KeyError
   return optimizer
@@ -156,3 +158,69 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
     super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel)
+
+
+@dataclass
+class IndirectMethodOptimizer(object):
+  hp: HParams
+  cfg: Config
+  bounds: np.ndarray   # Possible bounds on x_t and u_t
+  guess: np.ndarray    # Initial guess on x_t, u_t and adj_t
+  unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+
+
+  def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:  #return (optimal_state, optimal_control, optimal_adj)
+    raise NotImplementedError
+
+  def stopping_criterion(self, x_iter: Tuple[np.ndarray, np.ndarray], u_iter: Tuple[np.ndarray, np.ndarray], adj_iter: Tuple[np.ndarray, np.ndarray], delta: float = 0.001) -> bool:
+    x, old_x = x_iter
+    u, old_u = u_iter
+    adj, old_adj = adj_iter
+
+    stop_x = np.abs(x).sum() * delta - np.abs(x - old_x).sum()
+    stop_u = np.abs(u).sum()*delta - np.abs(u-old_u).sum()
+    stop_adj = np.abs(adj).sum() * delta - np.abs(adj - old_adj).sum()
+
+    return min(stop_u, stop_x, stop_adj) < 0
+
+
+class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
+  def __init__(self, hp: HParams, cfg: Config, system: FiniteHorizonControlSystem):
+    self.system = system
+    self.N = hp.steps
+    self.h = system.T /self.N
+
+    x_guess = np.hstack((system.x_0, np.zeros(self.N)))
+    u_guess = np.zeros(self.N+1)
+    if system.adj_T is not None:
+      adj_guess = np.hstack((np.zeros(self.N),system.adj_T))
+    else :
+      adj_guess = np.zeros(self.N+1)
+
+    guess, unravel = ravel_pytree((x_guess, u_guess, adj_guess))
+    self.x_guess, self.u_guess, self.adj_guess = x_guess, u_guess, adj_guess
+
+    x_bounds = system.bounds[:-1]
+    u_bounds = system.bounds[-1:]
+    bounds = np.vstack((x_bounds, u_bounds))
+    self.x_bounds, self.u_bounds = x_bounds, u_bounds
+
+    super().__init__(hp, cfg, bounds, guess, unravel)
+
+  def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    n = 0
+    while n==0 or self.stopping_criterion((self.x_guess, old_x), (self.u_guess, old_u), (self.adj_guess, old_adj)):
+      old_u = self.u_guess.copy()
+      old_x = self.x_guess.copy()
+      old_adj = self.adj_guess.copy()
+
+      self.x_guess = integrate_v2(self.system.dynamics, self.x_guess[0], self.u_guess, self.h, self.N)[-1]
+      self.adj_guess = integrate_v2(self.system.adj_ODE, self.adj_guess[-1], self.x_guess, self.h, self.N, forward=False)[-1]
+
+      u_estimate = self.system.optim_characterization(self.adj_guess, self.x_guess)
+      # Use basic convex approximation to update the guess on u
+      self.u_guess = 0.5*(u_estimate + old_u)
+
+      n = n +1
+
+    return self.x_guess, self.u_guess, self.adj_guess
