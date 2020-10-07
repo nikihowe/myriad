@@ -25,18 +25,19 @@ class FiniteHorizonControlSystem(object):
     assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
     assert self.T > 0
 
-  def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
+  def dynamics(self, x_t: np.ndarray, u_t: float, v_t: np.ndarray) -> np.ndarray:
     raise NotImplementedError
   
   def cost(self, x_t: np.ndarray, u_t: float) -> float:
     raise NotImplementedError
 
-  def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
+  def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: Optional[np.array]) -> None:
     raise NotImplementedError
 
 
 def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.Lab1 import Lab1
+  from .LenhartSystems.Lab5 import Lab5
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
   elif hp.system == SystemType.VANDERPOL:
@@ -47,6 +48,8 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Tumour()
   elif hp.system == SystemType.LENHART1:
     return Lab1()
+  elif hp.system == SystemType.LENHART5:
+    return Lab5()
   else:
     raise KeyError
 

@@ -8,6 +8,7 @@ class SystemType(Enum):
   SEIR="SEIR"
   TUMOUR="TUMOUR"
   LENHART1="LENHART1"
+  LENHART5 = "LENHART5"
 
 
 class OptimizerType(Enum):

@@ -4,40 +4,40 @@ import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-class Lab1(FiniteHorizonControlSystem):
+class Lab5(FiniteHorizonControlSystem):
     def __init__(self):
         ## Initial variables for the environment
-        self.A = 1    # Growth rate
-        self.B = 1
-        self.C = 4    # Strength of the chemical nutrient
+        self.r = 0.3        # Growth rate of the tumor
+        self.a = 3          # Positive weight parameter
+        self.delta = 0.45   # Magnitude of the chemo dose
 
         self.adj_T = None # final condition over the adjoint
 
         super().__init__(
-            x_0=np.array([1]),       # Starting state
+            x_0=np.array([0.975]),       # Starting state
             x_T=None,
-            T=2.0,                   # duration of experiment
+            T=20,                   # duration of experiment
             bounds=np.array([        # no bounds here
                 [np.NINF, np.inf],
-                [np.NINF, np.inf],  # Control bounds
+                [0, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray) -> np.ndarray:
-        d_x= -0.5*x_t**2 + self.C*u_t
+        d_x= self.r*x_t*np.log(1/x_t) - u_t*self.delta*x_t
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*x_t - self.B*u_t**2
+        return self.a*x_t**2 + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray) -> np.ndarray:
-        return -self.A + x_t*adj_t
+        return adj_t*(self.r + self.delta*u_t - self.r*np.log(1/x_t)) - 2*self.a*x_t
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray) -> np.ndarray:
-        char = (self.C*adj_t)/(2*self.B)
-        return np.minimum(self.bounds[0,1],np.maximum(self.bounds[0,0],char))
+        char = 0.5*adj_t*self.delta*x_t
+        return np.minimum(self.bounds[0, 1], np.maximum(self.bounds[0, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
         sns.set(style='darkgrid')
