@@ -4,7 +4,7 @@ import jax
 import numpy as onp
 import simple_parsing
 
-from source.config import Config, HParams
+from source.config import Config, HParams, MParams
 from source.optimizers import get_optimizer
 from source.systems import get_system
 
@@ -16,12 +16,15 @@ if __name__=='__main__':
   parser = simple_parsing.ArgumentParser()
   parser.add_arguments(HParams, dest="hparams")
   parser.add_arguments(Config, dest="config")
-  
+  parser.add_arguments(MParams, dest="syst")
   args = parser.parse_args()
+
   hp = args.hparams
   cfg = args.config
+  syst = args.syst
   print(hp)
   print(cfg)
+  print(syst)
 
   # Set our seeds for reproducibility
   random.seed(hp.seed)
@@ -29,6 +32,7 @@ if __name__=='__main__':
 
   # Run experiment
   system = get_system(hp)
+  system.update(syst) # Reinitialize
   optimizer = get_optimizer(hp, cfg, system)
   x, u, adj = optimizer.solve()  # TODO: accomodate for when solve does not return an adjoint (direct methods)
 

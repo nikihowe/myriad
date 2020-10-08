@@ -13,17 +13,17 @@ from .config import SystemType, HParams
 class FiniteHorizonControlSystem(object):
   x_0: np.array # state at time 0
   x_T: Optional[np.array] # state at time T
-  T: np.float64 # duration of trajectory
+  T: float # duration of trajectory
   bounds: np.ndarray # State and control bounds
   terminal_cost: bool # Whether only the final state and control are inputs to the cost
 
-  def __post_init__(self):
-    self.x_0 = self.x_0.astype(np.float64)
-    if self.x_T is not None:
-      assert self.x_0.shape == self.x_T.shape
-      self.x_T = self.x_T.astype(np.float64)
-    assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
-    assert self.T > 0
+  # def __post_init__(self):
+  #   self.x_0 = self.x_0.astype(np.float64)
+  #   if self.x_T is not None:
+  #     assert self.x_0.shape == self.x_T.shape
+  #     self.x_T = self.x_T.astype(np.float64)
+  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
+  #   assert self.T > 0
 
   def dynamics(self, x_t: np.ndarray, u_t: float, v_t: np.ndarray) -> np.ndarray:
     raise NotImplementedError

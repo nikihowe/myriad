@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import  Optional
 
 
 class SystemType(Enum):
@@ -39,3 +40,15 @@ class Config():
   verbose: bool = True
   jit: bool = True
   plot_results: bool = True
+
+# Third configurations, that manipulate directly the dynamics and modify the environment
+@dataclass(eq=True, frozen=True)
+class MParams:
+  x_0 : Optional[float] = None
+  x_T : Optional[float] = None
+  T : Optional[float] = None
+  A: Optional[float] = None
+  B: Optional[float] = None
+  C: Optional[float] = None
+  D: Optional[float] = None
+
