@@ -6,50 +6,57 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @dataclass
-class Lab5Parameters(FiniteHorizonControlSystem):
-    r: float
-    a: float
-    delta: float
+class Lab6Parameters(FiniteHorizonControlSystem):
+    A: float    # weight parameter of the objective
+    k: float    # maximum mass of the fish species
+    m: float    # natural death rate
+    M: float    # upper bound for harvesting; must be 0 <= M <= 1
 
-class Lab5(Lab5Parameters):
-    def __init__(self, r=0.3, a=3, delta=0.45, x_0=0.975, T=20 ):
+class Lab6(Lab6Parameters):
+    def __init__(self, A=5.0, k=10.0, m=0.2, M=1.0, x_0=0.4, T=10 ):
         self.adj_T = None # final condition over the adjoint
 
         super().__init__(
-            r = r,
-            a = a,
-            delta = delta,
+            A = A,
+            k = k,
+            m = m,
+            M = M,
             x_0=np.array([x_0]),  # Starting state
             x_T=None,
             T=T,  # duration of experiment
             bounds=np.array([  # no bounds here
                 [np.NINF, np.inf],
-                [0, np.inf],  # Control bounds
+                [0, M],  # Control bounds
             ]),
             terminal_cost=False,
         )
 
     def update(self, caller):
-        if caller.A: self.r = caller.A  # Growth rate of the tumor
-        if caller.B: self.a = caller.B          # Positive weight parameter
-        if caller.C: self.delta = caller.C   # Magnitude of the chemo dose
+        if caller.A: self.A = caller.A  # Growth rate of the tumor
+        if caller.B: self.k = caller.B          # Positive weight parameter
+        if caller.C: self.m = caller.C   # Magnitude of the chemo dose
         if caller.x_0: self.x_0 = np.array([caller.x_0])
         if caller.T: self.T = caller.T
+        if caller.M: self.bounds = np.array([  # no bounds here
+                [np.NINF, np.inf],
+                [0, caller.M],  # Control bounds
+            ])
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= self.r*x_t*np.log(1/x_t) - u_t*self.delta*x_t
+        d_x= -(self.m+u_t)*x_t
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.a*x_t**2 + u_t**2
+        return self.A*(self.k*t/(t+1))*x_t*u_t - u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return adj_t*(self.r + self.delta*u_t - self.r*np.log(1/x_t)) - 2*self.a*x_t
+        return adj_t*(self.m+u_t) - self.A *(self.k*t/(t+1))*u_t
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 0.5*adj_t*self.delta*x_t
-        return np.minimum(self.bounds[0, 1], np.maximum(self.bounds[0, 0], char))
+        char = 0.5*x_t * (self.A*(self.k*t/(t+1)) - adj_t)
+        #char = np.nan_to_num(char, nan=2)
+        return np.minimum(self.bounds[1, 1], np.maximum(self.bounds[1, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
         sns.set(style='darkgrid')
@@ -64,7 +71,7 @@ class Lab5(Lab5Parameters):
 
         plt.subplot(3, 1, 1)
         for x_i in x:
-            plt.plot(ts_x, x_i)
+            plt.plot(ts_x, x_i *(self.k*ts_x/(ts_x+1)))
         plt.title("Optimal state of dynamic system via forward-backward sweep")
         plt.ylabel("state (x)")
 

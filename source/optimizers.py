@@ -196,6 +196,7 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
       adj_guess = np.hstack((np.zeros(self.N),system.adj_T))
     else :
       adj_guess = np.zeros(self.N+1)
+    self.t_interval = np.linspace(0, system.T, num=self.N+1)
 
     guess, unravel = ravel_pytree((x_guess, u_guess, adj_guess))
     self.x_guess, self.u_guess, self.adj_guess = x_guess, u_guess, adj_guess
@@ -214,10 +215,10 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
       old_x = self.x_guess.copy()
       old_adj = self.adj_guess.copy()
 
-      self.x_guess = integrate_v2(self.system.dynamics, self.x_guess[0], self.u_guess, self.h, self.N)[-1]
-      self.adj_guess = integrate_v2(self.system.adj_ODE, self.adj_guess[-1], self.x_guess, self.h, self.N, self.u_guess, forward=False)[-1]
+      self.x_guess = integrate_v2(self.system.dynamics, self.x_guess[0], self.u_guess, self.h, self.N, self.t_interval)[-1]
+      self.adj_guess = integrate_v2(self.system.adj_ODE, self.adj_guess[-1], self.x_guess, -1*self.h, self.N, self.u_guess, self.t_interval)[-1]
 
-      u_estimate = self.system.optim_characterization(self.adj_guess, self.x_guess)
+      u_estimate = self.system.optim_characterization(self.adj_guess, self.x_guess, self.t_interval)
       # Use basic convex approximation to update the guess on u
       self.u_guess = 0.5*(u_estimate + old_u)
 

@@ -10,6 +10,7 @@ class SystemType(Enum):
   TUMOUR="TUMOUR"
   LENHART1="LENHART1"
   LENHART5 = "LENHART5"
+  LENHART6 = "LENHART6"
 
 
 class OptimizerType(Enum):
@@ -43,7 +44,7 @@ class Config():
 
 # Third configurations, that manipulate directly the dynamics and modify the environment
 @dataclass(eq=True, frozen=True)
-class MParams:
+class MParams:                       # TODO: this is disgusting, let's reorganize...
   x_0 : Optional[float] = None
   x_T : Optional[float] = None
   T : Optional[float] = None
@@ -51,4 +52,5 @@ class MParams:
   B: Optional[float] = None
   C: Optional[float] = None
   D: Optional[float] = None
+  M: Optional[float] = None
 
