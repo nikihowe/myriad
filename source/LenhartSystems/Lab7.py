@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @dataclass
-class Lab6Parameters(FiniteHorizonControlSystem):
+class Lab7Parameters(FiniteHorizonControlSystem):
     A: float    # weight parameter of the objective
     k: float    # maximum mass of the fish species
     m: float    # natural death rate
     M: float    # upper bound for harvesting; must be 0 <= M <= 1
 
-class Lab6(Lab6Parameters):
+class Lab7(Lab7Parameters):
     def __init__(self, A=5.0, k=10.0, m=0.2, M=1.0, x_0=0.4, T=10 ):
         self.adj_T = None # final condition over the adjoint
 
@@ -43,18 +43,27 @@ class Lab6(Lab6Parameters):
             ])
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= -(self.m+u_t)*x_t
+        d_x= [
+            self.b*x_t[3] - self.d*x_t[0] - self.c*x_t[0]*x_t[2] - u_t*x_t[0],
+            self.c*x_t[0]*x_t[2] - (self.e+self.d)*x_t[1],
+            self.e*x_t[1] - (self.g+self.a+self.d)*x_t[2],
+            (self.b-self.d)*x_t[3] - self.a*x_t[2]
+        ]
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*(self.k*t/(t+1))*x_t*u_t - u_t**2
+        return self.A*x_t[2] + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return adj_t*(self.m+u_t) - self.A *(self.k*t/(t+1))*u_t
+        return [
+            adj_t[0]*(self.d+self.c*x_t[2]+u_t),
+            adj_t[1]*(self.e+self.d) - adj_t[2]*self.e,
+            -self.A + adj_t[0]*self.c*x_t[0] - adj_t[1]*self.c*x_t[0] +adj_t[2]*(self.g+self.a+self.d) + adj_t[3]*self.a
+        ]
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 0.5*x_t * (self.A*(self.k*t/(t+1)) - adj_t)
+        char = adj_t[0]*x_t[0]/2
         return np.minimum(self.bounds[1, 1], np.maximum(self.bounds[1, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
