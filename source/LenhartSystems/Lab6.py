@@ -57,12 +57,11 @@ class Lab6(Lab6Parameters):
         char = 0.5*x_t * (self.A*(self.k*t/(t+1)) - adj_t)
         return np.minimum(self.bounds[1, 1], np.maximum(self.bounds[1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        if not multi:
-            x, u, adj = [x], [u], [adj]
+        x, u, adj = x.T, u.T, adj.T
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])

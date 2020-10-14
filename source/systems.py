@@ -36,9 +36,10 @@ class FiniteHorizonControlSystem(object):
 
 
 def get_system(hp: HParams) -> FiniteHorizonControlSystem:
-  from .LenhartSystems.Lab1 import Lab1
+  from .LenhartSystems.Lab1 import Lab1 #TODO: This is just dirty : to clean
   from .LenhartSystems.Lab5 import Lab5
   from .LenhartSystems.Lab6 import Lab6
+  from .LenhartSystems.Lab7 import Lab7
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
   elif hp.system == SystemType.VANDERPOL:
@@ -53,6 +54,8 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Lab5()
   elif hp.system == SystemType.LENHART6:
     return Lab6()
+  elif hp.system == SystemType.LENHART7:
+    return Lab7()
   else:
     raise KeyError
 

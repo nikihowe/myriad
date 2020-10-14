@@ -189,14 +189,15 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
     self.system = system
     self.N = hp.steps
     self.h = system.T /self.N
+    state_shape = system.x_0.shape[0]
 
-    x_guess = np.hstack((system.x_0, np.zeros(self.N)))
-    u_guess = np.zeros(self.N+1)
+    x_guess = np.vstack((system.x_0, np.zeros((self.N,state_shape))))
+    u_guess = np.zeros((self.N+1,1))
     if system.adj_T is not None:
-      adj_guess = np.hstack((np.zeros(self.N),system.adj_T))
+      adj_guess = np.vstack((np.zeros((self.N,state_shape)),system.adj_T))
     else :
-      adj_guess = np.zeros(self.N+1)
-    self.t_interval = np.linspace(0, system.T, num=self.N+1)
+      adj_guess = np.zeros((self.N+1,state_shape))
+    self.t_interval = np.linspace(0, system.T, num=self.N+1).reshape(-1,1)
 
     guess, unravel = ravel_pytree((x_guess, u_guess, adj_guess))
     self.x_guess, self.u_guess, self.adj_guess = x_guess, u_guess, adj_guess

@@ -52,7 +52,6 @@ def integrate_v2( # TODO: if dynamic ODE has a dependancy on t, need to modify r
 
   dir = int(np.sign(h))
   fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
-
   if dir >= 0 :
     x_T, ys = lax.scan(fn, x_0, np.arange(N))
     return x_T, np.concatenate((x_0[None], ys))

@@ -11,6 +11,7 @@ class SystemType(Enum):
   LENHART1="LENHART1"
   LENHART5 = "LENHART5"
   LENHART6 = "LENHART6"
+  LENHART7 = "LENHART7"
 
 
 class OptimizerType(Enum):
@@ -52,5 +53,8 @@ class MParams:                       # TODO: this is disgusting, let's reorganiz
   B: Optional[float] = None
   C: Optional[float] = None
   D: Optional[float] = None
+  E: Optional[float] = None
+  F: Optional[float] = None
+  G: Optional[float] = None
   M: Optional[float] = None
 
