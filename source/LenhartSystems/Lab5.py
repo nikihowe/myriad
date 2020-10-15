@@ -49,7 +49,7 @@ class Lab5(Lab5Parameters):
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         char = 0.5*adj_t*self.delta*x_t
-        return np.minimum(self.bounds[0, 1], np.maximum(self.bounds[0, 0], char))
+        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
         sns.set(style='darkgrid')
