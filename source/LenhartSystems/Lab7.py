@@ -76,9 +76,9 @@ class Lab7(Lab7Parameters):  #TODO : Add R calculation at the end
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
-            adj_t[0]*(self.d+self.c*x_t[2]+u_t[0]),
+            adj_t[0]*(self.d+self.c*x_t[2]+u_t[0]) - adj_t[1]*self.c*x_t[2],
             adj_t[1]*(self.e+self.d) - adj_t[2]*self.e,
-            -self.A + adj_t[0]*self.c*x_t[0] - adj_t[1]*self.c*x_t[0] +adj_t[2]*(self.g+self.a+self.d) + adj_t[3]*self.a,
+            -self.A + adj_t[0]*self.c*x_t[0] - adj_t[1]*self.c*x_t[0] + adj_t[2]*(self.g+self.a+self.d) + adj_t[3]*self.a,
             -self.b*adj_t[0] + adj_t[3]*(self.d-self.d)
         ])
 
@@ -92,7 +92,6 @@ class Lab7(Lab7Parameters):  #TODO : Add R calculation at the end
         plt.figure(figsize=(12,12))
 
         x, u, adj = x.T, u.T, adj.T
-        print(u[:,:10])
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])
