@@ -42,6 +42,7 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.Lab7 import Lab7
   from .LenhartSystems.Lab8 import Lab8
   from .LenhartSystems.Lab9 import Lab9
+  from .LenhartSystems.Lab10 import Lab10
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
   elif hp.system == SystemType.VANDERPOL:
@@ -62,6 +63,8 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Lab8()
   elif hp.system == SystemType.LENHART9:
     return Lab9()
+  elif hp.system == SystemType.LENHART10:
+    return Lab10()
   else:
     raise KeyError
 

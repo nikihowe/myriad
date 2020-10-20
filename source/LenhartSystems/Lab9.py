@@ -15,7 +15,7 @@ class Lab9Parameters(FiniteHorizonControlSystem): #TODO : describe variables
     c_f: float
 
 
-class Lab9(Lab9Parameters):  #TODO : Add R calculation at the end
+class Lab9(Lab9Parameters):
     def __init__(self, r=0.1, K=0.75, m_p=0.5, m_f=0.5, c_p=10000, c_f=10, x_0=(0.4,0.2,0), T=25):
         self.adj_T = None # final condition over the adjoint
 

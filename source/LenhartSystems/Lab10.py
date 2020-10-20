@@ -6,35 +6,27 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @dataclass
-class Lab8Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    s: float    #
-    m_1: float    #
-    m_2: float    #
-    m_3: float    #
-    r: float    #
-    T_max: float    #
-    k: float
-    N: float
-    A: float    # weight parameter of the objective
+class Lab10Parameters(FiniteHorizonControlSystem): #TODO : describe variables
+    a: float    #
+    b: float
+    c: float    #
+    A: float    #
+    l: float    #
 
-class Lab8(Lab8Parameters):
-    def __init__(self, s=10, m_1=0.02, m_2=0.5, m_3=4.4, r=0.03, T_max=1500, k=0.000024, N=300, x_0=(800,0.04,1.5), A=0.05, T=20):
+
+class Lab10(Lab10Parameters):
+    def __init__(self, a=1, b=1, c=1, A=2, l=0.5, x_0=(0.75,0), T=0.2):
         self.adj_T = None # final condition over the adjoint
 
         super().__init__(
-            s = s,
-            m_1 = m_1,
-            m_2 = m_2,
-            m_3 = m_3,
-            r = r,
-            T_max = T_max,
-            k = k,
-            N = N,
+            a = a,
+            b = b,
+            c = c,
             A = A,
+            l = l,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
-                x_0[2],
             ]),  # Starting state
             x_T=None,
             T=T,  # duration of experiment
@@ -42,52 +34,45 @@ class Lab8(Lab8Parameters):
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],
-                [0, 1],  # Control bounds
             ]),
             terminal_cost=False,
         )
 
     def update(self, caller):
-        if caller.A: self.s = caller.A
-        if caller.B: self.m_1 = caller.B
-        if caller.C: self.m_2 = caller.C
-        if caller.D: self.m_3 = caller.D
-        if caller.E: self.r = caller.E
-        if caller.F: self.T_max = caller.F
-        if caller.G: self.k = caller.G
-        if caller.H: self.N = caller.H
-        if caller.I: self.A = caller.I
+        if caller.A: self.a = caller.A
+        if caller.B: self.b = caller.B
+        if caller.C: self.c = caller.C
+        if caller.D: self.A = caller.D
+        if caller.E: self.l = caller.E
         if caller.x_0:
             self.x_0 = np.array([
                 caller.x_0[0],
                 caller.x_0[1],
-                caller.x_0[2],
             ])
         if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([
-            self.s/(1+x_t[2]) - self.m_1*x_t[0] + self.r*x_t[0]*(1-(x_t[0]+x_t[1])/self.T_max) - u_t[0]*self.k*x_t[0]*x_t[2],
-            u_t[0]*self.k*x_t[0]*x_t[2] - self.m_2*x_t[1],
-            self.N*self.m_2*x_t[1] - self.m_3*x_t[2],
+            -self.a*x_t[0] -self.b*x_t[1],
+            -self.c*x_t[1] + u_t[0]
             ])
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*x_t[0] - (1-u_t)**2
+        return A*(x_t[0]-l)**2 + u_t[0]**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
-            -self.A + adj_t[0]*(self.m_1 - self.r*(1-(x_t[0]+x_t[1])/self.T_max) + self.r*x_t[0]/self.T_max + u_t[0]*self.k*x_t[2]) - adj_t[1]*u_t[0]*self.k*x_t[2],
-            adj_t[0]*self.r*x_t[0]/self.T_max + adj_t[1]*self.m_2 - adj_t[2]*self.N*self.m_2,
-            adj_t[0]*(self.s/(1+x_t[2])**2 + u_t[0]*self.k*x_t[0]) - adj_t[1]*u_t[0]*self.k*x_t[0] + adj_t[2]*self.m_3,
+            -2*self.A*(x_t[0]-self.l) +adj_t[0]*self.a,
+            adj_t[0]*self.b + adj_t[1]*self.c
         ])
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 1 + 0.5*self.k*x_t[:,0]*x_t[:,2]*(adj_t[:,1]-adj_t[:,0])
-        char = char.reshape(-1,1)
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
+        char_0 = -adj_t[:,1]/2
+        char_0 = char_0.reshape(-1,1)
+
+        return char_0
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
         sns.set(style='darkgrid')
@@ -99,9 +84,9 @@ class Lab8(Lab8Parameters):
         ts_u = np.linspace(0, self.T, u[0].shape[0])
         ts_adj = np.linspace(0, self.T, adj[0].shape[0])
 
-        labels = ["Healthy cells", "Infected cells", "Viral charge"]
+        labels = ["Blood Glucose", "Net Hormonal Concentration"]
 
-        to_print = [2] #curves we want to print out
+        to_print = [0,1] #curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):
@@ -113,8 +98,7 @@ class Lab8(Lab8Parameters):
 
         plt.subplot(3, 1, 2)
         for idx, u_i in enumerate(u):
-            if idx in [0]:
-                plt.plot(ts_u, u_i)
+            plt.plot(ts_u, u_i, label='Insulin level')
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
