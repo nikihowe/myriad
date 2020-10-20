@@ -58,4 +58,4 @@ def integrate_v2( # TODO: if dynamic ODE has a dependancy on t, need to modify r
 
   else:
     x_T, ys = lax.scan(fn, x_0, np.arange(N,0,-1))
-    return x_T, np.concatenate((np.flip(ys), x_0[None]))
+    return x_T, np.concatenate((np.flipud(ys), x_0[None]))

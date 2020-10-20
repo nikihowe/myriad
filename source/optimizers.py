@@ -177,11 +177,11 @@ class IndirectMethodOptimizer(object):
     u, old_u = u_iter
     adj, old_adj = adj_iter
 
-    stop_x = np.abs(x).sum() * delta - np.abs(x - old_x).sum()
-    stop_u = np.abs(u).sum()*delta - np.abs(u-old_u).sum()
-    stop_adj = np.abs(adj).sum() * delta - np.abs(adj - old_adj).sum()
+    stop_x = np.abs(x).sum(axis=0) * delta - np.abs(x - old_x).sum(axis=0)
+    stop_u = np.abs(u).sum(axis=0)*delta - np.abs(u-old_u).sum(axis=0)
+    stop_adj = np.abs(adj).sum(axis=0) * delta - np.abs(adj - old_adj).sum(axis=0)
 
-    return min(stop_u, stop_x, stop_adj) < 0
+    return np.min(np.hstack((stop_u, stop_x, stop_adj))) < 0
 
 
 class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
@@ -190,9 +190,10 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
     self.N = hp.steps
     self.h = system.T /self.N
     state_shape = system.x_0.shape[0]
+    control_shape = system.bounds.shape[0] - state_shape
 
     x_guess = np.vstack((system.x_0, np.zeros((self.N,state_shape))))
-    u_guess = np.zeros((self.N+1,1))
+    u_guess = np.zeros((self.N+1,control_shape))
     if system.adj_T is not None:
       adj_guess = np.vstack((np.zeros((self.N,state_shape)),system.adj_T))
     else :
