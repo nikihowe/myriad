@@ -17,6 +17,7 @@ class SystemType(Enum):
   LENHART10 = "LENHART10"
   LENHART11 = "LENHART11"
   LENHART12 = "LENHART12"
+  LENHART13 = "LENHART13"
 
 
 class OptimizerType(Enum):

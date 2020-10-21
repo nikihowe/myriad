@@ -4,6 +4,7 @@ from typing import Callable, Tuple
 
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
+from jax.ops import index_update
 import jax.numpy as np
 import numpy as onp
 from ipopt import minimize_ipopt as minimize
@@ -184,21 +185,21 @@ class IndirectMethodOptimizer(object):
     return np.min(np.hstack((stop_u, stop_x, stop_adj))) < 0
 
 
-class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
+class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
   def __init__(self, hp: HParams, cfg: Config, system: FiniteHorizonControlSystem):
     self.system = system
     self.N = hp.steps
-    self.h = system.T /self.N
+    self.h = system.T / self.N
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
-    x_guess = np.vstack((system.x_0, np.zeros((self.N,state_shape))))
-    u_guess = np.zeros((self.N+1,control_shape))
+    x_guess = np.vstack((system.x_0, np.zeros((self.N, state_shape))))
+    u_guess = np.zeros((self.N+1, control_shape))
     if system.adj_T is not None:
-      adj_guess = np.vstack((np.zeros((self.N,state_shape)),system.adj_T))
+      adj_guess = np.vstack((np.zeros((self.N, state_shape)), system.adj_T))
     else :
-      adj_guess = np.zeros((self.N+1,state_shape))
-    self.t_interval = np.linspace(0, system.T, num=self.N+1).reshape(-1,1)
+      adj_guess = np.zeros((self.N+1, state_shape))
+    self.t_interval = np.linspace(0, system.T, num=self.N+1).reshape(-1, 1)
 
     guess, unravel = ravel_pytree((x_guess, u_guess, adj_guess))
     self.x_guess, self.u_guess, self.adj_guess = x_guess, u_guess, adj_guess
@@ -208,9 +209,36 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
     bounds = np.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
+    #Additional condition if terminal condition are present
+    self.terminal_cdtion = False
+    if self.system.x_T is not None:
+      num_term_state = 0
+      for idx, x_Ti in enumerate(self.system.x_T):
+        if x_Ti is not None:
+          self.terminal_cdtion = True
+          self.term_cdtion_state = idx
+          self.term_value = x_Ti
+          num_term_state += 1
+        if num_term_state > 1:
+          raise NotImplementedError("Multiple states with terminal condition not supported yet")
+
     super().__init__(hp, cfg, bounds, guess, unravel)
 
+  def reinitiate(self, a):
+    state_shape = self.system.x_0.shape[0]
+    control_shape = self.system.bounds.shape[0] - state_shape
+
+    self.x_guess = np.vstack((self.system.x_0, np.zeros((self.N, state_shape))))
+    self.u_guess = np.zeros((self.N + 1, control_shape))
+    if self.system.adj_T is not None:
+      adj_guess = np.vstack((np.zeros((self.N, state_shape)), self.system.adj_T))
+    else:
+      adj_guess = np.zeros((self.N + 1, state_shape))
+    self.adj_guess = index_update(adj_guess, (-1, self.term_cdtion_state), a)
+
   def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    if self.terminal_cdtion:
+      return self.sequenceSolver()
     n = 0
     while n==0 or self.stopping_criterion((self.x_guess, old_x), (self.u_guess, old_u), (self.adj_guess, old_adj)):
       old_u = self.u_guess.copy()
@@ -224,6 +252,36 @@ class FBSM(IndirectMethodOptimizer): # Forward-Backward Sweep Method
       # Use basic convex approximation to update the guess on u
       self.u_guess = 0.5*(u_estimate + old_u)
 
-      n = n +1
+      n = n + 1
+
+    return self.x_guess, self.u_guess, self.adj_guess
+
+  def sequenceSolver(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    self.terminal_cdtion = False
+    iter = 0
+
+    #Adjust lambda to the initial guess
+    a = self.system.guess_a
+    self.reinitiate(a)
+    x_a, _, _ = self.solve()
+    Va = x_a[-1, self.term_cdtion_state] - self.term_value
+    b = self.system.guess_b
+    self.reinitiate(b)
+    x_b, _, _ = self.solve()
+    Vb = x_b[-1, self.term_cdtion_state] - self.term_value
+
+    while np.abs(Va) > 1e-10:
+      if (np.abs(Va) > np.abs(Vb)):
+        a, b = b, a
+        Va, Vb = Vb, Va
+
+      d = Va*(b-a)/(Vb-Va)
+      b = a
+      Vb = Va
+      a = a - d
+      self.reinitiate(a)
+      x_a, _, _ = self.solve()
+      Va = x_a[-1, self.term_cdtion_state] - self.term_value
+      iter += 1
 
     return self.x_guess, self.u_guess, self.adj_guess
