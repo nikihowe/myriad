@@ -36,6 +36,7 @@ class Lab10(Lab10Parameters):
                 [np.NINF, np.inf],
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

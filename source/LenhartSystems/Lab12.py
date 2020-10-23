@@ -29,6 +29,7 @@ class Lab12(Lab12Parameters): #TODO: Add resolution for z state after optimizati
                 [0, M],
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

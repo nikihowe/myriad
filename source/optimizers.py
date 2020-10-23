@@ -190,11 +190,17 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
     self.system = system
     self.N = hp.steps
     self.h = system.T / self.N
+    if system.discrete:
+      self.N = system.T
+      self.h = 1
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
     x_guess = np.vstack((system.x_0, np.zeros((self.N, state_shape))))
-    u_guess = np.zeros((self.N+1, control_shape))
+    if system.discrete:
+      u_guess = np.zeros((self.N, control_shape))
+    else:
+      u_guess = np.zeros((self.N+1, control_shape))
     if system.adj_T is not None:
       adj_guess = np.vstack((np.zeros((self.N, state_shape)), system.adj_T))
     else :
@@ -245,8 +251,8 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
       old_x = self.x_guess.copy()
       old_adj = self.adj_guess.copy()
 
-      self.x_guess = integrate_v2(self.system.dynamics, self.x_guess[0], self.u_guess, self.h, self.N, self.t_interval)[-1]
-      self.adj_guess = integrate_v2(self.system.adj_ODE, self.adj_guess[-1], self.x_guess, -1*self.h, self.N, self.u_guess, self.t_interval)[-1]
+      self.x_guess = integrate_v2(self.system.dynamics, self.x_guess[0], self.u_guess, self.h, self.N, t=self.t_interval, discrete=self.system.discrete)[-1]
+      self.adj_guess = integrate_v2(self.system.adj_ODE, self.adj_guess[-1], self.x_guess, -1*self.h, self.N, self.u_guess, t=self.t_interval, discrete=self.system.discrete)[-1]
 
       u_estimate = self.system.optim_characterization(self.adj_guess, self.x_guess, self.t_interval)
       # Use basic convex approximation to update the guess on u

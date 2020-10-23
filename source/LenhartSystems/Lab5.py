@@ -27,6 +27,7 @@ class Lab5(Lab5Parameters):
                 [0, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

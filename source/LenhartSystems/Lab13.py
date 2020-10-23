@@ -38,6 +38,7 @@ class Lab13(Lab13Parameters):
                 [0, M]
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):
@@ -73,7 +74,7 @@ class Lab13(Lab13Parameters):
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return A*0.5*u_t[0]**2
+        return self.A*0.5*u_t[0]**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
@@ -83,10 +84,10 @@ class Lab13(Lab13Parameters):
         ])
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char_0 = (adj_t[:, 0]*self.d_1*x_t[:, 0] + adj_t[:, 1]*self.d_2*x_t[:, 1] - adj_t[:, 2])/self.A
-        char_0 = char_0.reshape(-1,1)
+        char = (adj_t[:, 0]*self.d_1*x_t[:, 0] + adj_t[:, 1]*self.d_2*x_t[:, 1] - adj_t[:, 2])/self.A
+        char = char.reshape(-1,1)
 
-        return char_0
+        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
         sns.set(style='darkgrid')

@@ -45,6 +45,7 @@ class Lab8(Lab8Parameters):
                 [0, 1],  # Control bounds
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

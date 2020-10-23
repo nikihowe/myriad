@@ -43,6 +43,7 @@ class Lab7(Lab7Parameters):  #TODO : Add R calculation at the end
                 [0, 0.9],  # Control bounds
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

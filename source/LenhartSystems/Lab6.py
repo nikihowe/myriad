@@ -29,6 +29,7 @@ class Lab6(Lab6Parameters):
                 [0, M],  # Control bounds
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def update(self, caller):

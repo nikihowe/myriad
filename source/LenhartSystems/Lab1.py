@@ -22,6 +22,7 @@ class Lab1(FiniteHorizonControlSystem):
                 [np.NINF, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
+            discrete=False,
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray) -> np.ndarray:

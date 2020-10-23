@@ -31,6 +31,7 @@ def integrate_v2( # TODO: if dynamic ODE has a dependancy on t, need to modify r
   N: int, # steps
   v: Optional[np.ndarray] = None,
   t: Optional[np.ndarray] = None,
+  discrete: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
@@ -51,7 +52,13 @@ def integrate_v2( # TODO: if dynamic ODE has a dependancy on t, need to modify r
     t = np.empty_like(u)
 
   dir = int(np.sign(h))
-  fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
+  if discrete:
+    if dir >= 0 :
+      fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx], t[idx])] * 2
+    else:
+      fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx-1], t[idx-1])] * 2
+  else:
+    fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
   if dir >= 0 :
     x_T, ys = lax.scan(fn, x_0, np.arange(N))
     return x_T, np.concatenate((x_0[None], ys))
