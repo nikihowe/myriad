@@ -3,6 +3,7 @@ import random
 import jax
 import numpy as onp
 import simple_parsing
+import gin
 
 from source.config import Config, HParams, MParams
 from source.optimizers import get_optimizer
@@ -31,10 +32,14 @@ if __name__=='__main__':
   onp.random.seed(hp.seed)
 
   # Run experiment
+  gin.parse_config_file('source/configs/default.gin')
   system = get_system(hp)
-  system.update(syst) # Reinitialize
+  #system.update(syst) # Reinitialize  # TODO: remove after fininshing integration og gin-config
   optimizer = get_optimizer(hp, cfg, system)
   x, u, adj = optimizer.solve()  # TODO: accomodate for when solve does not return an adjoint (direct methods)
+
+  #debug tool:
+  print(system.A)
 
   if cfg.plot_results:
     system.plot_solution(x, u, adj)

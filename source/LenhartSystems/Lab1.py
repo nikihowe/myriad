@@ -1,15 +1,17 @@
 from ..systems import FiniteHorizonControlSystem
 
 import jax.numpy as np
+import gin
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+@gin.configurable
 class Lab1(FiniteHorizonControlSystem):
-    def __init__(self):
+    def __init__(self, A, B, C):
         ## Initial variables for the environment
-        self.A = 1    # Growth rate
-        self.B = 1
-        self.C = 4    # Strength of the chemical nutrient
+        self.A = A    # Growth rate
+        self.B = B
+        self.C = C    # Strength of the chemical nutrient
 
         self.adj_T = None # final condition over the adjoint
 
