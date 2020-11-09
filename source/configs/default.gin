@@ -1,6 +1,8 @@
-# Lab1 parameters default values
 import source.LenhartSystems.Lab1
 
+# Lab1 parameters default values
 Lab1.A = 1
 Lab1.B = 1
 Lab1.C = 4
+Lab1.x_0 = 1.0
+Lab1.T = 1.0

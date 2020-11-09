@@ -7,7 +7,7 @@ import seaborn as sns
 
 @gin.configurable
 class Lab1(FiniteHorizonControlSystem):
-    def __init__(self, A, B, C):
+    def __init__(self, A, B, C, x_0, T):
         ## Initial variables for the environment
         self.A = A    # Growth rate
         self.B = B
@@ -16,9 +16,9 @@ class Lab1(FiniteHorizonControlSystem):
         self.adj_T = None # final condition over the adjoint
 
         super().__init__(
-            x_0=np.array([1]),       # Starting state
+            x_0=np.array([x_0]),       # Starting state
             x_T=None,
-            T=2.0,                   # duration of experiment
+            T=T,                   # duration of experiment
             bounds=np.array([        # no bounds here
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],  # Control bounds
@@ -27,18 +27,18 @@ class Lab1(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x= -0.5*x_t**2 + self.C*u_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray) -> float: ## TODO : rename for max problem?
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
         return self.A*x_t - self.B*u_t**2
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray) -> np.ndarray:
+    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return -self.A + x_t*adj_t
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray) -> np.ndarray:
+    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         char = (self.C*adj_t)/(2*self.B)
         return np.minimum(self.bounds[0,1],np.maximum(self.bounds[0,0],char))
 
