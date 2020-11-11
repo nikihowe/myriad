@@ -1,24 +1,19 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab12Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    K: float    #
-    G: float
-    D: float
-
-class Lab12(Lab12Parameters): #TODO: Add resolution for z state after optimization
-    def __init__(self, K=2, G=1, D=1, M=1, x_0=(0.5,0.1), T=2):
+@gin.configurable
+class Lab12(FiniteHorizonControlSystem): #TODO: Add resolution for z state after optimization
+    def __init__(self, K, G, D, M, x_0, T):
         self.adj_T = None # final condition over the adjoint
+        self.K = K
+        self.G = G
+        self.D = D
 
         super().__init__(
-            K = K,
-            G = G,
-            D = D,
             x_0=np.array([
                 x_0[0],
             ]),  # Starting state
@@ -31,21 +26,6 @@ class Lab12(Lab12Parameters): #TODO: Add resolution for z state after optimizati
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.K = caller.A
-        if caller.B: self.G = caller.B
-        if caller.C: self.D = caller.C
-        if caller.D:
-            self.bounds = np.array([  # no bounds here
-                [np.NINF, np.inf],
-                [0, caller.D],
-            ])
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([

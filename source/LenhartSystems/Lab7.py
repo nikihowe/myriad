@@ -1,32 +1,23 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab7Parameters(FiniteHorizonControlSystem):
-    b: float    # natural exponential birth rate
-    d: float    # natural exponential death rate
-    c: float    # rate of contamination
-    e: float    # rate at which exposed individuals become infectious
-    g: float    # rate of recovery among infectious people
-    a: float    # death rate due to the infection
-    A: float    # weight parameter of the objective
-
-class Lab7(Lab7Parameters):  #TODO : Add R calculation at the end
-    def __init__(self, b=0.525, d=0.5, c=0.0001, e=0.5, g=0.1, a=0.2, x_0=(1000,100,50,15), A=0.1, T=20 ):
+@gin.configurable
+class Lab7(FiniteHorizonControlSystem):  #TODO : Add R calculation at the end
+    def __init__(self, b, d, c, e, g, a, x_0, A, T):
         self.adj_T = None # final condition over the adjoint
+        self.b = b
+        self.d = d
+        self.c = c
+        self.e = e
+        self.g = g
+        self.a = a
+        self.A = A
 
         super().__init__(
-            b = b,
-            d = d,
-            c = c,
-            e = e,
-            g = g,
-            a = a,
-            A = A,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
@@ -45,23 +36,6 @@ class Lab7(Lab7Parameters):  #TODO : Add R calculation at the end
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.a = caller.A
-        if caller.B: self.b = caller.B
-        if caller.C: self.c = caller.C
-        if caller.D: self.d = caller.D
-        if caller.E: self.e = caller.E
-        if caller.F: self.A = caller.F
-        if caller.G: self.g = caller.G
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-                caller.x_0[1],
-                caller.x_0[2],
-                np.sum(caller.x_0),
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x= np.asarray([

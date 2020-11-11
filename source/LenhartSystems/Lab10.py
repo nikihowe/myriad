@@ -1,29 +1,21 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab10Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    a: float    #
-    b: float
-    c: float    #
-    A: float    #
-    l: float    #
-
-
-class Lab10(Lab10Parameters):
-    def __init__(self, a=1, b=1, c=1, A=2, l=0.5, x_0=(0.75,0), T=0.2):
+@gin.configurable
+class Lab10(FiniteHorizonControlSystem):
+    def __init__(self, a, b, c, A, l, x_0, T):
         self.adj_T = None # final condition over the adjoint
+        self.a = a
+        self.b = b
+        self.c = c
+        self.A = A
+        self.l = l
 
         super().__init__(
-            a = a,
-            b = b,
-            c = c,
-            A = A,
-            l = l,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
@@ -39,19 +31,6 @@ class Lab10(Lab10Parameters):
             discrete=False,
         )
 
-    def update(self, caller):
-        if caller.A: self.a = caller.A
-        if caller.B: self.b = caller.B
-        if caller.C: self.c = caller.C
-        if caller.D: self.A = caller.D
-        if caller.E: self.l = caller.E
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-                caller.x_0[1],
-            ])
-        if caller.T: self.T = caller.T
-
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([
             -self.a*x_t[0] -self.b*x_t[1],
@@ -61,7 +40,7 @@ class Lab10(Lab10Parameters):
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return A*(x_t[0]-l)**2 + u_t[0]**2
+        return self.A*(x_t[0]-self.l)**2 + u_t[0]**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([

@@ -1,22 +1,18 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab11Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    r: float    #
-    k: float
-
-class Lab11(Lab11Parameters):
-    def __init__(self, r=0, k=1, x_0=100, T=5):
+@gin.configurable
+class Lab11(FiniteHorizonControlSystem):
+    def __init__(self, r, k, x_0, T):
         self.adj_T = None # final condition over the adjoint
+        self.r = r
+        self.k = k
 
         super().__init__(
-            r = r,
-            k = k,
             x_0=np.array([
                 x_0,
             ]),  # Starting state
@@ -29,15 +25,6 @@ class Lab11(Lab11Parameters):
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.r = caller.A
-        if caller.B: self.k = caller.B
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([

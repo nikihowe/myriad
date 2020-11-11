@@ -1,29 +1,21 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab13Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    d_1: float    #
-    d_2: float
-    A: float    #
-    guess_a: float    #
-    guess_b: float
-
-
-class Lab13(Lab13Parameters):
-    def __init__(self, d_1=0.1, d_2=0.1, A=1, B=5, guess_a=-0.52, guess_b=-0.5, M=1, x_0=(10, 1, 0), T=10):
+@gin.configurable
+class Lab13(FiniteHorizonControlSystem):
+    def __init__(self, d_1, d_2, A, B, guess_a, guess_b, M, x_0, T):
         self.adj_T = np.array([1, 0, 0]) # final condition over the adjoint
+        self.d_1 = d_1
+        self.d_2 = d_2
+        self.A = A
+        self.guess_a = guess_a
+        self.guess_b = guess_b
 
         super().__init__(
-            d_1 =d_1,
-            d_2 = d_2,
-            A = A,
-            guess_a = guess_a,
-            guess_b = guess_b,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
@@ -40,29 +32,6 @@ class Lab13(Lab13Parameters):
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.d_1 = caller.A
-        if caller.B: self.d_2 = caller.B
-        if caller.C: self.A = caller.C
-        if caller.D: self.guess_a = caller.D
-        if caller.E: self.guess_b = caller.E
-        if caller.F:
-            self.bounds =np.array([  # no bounds here
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
-                [0, caller.F]
-            ])
-        if caller.G:
-            self.x_T = [None, None, caller.G]
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-                caller.x_0[1],
-                caller.x_0[2],
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([

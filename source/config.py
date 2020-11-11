@@ -8,7 +8,10 @@ class SystemType(Enum):
   VANDERPOL="VANDERPOL"
   SEIR="SEIR"
   TUMOUR="TUMOUR"
-  LENHART1="LENHART1"
+  LENHART1 = "LENHART1"
+  LENHART2 = "LENHART2"
+  LENHART3 = "LENHART3"
+  LENHART4 = "LENHART4"
   LENHART5 = "LENHART5"
   LENHART6 = "LENHART6"
   LENHART7 = "LENHART7"
@@ -49,21 +52,3 @@ class Config():
   verbose: bool = True
   jit: bool = True
   plot_results: bool = True
-
-# Third configurations, that manipulate directly the dynamics and modify the environment
-@dataclass(eq=True, frozen=True)
-class MParams:                       # TODO: this is disgusting, let's reorganize...
-  x_0 : Optional[float] = None
-  x_T : Optional[float] = None
-  T : Optional[float] = None
-  A: Optional[float] = None
-  B: Optional[float] = None
-  C: Optional[float] = None
-  D: Optional[float] = None
-  E: Optional[float] = None
-  F: Optional[float] = None
-  G: Optional[float] = None
-  H: Optional[float] = None
-  I: Optional[float] = None
-  M: Optional[float] = None
-

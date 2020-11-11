@@ -1,31 +1,22 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab9Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    r: float    #
-    K: float
-    m_p: float    #
-    m_f: float    #
-    c_p: float    #
-    c_f: float
-
-
-class Lab9(Lab9Parameters):
-    def __init__(self, r=0.1, K=0.75, m_p=0.5, m_f=0.5, c_p=10000, c_f=10, x_0=(0.4,0.2,0), T=25):
+@gin.configurable
+class Lab9(FiniteHorizonControlSystem):
+    def __init__(self, r, K, m_p, m_f, c_p, c_f, x_0, T):
         self.adj_T = None # final condition over the adjoint
+        self.r = r
+        self.K = K
+        self.m_p = m_p
+        self.m_f = m_f
+        self.c_p = c_p
+        self.c_f = c_f
 
         super().__init__(
-            r = r,
-            K =K,
-            m_p = m_p,
-            m_f = m_f,
-            c_p = c_p,
-            c_f = c_f,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
@@ -43,21 +34,6 @@ class Lab9(Lab9Parameters):
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.r = caller.A
-        if caller.B: self.K = caller.B
-        if caller.C: self.m_p = caller.C
-        if caller.D: self.m_f = caller.D
-        if caller.E: self.c_p = caller.E
-        if caller.F: self.c_f = caller.F
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-                caller.x_0[1],
-                caller.x_0[2],
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         k = self.r/self.K

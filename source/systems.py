@@ -38,6 +38,9 @@ class FiniteHorizonControlSystem(object):
 
 def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.Lab1 import Lab1 #TODO: This is just dirty : to clean
+  from .LenhartSystems.Lab2 import Lab2
+  from .LenhartSystems.Lab3 import Lab3
+  from .LenhartSystems.Lab4 import Lab4
   from .LenhartSystems.Lab5 import Lab5
   from .LenhartSystems.Lab6 import Lab6
   from .LenhartSystems.Lab7 import Lab7
@@ -58,6 +61,12 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Tumour()
   elif hp.system == SystemType.LENHART1:
     return Lab1()
+  elif hp.system == SystemType.LENHART2:
+    return Lab2()
+  elif hp.system == SystemType.LENHART3:
+    return Lab3()
+  elif hp.system == SystemType.LENHART4:
+    return Lab4()
   elif hp.system == SystemType.LENHART5:
     return Lab5()
   elif hp.system == SystemType.LENHART6:

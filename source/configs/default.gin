@@ -1,4 +1,17 @@
 import source.LenhartSystems.Lab1
+import source.LenhartSystems.Lab2
+import source.LenhartSystems.Lab3
+import source.LenhartSystems.Lab4
+import source.LenhartSystems.Lab5
+import source.LenhartSystems.Lab6
+import source.LenhartSystems.Lab7
+import source.LenhartSystems.Lab8
+import source.LenhartSystems.Lab9
+import source.LenhartSystems.Lab10
+import source.LenhartSystems.Lab11
+import source.LenhartSystems.Lab12
+import source.LenhartSystems.Lab13
+import source.LenhartSystems.Lab14
 
 # Lab1 parameters default values
 Lab1.A = 1
@@ -6,3 +19,116 @@ Lab1.B = 1
 Lab1.C = 4
 Lab1.x_0 = 1.0
 Lab1.T = 1.0
+
+# Lab2 parameters default values
+Lab2.r = 0.3
+Lab2.M = 10
+Lab2.A = 1
+Lab2.x_0 = 1
+Lab2.T = 5
+
+# Lab3 parameters default values
+Lab3.r = 1
+Lab3.A = 1
+Lab3.B = 12
+Lab3.C = 1
+Lab3.x_0 = 1
+Lab3.T = 1
+
+# Lab4 parameters default values
+Lab4.A = 1
+Lab4.C = 4
+Lab4.M_1 = -1
+Lab4.M_2 = 2
+Lab4.x_0 = 1
+Lab4.T = 1
+
+# Lab5 parameters default values
+Lab5.r = 0.3
+Lab5.a = 3
+Lab5.delta = 0.45
+Lab5.x_0 = 0.975
+Lab5.T = 20
+
+# Lab6 parameters default value
+Lab6.A = 5.0
+Lab6.k = 10.0
+Lab6.m = 0.2
+Lab6.M = 1.0
+Lab6.x_0 = 0.4
+Lab6.T = 10
+
+# Lab7 parameters default value
+Lab7.A = 0.1
+Lab7.b = 0.525
+Lab7.d = 0.5
+Lab7.c = 0.0001
+Lab7.e = 0.5
+Lab7.g = 0.1
+Lab7.a = 0.2
+Lab7.x_0 = (1000,100,50,15)
+Lab7.T = 20
+
+# Lab8 parameters default value
+Lab8.s = 10
+Lab8.m_1 = 0.02
+Lab8.m_2 = 0.5
+Lab8.m_3 = 4.4
+Lab8.r = 0.03
+Lab8.T_max = 1500
+Lab8.k = 0.000024
+Lab8.N = 300
+Lab8.x_0 = (800,0.04,1.5)
+Lab8.A = 0.05
+Lab8.T = 20
+
+# Lab9 parameters default value
+Lab9.r = 0.1
+Lab9.K = 0.75
+Lab9.m_p = 0.5
+Lab9.m_f = 0.5
+Lab9.c_p = 10000
+Lab9.c_f = 10
+Lab9.x_0 = (0.4,0.2,0.0)
+Lab9.T = 25
+
+# Lab10 model parameters default values
+Lab10.a = 1
+Lab10.b = 1
+Lab10.c = 1
+Lab10.A = 2
+Lab10.l = 0.5
+Lab10.x_0 = (0.75, 0.0)
+Lab10.T = 0.2
+
+# Lab11 model parameters default values
+Lab11.r = 0.0
+Lab11.k = 1.0
+Lab11.x_0 = 100
+Lab11.T = 5
+
+# Lab12 model parameters default values
+Lab12.K = 2
+Lab12.G = 1
+Lab12.D = 1
+Lab12.M = 1
+Lab12.x_0 = (0.5, 0.1)
+Lab12.T = 2
+
+# Lab13 model parameters default values
+Lab13.d_1 = 0.1
+Lab13.d_2 = 0.1
+Lab13.A = 1
+Lab13.B = 5
+Lab13.guess_a = -0.52
+Lab13.guess_b = -0.5
+Lab13.M = 1
+Lab13.x_0 = (10, 1, 0)
+Lab13.T = 10
+
+# Lab14 model parameters default values
+Lab14.B = 1
+Lab14.k = 1
+Lab14.eps = 0.01
+Lab14.x_0 = (0.5, 1.0, 1.5, 2.0, 10.0)
+Lab14.T = 10

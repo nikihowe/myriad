@@ -1,36 +1,25 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab8Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    s: float    #
-    m_1: float    #
-    m_2: float    #
-    m_3: float    #
-    r: float    #
-    T_max: float    #
-    k: float
-    N: float
-    A: float    # weight parameter of the objective
-
-class Lab8(Lab8Parameters):
-    def __init__(self, s=10, m_1=0.02, m_2=0.5, m_3=4.4, r=0.03, T_max=1500, k=0.000024, N=300, x_0=(800,0.04,1.5), A=0.05, T=20):
+@gin.configurable
+class Lab8(FiniteHorizonControlSystem):
+    def __init__(self, s, m_1, m_2, m_3, r, T_max, k, N, x_0, A, T):
         self.adj_T = None # final condition over the adjoint
+        self.s = s
+        self.m_1 = m_1
+        self.m_2 = m_2
+        self.m_3 = m_3
+        self.r = r
+        self.T_max = T_max
+        self.k = k
+        self.N = N
+        self.A = A
 
         super().__init__(
-            s = s,
-            m_1 = m_1,
-            m_2 = m_2,
-            m_3 = m_3,
-            r = r,
-            T_max = T_max,
-            k = k,
-            N = N,
-            A = A,
             x_0=np.array([
                 x_0[0],
                 x_0[1],
@@ -47,24 +36,6 @@ class Lab8(Lab8Parameters):
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.s = caller.A
-        if caller.B: self.m_1 = caller.B
-        if caller.C: self.m_2 = caller.C
-        if caller.D: self.m_3 = caller.D
-        if caller.E: self.r = caller.E
-        if caller.F: self.T_max = caller.F
-        if caller.G: self.k = caller.G
-        if caller.H: self.N = caller.H
-        if caller.I: self.A = caller.I
-        if caller.x_0:
-            self.x_0 = np.array([
-                caller.x_0[0],
-                caller.x_0[1],
-                caller.x_0[2],
-            ])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x = np.asarray([

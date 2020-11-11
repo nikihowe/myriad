@@ -8,7 +8,7 @@ import gin
 from absl import app
 from absl import flags
 
-from source.config import Config, HParams, MParams
+from source.config import Config, HParams
 from source.optimizers import get_optimizer
 from source.systems import get_system
 
@@ -16,7 +16,6 @@ from source.systems import get_system
 parser = simple_parsing.ArgumentParser()
 parser.add_arguments(HParams, dest="hparams")
 parser.add_arguments(Config, dest="config")
-parser.add_arguments(MParams, dest="syst")
 parser.add_argument("--gin_bindings", type=str)  #Needed for the parser to work in conjonction to absl.flags
 
 key_dict = HParams.__dict__.copy()
@@ -43,23 +42,22 @@ def main(unused_argv):
   args = parser.parse_args()
   hp = args.hparams
   cfg = args.config
-  syst = args.syst
   print(hp)
   print(cfg)
-  print(syst)
 
   # Set our seeds for reproducibility
   random.seed(hp.seed)
   onp.random.seed(hp.seed)
 
-  # Run experiment
-  gin_files = ['source/configs/default.gin']
+  #Load config, then build system
+  gin_files = ['./source/configs/default.gin']
   gin_bindings = FLAGS.gin_bindings
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
                                       skip_unknown=False)
   system = get_system(hp)
-  #system.update(syst) # Reinitialize  # TODO: remove after fininshing integration og gin-config
+
+  # Run experiment
   optimizer = get_optimizer(hp, cfg, system)
   x, u, adj = optimizer.solve()  # TODO: accommodate for when solve does not return an adjoint (direct methods)
 

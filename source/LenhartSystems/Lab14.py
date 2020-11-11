@@ -1,25 +1,19 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
-from jax import vmap
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab14Parameters(FiniteHorizonControlSystem): #TODO : describe variables
-    B: float    #
-    k: float
-    eps: float    #
-
-class Lab14(Lab14Parameters):
-    def __init__(self, B=1, k=1, eps=0.01, x_0=(0.5, 1, 1.5, 2, 10), T=10):
+@gin.configurable
+class Lab14(FiniteHorizonControlSystem):
+    def __init__(self, B, k, eps, x_0, T):
         self.adj_T = np.ones(5) # final condition over the adjoint
+        self.B = B
+        self.k = k
+        self.eps = eps
 
         super().__init__(
-            B=B,
-            k=k,
-            eps=eps,
             x_0=np.array(x_0),  # Starting state
             x_T=None,
             T=T,  # duration of experiment
@@ -38,14 +32,6 @@ class Lab14(Lab14Parameters):
             terminal_cost=False,
             discrete=True,
         )
-
-    def update(self, caller):
-        if caller.A: self.B = caller.A
-        if caller.B: self.k = caller.B
-        if caller.C: self.eps = caller.C
-        if caller.x_0:
-            self.x_0 = np.array(caller.x_0)
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         next_x = (x_t + x_t*self.k/(self.eps + x_t)) * (1 - u_t)

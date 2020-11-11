@@ -6,13 +6,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab6(FiniteHorizonControlSystem):
-    def __init__(self, A=5.0, k=10.0, m=0.2, M=1.0, x_0=0.4, T=10 ):
+class Lab2(FiniteHorizonControlSystem):
+    def __init__(self, r, M, A, x_0, T):
         self.adj_T = None # final condition over the adjoint
-        self.A = A
-        self.k = k
-        self.m = m
+        self.r = r
         self.M = M
+        self.A = A
 
         super().__init__(
             x_0=np.array([x_0]),  # Starting state
@@ -20,32 +19,33 @@ class Lab6(FiniteHorizonControlSystem):
             T=T,  # duration of experiment
             bounds=np.array([  # no bounds here
                 [np.NINF, np.inf],
-                [0, M],  # Control bounds
+                [np.NINF, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= -(self.m+u_t)*x_t
+        d_x= self.r*(self.M - x_t) - u_t*x_t
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*(self.k*t/(t+1))*x_t*u_t - u_t**2
+        return self.A*x_t**2 + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return adj_t*(self.m+u_t) - self.A *(self.k*t/(t+1))*u_t
+        return adj_t*(self.r + u_t) - 2*self.A*x_t
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 0.5*x_t * (self.A*(self.k*t/(t+1)) - adj_t)
+        char = 0.5*adj_t*x_t
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        x, u, adj = x.T, u.T, adj.T
+        if not multi:
+            x, u, adj = [x], [u], [adj]
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])
@@ -53,14 +53,14 @@ class Lab6(FiniteHorizonControlSystem):
 
         plt.subplot(3, 1, 1)
         for x_i in x:
-            plt.plot(ts_x, x_i *(self.k*ts_x/(ts_x+1)))
-        plt.title("Optimal state of dynamic system via forward-backward sweep")
+            plt.plot(ts_x, x_i)
+        plt.title("Optimal mold population of dynamic system via forward-backward sweep")
         plt.ylabel("state (x)")
 
         plt.subplot(3, 1, 2)
         for u_i in u:
             plt.plot(ts_u, u_i)
-        plt.title("Optimal control of dynamic system via forward-backward sweep")
+        plt.title("Optimal use of fungicide system via forward-backward sweep")
         plt.ylabel("control (u)")
 
         plt.subplot(3, 1, 3)

@@ -1,24 +1,19 @@
-from dataclasses import dataclass
 from ..systems import FiniteHorizonControlSystem
+import gin
 
 import jax.numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-@dataclass
-class Lab5Parameters(FiniteHorizonControlSystem):
-    r: float
-    a: float
-    delta: float
-
-class Lab5(Lab5Parameters):
-    def __init__(self, r=0.3, a=3, delta=0.45, x_0=0.975, T=20 ):
+@gin.configurable
+class Lab5(FiniteHorizonControlSystem):
+    def __init__(self, r, a, delta, x_0, T):
         self.adj_T = None # final condition over the adjoint
+        self.r = r
+        self.a = a
+        self.delta = delta
 
         super().__init__(
-            r = r,
-            a = a,
-            delta = delta,
             x_0=np.array([x_0]),  # Starting state
             x_T=None,
             T=T,  # duration of experiment
@@ -29,13 +24,6 @@ class Lab5(Lab5Parameters):
             terminal_cost=False,
             discrete=False,
         )
-
-    def update(self, caller):
-        if caller.A: self.r = caller.A  # Growth rate of the tumor
-        if caller.B: self.a = caller.B          # Positive weight parameter
-        if caller.C: self.delta = caller.C   # Magnitude of the chemo dose
-        if caller.x_0: self.x_0 = np.array([caller.x_0])
-        if caller.T: self.T = caller.T
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         d_x= self.r*x_t*np.log(1/x_t) - u_t*self.delta*x_t
