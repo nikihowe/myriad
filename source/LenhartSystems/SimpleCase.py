@@ -6,22 +6,37 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab1(FiniteHorizonControlSystem):
+class SimpleCase(FiniteHorizonControlSystem):
     def __init__(self, A, B, C, x_0, T):
-        ## Initial variables for the environment
-        self.A = A    # Growth rate
-        self.B = B
-        self.C = C    # Strength of the chemical nutrient
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 5, Lab 1)
+        A simple introductory environment example of the form :
 
-        self.adj_T = None # final condition over the adjoint
+        .. math::
+
+            \max_u \quad &\int_0^1 Ax(t) - Bu^2(t) dt \\
+            \mathrm{s.t.}\qquad & x'(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
+            & x(0)=x_0>-2, \; A \geq 0, \; B > 0
+
+        :param A: Weight parameter
+        :param B: Weight parameter
+        :param C: Weight parameter
+        :param x_0: Initial state
+        :param T: Horizon
+        """
+        self.A = A
+        self.B = B
+        self.C = C
+
+        self.adj_T = None   # Final condition over the adjoint, if any
 
         super().__init__(
-            x_0=np.array([x_0]),       # Starting state
-            x_T=None,
-            T=T,                   # duration of experiment
-            bounds=np.array([        # no bounds here
+            x_0=np.array([x_0]),    # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
-                [np.NINF, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
             discrete=False,

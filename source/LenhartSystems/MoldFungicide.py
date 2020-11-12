@@ -6,38 +6,56 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab3(FiniteHorizonControlSystem):
-    def __init__(self, r, A, B, C, x_0, T):
-        self.adj_T = np.array([C]) # final condition over the adjoint
+class MoldFungicide(FiniteHorizonControlSystem):
+    def __init__(self, r, M, A, x_0, T):
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
+
+        This environment model the concentration level of a mold population that we try to control by
+        applying a fungicide. The state (x) is the population concentration, while the control (u) is
+        the amount of fungicide added. We are trying to minimize:
+
+        .. math::
+            \min_u \quad &\int_0^T Ax^2(t) + u^2(t) dt \\
+            \mathrm{s.t.}\qquad & x'(t) = r(M - x(t)) - u(t)x(t) \\
+            & x(0)=x_0 \;
+
+        :param r: Growth rate
+        :param M: Carrying capacity
+        :param A: Weight parameter, balancing between controlling the population and limiting the fungicide use
+        :param x_0: Initial mold population concentration
+        :param T: Horizon
+        """
+        self.adj_T = None   # Final condition over the adjoint, if any
         self.r = r
+        self.M = M
         self.A = A
-        self.B = B
 
         super().__init__(
-            x_0=np.array([x_0]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
+            x_0=np.array([x_0]),    # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
-                [np.NINF, np.inf],  # Control bounds
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= self.r*x_t + self.A*u_t*x_t - self.B*u_t**2*np.exp(-x_t)
+        d_x= self.r*(self.M - x_t) - u_t*x_t
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return u_t**2 #TODO: Terminal reward missing
+        return self.A*x_t**2 + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return -adj_t*(self.r+self.A*u_t+self.B*u_t**2*np.exp(-x_t))
+        return adj_t*(self.r + u_t) - 2*self.A*x_t
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = adj_t*self.A*x_t/(2*(1+self.B*adj_t*np.exp(-x_t)))
+        char = 0.5*adj_t*x_t
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
     def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
@@ -54,13 +72,13 @@ class Lab3(FiniteHorizonControlSystem):
         plt.subplot(3, 1, 1)
         for x_i in x:
             plt.plot(ts_x, x_i)
-        plt.title("Optimal bacteria concentration of dynamic system via forward-backward sweep")
+        plt.title("Optimal mold population of dynamic system via forward-backward sweep")
         plt.ylabel("state (x)")
 
         plt.subplot(3, 1, 2)
         for u_i in u:
             plt.plot(ts_u, u_i)
-        plt.title("Optimal use of chemical nutrient in dynamic system via forward-backward sweep")
+        plt.title("Optimal use of fungicide system via forward-backward sweep")
         plt.ylabel("control (u)")
 
         plt.subplot(3, 1, 3)
