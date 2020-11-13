@@ -6,20 +6,43 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab5(FiniteHorizonControlSystem):
+class Cancer(FiniteHorizonControlSystem):
     def __init__(self, r, a, delta, x_0, T):
-        self.adj_T = None # final condition over the adjoint
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 10, Lab 5)
+        The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
+        competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
+
+        The tumor is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
+        cell-kill due to the chemotherapy treatment is proportional to the tumor population
+
+        This environment model the normalized density of a cancerous tumor undergoing chemotherapy. The state (x) is the
+        normalized density of the tumor, while the control (u) is the strength of the drug used for chemotherapy.
+        We are trying to minimize:
+
+        .. math::
+            \min_u \quad &\int_0^T aN^2(t) + u^2(t) dt \\
+            \mathrm{s.t.}\qquad & x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
+            & x(0)=x_0, \; u(t) \geq 0
+
+        :param r: Growth rate of the tumor
+        :param a: Positive weight parameter
+        :param delta: Magnitude of the dose administered
+        :param x_0: Initial normalized density of the tumor
+        :param T: Horizon
+        """
+        self.adj_T = None # Final condition over the adjoint, if any
         self.r = r
         self.a = a
         self.delta = delta
 
         super().__init__(
-            x_0=np.array([x_0]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
-                [np.NINF, np.inf],
-                [0, np.inf],  # Control bounds
+            x_0=np.array([x_0]),    # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,  #                 Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [0, np.inf],
             ]),
             terminal_cost=False,
             discrete=False,

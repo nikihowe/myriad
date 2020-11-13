@@ -40,9 +40,9 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.SimpleCase import SimpleCase #TODO: This is just dirty : to clean
   from .LenhartSystems.MoldFungicide import MoldFungicide
   from .LenhartSystems.Bacteria import Bacteria
-  from .LenhartSystems.Lab4 import Lab4
-  from .LenhartSystems.Lab5 import Lab5
-  from .LenhartSystems.Lab6 import Lab6
+  from .LenhartSystems.SimpleCaseWithBounds import SimpleCaseWithBounds
+  from .LenhartSystems.Cancer import Cancer
+  from .LenhartSystems.FishHarvest import FishHarvest
   from .LenhartSystems.Lab7 import Lab7
   from .LenhartSystems.Lab8 import Lab8
   from .LenhartSystems.Lab9 import Lab9
@@ -65,12 +65,12 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return MoldFungicide()
   elif hp.system == SystemType.BACTERIA:
     return Bacteria()
-  elif hp.system == SystemType.LENHART4:
-    return Lab4()
-  elif hp.system == SystemType.LENHART5:
-    return Lab5()
-  elif hp.system == SystemType.LENHART6:
-    return Lab6()
+  elif hp.system == SystemType.SIMPLECASEWITHBOUNDS:
+    return SimpleCaseWithBounds()
+  elif hp.system == SystemType.CANCER:
+    return Cancer()
+  elif hp.system == SystemType.FISHHARVEST:
+    return FishHarvest()
   elif hp.system == SystemType.LENHART7:
     return Lab7()
   elif hp.system == SystemType.LENHART8:

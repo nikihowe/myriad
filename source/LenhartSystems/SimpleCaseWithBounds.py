@@ -6,46 +6,63 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab6(FiniteHorizonControlSystem):
-    def __init__(self, A=5.0, k=10.0, m=0.2, M=1.0, x_0=0.4, T=10 ):
-        self.adj_T = None # final condition over the adjoint
+class SimpleCaseWithBounds(FiniteHorizonControlSystem):
+    def __init__(self, A, C, M_1, M_2, x_0, T):
+        """
+                Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 9, Lab 4)
+                A simple introductory environment example of the form :
+
+                .. math::
+
+                    \max_u \quad &\int_0^1 Ax(t) - u^2(t) dt \\
+                    \mathrm{s.t.}\qquad & x'(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
+                    & x(0)=x_0>-2, \; A \geq 0, \; M_1 \leq u(t) \leq M_2
+
+                :param A: Weight parameter
+                :param C: Weight parameter
+                :param M_1: Lower bound for the control
+                :param M_2: Upper bound for the control
+                :param x_0: Initial state
+                :param T: Horizon
+                """
         self.A = A
-        self.k = k
-        self.m = m
-        self.M = M
+        self.C = C
+
+        self.adj_T = None  # Final condition over the adjoint, if any
 
         super().__init__(
             x_0=np.array([x_0]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
-                [np.NINF, np.inf],
-                [0, M],  # Control bounds
+            x_T=None,  # Terminal state, if any
+            T=T,  # Duration of experiment
+            bounds=np.array([  # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],  # followed by bounds over controls (u_0,u_1,...)
+                [M_1, M_2],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= -(self.m+u_t)*x_t
+        d_x= -0.5*x_t**2+ self.C*u_t
 
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*(self.k*t/(t+1))*x_t*u_t - u_t**2
+        return self.A*x_t - u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return adj_t*(self.m+u_t) - self.A *(self.k*t/(t+1))*u_t
+        return -self.A + x_t*adj_t
 
     def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 0.5*x_t * (self.A*(self.k*t/(t+1)) - adj_t)
+        char = (self.C*adj_t)/2
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        x, u, adj = x.T, u.T, adj.T
+        if not multi:
+            x, u, adj = [x], [u], [adj]
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])
@@ -53,7 +70,7 @@ class Lab6(FiniteHorizonControlSystem):
 
         plt.subplot(3, 1, 1)
         for x_i in x:
-            plt.plot(ts_x, x_i *(self.k*ts_x/(ts_x+1)))
+            plt.plot(ts_x, x_i)
         plt.title("Optimal state of dynamic system via forward-backward sweep")
         plt.ylabel("state (x)")
 
