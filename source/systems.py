@@ -43,9 +43,9 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.SimpleCaseWithBounds import SimpleCaseWithBounds
   from .LenhartSystems.Cancer import Cancer
   from .LenhartSystems.FishHarvest import FishHarvest
-  from .LenhartSystems.Lab7 import Lab7
-  from .LenhartSystems.Lab8 import Lab8
-  from .LenhartSystems.Lab9 import Lab9
+  from .LenhartSystems.EpidemicSEIRN import EpidemicSEIRN
+  from .LenhartSystems.HIVTreatment import HIVTreatment
+  from .LenhartSystems.BearPopulations import BearPopulations
   from .LenhartSystems.Lab10 import Lab10
   from .LenhartSystems.Lab11 import Lab11
   from .LenhartSystems.Lab12 import Lab12
@@ -71,12 +71,12 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Cancer()
   elif hp.system == SystemType.FISHHARVEST:
     return FishHarvest()
-  elif hp.system == SystemType.LENHART7:
-    return Lab7()
-  elif hp.system == SystemType.LENHART8:
-    return Lab8()
-  elif hp.system == SystemType.LENHART9:
-    return Lab9()
+  elif hp.system == SystemType.EPIDEMICSEIRN:
+    return EpidemicSEIRN()
+  elif hp.system == SystemType.HIVTREATMENT:
+    return HIVTreatment()
+  elif hp.system == SystemType.BEARPOPULATIONS:
+    return BearPopulations()
   elif hp.system == SystemType.LENHART10:
     return Lab10()
   elif hp.system == SystemType.LENHART11:

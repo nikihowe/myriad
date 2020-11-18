@@ -4,9 +4,9 @@ import source.LenhartSystems.Bacteria
 import source.LenhartSystems.SimpleCaseWithBounds
 import source.LenhartSystems.Cancer
 import source.LenhartSystems.FishHarvest
-import source.LenhartSystems.Lab7
-import source.LenhartSystems.Lab8
-import source.LenhartSystems.Lab9
+import source.LenhartSystems.EpidemicSEIRN
+import source.LenhartSystems.HIVTreatment
+import source.LenhartSystems.BearPopulations
 import source.LenhartSystems.Lab10
 import source.LenhartSystems.Lab11
 import source.LenhartSystems.Lab12
@@ -57,39 +57,39 @@ FishHarvest.M = 1.0
 FishHarvest.x_0 = 0.4
 FishHarvest.T = 10
 
-# Lab7 parameters default value
-Lab7.A = 0.1
-Lab7.b = 0.525
-Lab7.d = 0.5
-Lab7.c = 0.0001
-Lab7.e = 0.5
-Lab7.g = 0.1
-Lab7.a = 0.2
-Lab7.x_0 = (1000,100,50,15)
-Lab7.T = 20
+# EpidemicSEIRN parameters default value
+EpidemicSEIRN.A = 0.1
+EpidemicSEIRN.b = 0.525
+EpidemicSEIRN.d = 0.5
+EpidemicSEIRN.c = 0.0001
+EpidemicSEIRN.e = 0.5
+EpidemicSEIRN.g = 0.1
+EpidemicSEIRN.a = 0.2
+EpidemicSEIRN.x_0 = (1000,100,50,15)
+EpidemicSEIRN.T = 20
 
-# Lab8 parameters default value
-Lab8.s = 10
-Lab8.m_1 = 0.02
-Lab8.m_2 = 0.5
-Lab8.m_3 = 4.4
-Lab8.r = 0.03
-Lab8.T_max = 1500
-Lab8.k = 0.000024
-Lab8.N = 300
-Lab8.x_0 = (800,0.04,1.5)
-Lab8.A = 0.05
-Lab8.T = 20
+# HIVTreatment parameters default value
+HIVTreatment.s = 10
+HIVTreatment.m_1 = 0.02
+HIVTreatment.m_2 = 0.5
+HIVTreatment.m_3 = 4.4
+HIVTreatment.r = 0.03
+HIVTreatment.T_max = 1500
+HIVTreatment.k = 0.000024
+HIVTreatment.N = 300
+HIVTreatment.x_0 = (800,0.04,1.5)
+HIVTreatment.A = 0.05
+HIVTreatment.T = 20
 
-# Lab9 parameters default value
-Lab9.r = 0.1
-Lab9.K = 0.75
-Lab9.m_p = 0.5
-Lab9.m_f = 0.5
-Lab9.c_p = 10000
-Lab9.c_f = 10
-Lab9.x_0 = (0.4,0.2,0.0)
-Lab9.T = 25
+# BearPopulations parameters default value
+BearPopulations.r = 0.1
+BearPopulations.K = 0.75
+BearPopulations.m_p = 0.5
+BearPopulations.m_f = 0.5
+BearPopulations.c_p = 10000
+BearPopulations.c_f = 10
+BearPopulations.x_0 = (0.4,0.2,0.0)
+BearPopulations.T = 25
 
 # Lab10 model parameters default values
 Lab10.a = 1
