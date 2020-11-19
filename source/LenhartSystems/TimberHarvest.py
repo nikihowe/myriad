@@ -6,20 +6,48 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab11(FiniteHorizonControlSystem):
+class TimberHarvest(FiniteHorizonControlSystem):
     def __init__(self, r, k, x_0, T):
-        self.adj_T = None # final condition over the adjoint
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 18, Lab 11)
+        Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
+        The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.
+
+        This environment is an example of model where the cost is linear w/r to the control. It can still be solved by
+        the FBSM algorithm since the optimal control are of the "bang-bang" type, i.e. it jumps from one boundary value
+        to the other.
+
+        In this problem we are trying to optimize the tree harvesting in a timber farm, resulting in the production of
+        raw timber (x(t)). The harvest percentage over the land is low enough that we can assumed that there will always
+        be enough mature trees ready for harvest. The timbers are sold right after their production, generating a income
+        proportional to the production at every time t. The operators then have the choice of reinvesting a fraction of
+        this revenue directly into the plant (u(t)), thus stimulating future production. But, this reinvestment come at the
+        price of loosing potential interest return over the period T is the revenue had been placed. The control problem
+        is therefore:
+
+        .. math::
+
+            \max_{u} \quad &\int_0^T e^{-rt}x(t)\[1 - u(t)] dt \\
+            \mathrm{s.t.}\qquad & x'(t) = kx(t)u(t) ,\; x(0) > 0 \\
+            & 0 \leq u(t) \leq 1
+
+        :param r: Discount rate encouraging investment early on
+        :param k: Return constant of reinvesting into the plant, taking into account cost of labor and land
+        :param x_0: Initial raw timber production
+        :param T: Horizon
+        """
+        self.adj_T = None # Final condition over the adjoint, if any
         self.r = r
         self.k = k
 
         super().__init__(
             x_0=np.array([
                 x_0,
-            ]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
-                [np.NINF, np.inf],
+            ]),                     # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [0, 1],
             ]),
             terminal_cost=False,

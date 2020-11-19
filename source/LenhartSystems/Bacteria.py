@@ -17,6 +17,7 @@ class Bacteria(FiniteHorizonControlSystem):
         concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
 
         .. math::
+
             \max_u \quad &Cx(1) - \int_0^1 u^2(t) dt \\
             \mathrm{s.t.}\qquad & x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\
             & x(0)=x_0, \; A,B,C \geq 0

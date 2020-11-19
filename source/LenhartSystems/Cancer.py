@@ -21,6 +21,7 @@ class Cancer(FiniteHorizonControlSystem):
         We are trying to minimize:
 
         .. math::
+
             \min_u \quad &\int_0^T aN^2(t) + u^2(t) dt \\
             \mathrm{s.t.}\qquad & x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
             & x(0)=x_0, \; u(t) \geq 0

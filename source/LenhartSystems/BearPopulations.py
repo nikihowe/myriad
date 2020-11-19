@@ -22,6 +22,7 @@ class BearPopulations(FiniteHorizonControlSystem):
         park area. The goal is thus to minimize:
 
         .. math::
+
             \min_{u_p,u_f} \quad &\int_0^T x_2(t) + c_p u_p(t)^2 + c_f u_f(t)^2  dt \\
             \mathrm{s.t.}\qquad & x_0'(t) = rx_0(t) - \frac{r}{K}x_0(t)^2 + \frac{m_f r}{K}\big( 1 - \frac{x_0(t)}{K} \big)x_1(t)^2 - u_p(t)x_0(t),\; x_0(0)\geq 0 \\
             & x_1'(t) = rx_1(t) - \frac{r}{K}x_1(t)^2 + \frac{m_p r}{K}\big( 1 - \frac{x_1(t)}{K} \big)x_0(t)^2 - u_f(t)x_1(t),\; x_1(0)\geq 0 \\

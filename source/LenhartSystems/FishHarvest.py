@@ -20,6 +20,7 @@ class FishHarvest(FiniteHorizonControlSystem):
         We are trying to maximize:
 
         .. math::
+
             \max_u \quad &\int_0^T A \frac{kt}{t+1}x(t)u(t) - u^2(t) dt \\
             \mathrm{s.t.}\qquad & x'(t) = -(m+u(t)) x(t) \\
             & x(0)=x_0, \; 0\leq u(t) \leq M \; A > 0

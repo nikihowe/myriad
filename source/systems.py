@@ -46,10 +46,10 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.EpidemicSEIRN import EpidemicSEIRN
   from .LenhartSystems.HIVTreatment import HIVTreatment
   from .LenhartSystems.BearPopulations import BearPopulations
-  from .LenhartSystems.Lab10 import Lab10
-  from .LenhartSystems.Lab11 import Lab11
-  from .LenhartSystems.Lab12 import Lab12
-  from .LenhartSystems.Lab13 import Lab13
+  from .LenhartSystems.Glucose import Glucose
+  from .LenhartSystems.TimberHarvest import TimberHarvest
+  from .LenhartSystems.Bioreactor import Bioreactor
+  from .LenhartSystems.PredatorPrey import PredatorPrey
   from .LenhartSystems.Lab14 import Lab14
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
@@ -77,14 +77,14 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return HIVTreatment()
   elif hp.system == SystemType.BEARPOPULATIONS:
     return BearPopulations()
-  elif hp.system == SystemType.LENHART10:
-    return Lab10()
-  elif hp.system == SystemType.LENHART11:
-    return Lab11()
-  elif hp.system == SystemType.LENHART12:
-    return Lab12()
-  elif hp.system == SystemType.LENHART13:
-    return Lab13()
+  elif hp.system == SystemType.GLUCOSE:
+    return Glucose()
+  elif hp.system == SystemType.TIMBERHARVEST:
+    return TimberHarvest()
+  elif hp.system == SystemType.BIOREACTOR:
+    return Bioreactor()
+  elif hp.system == SystemType.PREDATORPREY:
+    return PredatorPrey()
   elif hp.system == SystemType.LENHART14:
     return Lab14()
   else:

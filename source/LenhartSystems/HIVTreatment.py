@@ -19,6 +19,7 @@ class HIVTreatment(FiniteHorizonControlSystem):
         Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
 
          .. math::
+
             \max_u \quad &\int_0^T A x_0(t) - (1-u(t))^2 dt \\
             \mathrm{s.t.}\qquad & x_0'(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)> 0 \\
             & x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)> 0 \\

@@ -24,6 +24,7 @@ class EpidemicSEIRN(FiniteHorizonControlSystem):  #TODO : Add R calculation at t
         Finally, note that all individuals are considered to be born susceptible. We want to minimize:
 
         .. math::
+
             \min_u \quad &\int_0^T A x_0(t) + u^2(t) dt \\
             \mathrm{s.t.}\qquad & x_0'(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \\
             & x_1'(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \\

@@ -16,6 +16,7 @@ class MoldFungicide(FiniteHorizonControlSystem):
         the amount of fungicide added. We are trying to minimize:
 
         .. math::
+
             \min_u \quad &\int_0^T Ax^2(t) + u^2(t) dt \\
             \mathrm{s.t.}\qquad & x'(t) = r(M - x(t)) - u(t)x(t) \\
             & x(0)=x_0 \;

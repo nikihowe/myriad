@@ -7,10 +7,10 @@ import source.LenhartSystems.FishHarvest
 import source.LenhartSystems.EpidemicSEIRN
 import source.LenhartSystems.HIVTreatment
 import source.LenhartSystems.BearPopulations
-import source.LenhartSystems.Lab10
-import source.LenhartSystems.Lab11
-import source.LenhartSystems.Lab12
-import source.LenhartSystems.Lab13
+import source.LenhartSystems.Glucose
+import source.LenhartSystems.TimberHarvest
+import source.LenhartSystems.Bioreactor
+import source.LenhartSystems.PredatorPrey
 import source.LenhartSystems.Lab14
 
 # SimpleCase parameters default values
@@ -91,39 +91,39 @@ BearPopulations.c_f = 10
 BearPopulations.x_0 = (0.4,0.2,0.0)
 BearPopulations.T = 25
 
-# Lab10 model parameters default values
-Lab10.a = 1
-Lab10.b = 1
-Lab10.c = 1
-Lab10.A = 2
-Lab10.l = 0.5
-Lab10.x_0 = (0.75, 0.0)
-Lab10.T = 0.2
+# Glucose model parameters default values
+Glucose.a = 1
+Glucose.b = 1
+Glucose.c = 1
+Glucose.A = 2
+Glucose.l = 0.5
+Glucose.x_0 = (0.75, 0.0)
+Glucose.T = 0.2
 
-# Lab11 model parameters default values
-Lab11.r = 0.0
-Lab11.k = 1.0
-Lab11.x_0 = 100
-Lab11.T = 5
+# TimberHarvest model parameters default values
+TimberHarvest.r = 0.0
+TimberHarvest.k = 1.0
+TimberHarvest.x_0 = 100
+TimberHarvest.T = 5
 
-# Lab12 model parameters default values
-Lab12.K = 2
-Lab12.G = 1
-Lab12.D = 1
-Lab12.M = 1
-Lab12.x_0 = (0.5, 0.1)
-Lab12.T = 2
+# Bioreactor model parameters default values
+Bioreactor.K = 2
+Bioreactor.G = 1
+Bioreactor.D = 1
+Bioreactor.M = 1
+Bioreactor.x_0 = (0.5, 0.1)
+Bioreactor.T = 2
 
-# Lab13 model parameters default values
-Lab13.d_1 = 0.1
-Lab13.d_2 = 0.1
-Lab13.A = 1
-Lab13.B = 5
-Lab13.guess_a = -0.52
-Lab13.guess_b = -0.5
-Lab13.M = 1
-Lab13.x_0 = (10, 1, 0)
-Lab13.T = 10
+# PredatorPrey model parameters default values
+PredatorPrey.d_1 = 0.1
+PredatorPrey.d_2 = 0.1
+PredatorPrey.A = 1
+PredatorPrey.B = 5
+PredatorPrey.guess_a = -0.52
+PredatorPrey.guess_b = -0.5
+PredatorPrey.M = 1
+PredatorPrey.x_0 = (10, 1, 0)
+PredatorPrey.T = 10
 
 # Lab14 model parameters default values
 Lab14.B = 1

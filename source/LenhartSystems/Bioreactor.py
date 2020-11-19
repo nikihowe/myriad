@@ -6,9 +6,37 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab12(FiniteHorizonControlSystem): #TODO: Add resolution for z state after optimization
+class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state after optimization
     def __init__(self, K, G, D, M, x_0, T):
-        self.adj_T = None # final condition over the adjoint
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 19, Lab 12)
+        Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
+        The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
+        1995.
+
+        This environment is an example of model where the cost is linear w/r to the control. It can still be solved by
+        the FBSM algorithm since the optimal control are of the "bang-bang" type, i.e. it jumps from one boundary value
+        to the other.
+
+        This environment try to model the evolution of a bacteria population (x(t)) that helps in the degradation of a
+        contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
+        growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
+        allows for the simplification of the problem into:
+
+        .. math::
+
+            \max_{u} \quad &\int_0^T Kx(t) - u(t) dt \\
+            \mathrm{s.t.}\qquad & x'(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \\
+            & 0 \leq u(t) \leq M
+
+        :param K: Weight parameter
+        :param G: Maximum growth rate of the bacteria population
+        :param D: Natural  death rate of the bacteria population
+        :param M: Physical limitation into the application of the chemical nutrient
+        :param x_0: Initial bacteria concentration
+        :param T: Horizon
+        """
+        self.adj_T = None # Final condition over the adjoint, if any
         self.K = K
         self.G = G
         self.D = D
@@ -16,11 +44,11 @@ class Lab12(FiniteHorizonControlSystem): #TODO: Add resolution for z state after
         super().__init__(
             x_0=np.array([
                 x_0[0],
-            ]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
-                [np.NINF, np.inf],
+            ]),                     # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [0, M],
             ]),
             terminal_cost=False,

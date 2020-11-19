@@ -6,9 +6,39 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab10(FiniteHorizonControlSystem):
+class Glucose(FiniteHorizonControlSystem):
     def __init__(self, a, b, c, A, l, x_0, T):
-        self.adj_T = None # final condition over the adjoint
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 16, Lab 10)
+        Model is presented in more details in Martin Eisen. Mathematical Methods and Models in the Biological Sciences.
+        Prentice Hall, Englewood Cliffs, New Jersey, 1988.
+
+        This environment try to model the blood glucose (x_0(t0) level of a diabetic person in the presence of injected
+        insulin (u(t)) and the net hormonal concentration (x_1(t)) of the insulin in the person system. In this model,
+        the diabetic person is assumed to be unable to produce natural insulin via its pancreas.
+
+        Note that the model was developed for regulating blood glucose levels over a short window of time. As thus, T
+        should be kept under 0.45 for the model to make sense (T here is measured in day, 0.45 corresponds to ~11 hours)
+
+        The goal of the control is to maintain the blood glucose level close to a desired level, l, while also taking
+        into account that there is a cost associated to the treatment. Thus the objective is:
+
+        .. math::
+
+            \min_{u} \quad &\int_0^T A(x_0(t)-l)^2 + u_f(t)^2  dt \\
+            \mathrm{s.t.}\qquad & x_0'(t) = -ax_0(t) - bx_1(t) ,\; x_0(0) > 0 \\
+            & x_1'(t) = -cx_1(t) + u(t) ,\; x_1(0)=0 \\
+            & a,b,c > 0 \; A \geq 0
+
+        :param a: Rate of decrease in glucose level resulting of its use by the body
+        :param b: Rate of decrease in glucose level resulting from its degradation provoked by insulin
+        :param c: Rate of degradation of the insulin
+        :param A: Weight parameter balancing the objective
+        :param l: Desired level of blood glucose
+        :param x_0: Initial blood glucose level and insulin level (x_0,x_1)
+        :param T: Horizon (Should be kept under 0.45)
+        """
+        self.adj_T = None # Final condition over the adjoint, if any
         self.a = a
         self.b = b
         self.c = c
@@ -19,11 +49,11 @@ class Lab10(FiniteHorizonControlSystem):
             x_0=np.array([
                 x_0[0],
                 x_0[1],
-            ]),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([  # no bounds here
-                [np.NINF, np.inf],
+            ]),                     # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],
             ]),
