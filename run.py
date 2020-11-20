@@ -50,7 +50,7 @@ def main(unused_argv):
   onp.random.seed(hp.seed)
 
   #Load config, then build system
-  gin_files = ['./source/configs/default.gin']
+  gin_files = ['./source/gin-configs/default.gin']
   gin_bindings = FLAGS.gin_bindings
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
@@ -59,10 +59,16 @@ def main(unused_argv):
 
   # Run experiment
   optimizer = get_optimizer(hp, cfg, system)
-  x, u, adj = optimizer.solve()  # TODO: accommodate for when solve does not return an adjoint (direct methods)
+  if optimizer.require_adj:
+      x, u, adj = optimizer.solve()
 
-  if cfg.plot_results:
-    system.plot_solution(x, u, adj)
+      if cfg.plot_results:
+        system.plot_solution(x, u, adj) #TODO: Make adj an optional argument of Lenhart systems
+  else:
+      x, u = optimizer.solve()
+
+      if cfg.plot_results:
+          system.plot_solution(x, u)
 
 if __name__=='__main__':
   app.run(main)

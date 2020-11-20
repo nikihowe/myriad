@@ -16,7 +16,7 @@ class FiniteHorizonControlSystem(object):
   T: float # duration of trajectory
   bounds: np.ndarray # State and control bounds
   terminal_cost: bool # Whether only the final state and control are inputs to the cost
-  discrete: bool # Whether we are working with a system with continuous cost or not
+  discrete: bool = False # Whether we are working with a system with continuous cost or not
 
   # def __post_init__(self):
   #   self.x_0 = self.x_0.astype(np.float64)
@@ -50,7 +50,7 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
   from .LenhartSystems.TimberHarvest import TimberHarvest
   from .LenhartSystems.Bioreactor import Bioreactor
   from .LenhartSystems.PredatorPrey import PredatorPrey
-  from .LenhartSystems.Lab14 import Lab14
+  from .LenhartSystems.InvasivePlant import InvasivePlant
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
   elif hp.system == SystemType.VANDERPOL:
@@ -85,8 +85,8 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return Bioreactor()
   elif hp.system == SystemType.PREDATORPREY:
     return PredatorPrey()
-  elif hp.system == SystemType.LENHART14:
-    return Lab14()
+  elif hp.system == SystemType.INVASIVEPLANT:
+    return InvasivePlant()
   else:
     raise KeyError
 

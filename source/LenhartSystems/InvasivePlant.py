@@ -6,19 +6,49 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 @gin.configurable
-class Lab14(FiniteHorizonControlSystem):
+class InvasivePlant(FiniteHorizonControlSystem):
     def __init__(self, B, k, eps, x_0, T):
-        self.adj_T = np.ones(5) # final condition over the adjoint
+        """
+        Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 24, Lab 14)
+        This problem was first look at in M. E. Moody and R. N. Mack. Controlling the spread of plant invasions:
+        the importance of nascent foci. Journal of Applied Ecology, 25:1009–21, 1988.
+        The general formulation that the we look at in this environment was presented in A. J. Whittle, S. Lenhart, and
+        L. J. Gross. Optimal control for management of an invasive plant species. Mathematical Biosciences and
+        Engineering, to appear, 2007.
+
+        The scenario considered in the environment implemented here has been modified from its original formulation so
+        so that the state terminal cost term is linear instead of quadratic. Obviously, the optimal solutions are
+        different from the original problem, but the behaviors are similar.
+
+        In this environment, we look at the growth of an invasive species that has a main focus population (x_i) and
+        4 smaller satellite populations (x_{i\neq j}. The area occupied by the different population are assumed to be
+        circular, with a growth that can be represented via the total radius of the population area. Annual intervention
+        are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the intervention are
+        annual, we are in presence of a discrete time model. We aim to:
+
+        .. math::
+
+            \min_{u} \quad &\sum_{j=0}^4 \bigg[x_{j,T} + B\sum_{t=0}^{T-1} u_{j,t}^2 \bigg] \\
+            \mathrm{s.t.}\qquad & x_{j,t+1} = \bigg( x_{j,t} + \frac{k x_{j,t}}{\epsilon + x_{j,t}}\bigg) (1-u_{j,t}) ,\; x_{j,0} = \rho_j \\
+            & 0 \leq u_{j,t} \leq 1
+
+        :param B: Positive weight parameter
+        :param k: Spread rate of the population
+        :param eps: Small constant, used to scale the spread by :math:`\frac{r}{\epsilon+r}` so eradication is possible
+        :param x_0: Initial radius of the different populations
+        :param T: Horizon
+        """
+        self.adj_T = np.ones(5) # Final condition over the adjoint, if any
         self.B = B
         self.k = k
         self.eps = eps
 
         super().__init__(
-            x_0=np.array(x_0),  # Starting state
-            x_T=None,
-            T=T,  # duration of experiment
-            bounds=np.array([
-                [np.NINF, np.inf],
+            x_0=np.array(x_0),      # Starting state
+            x_T=None,               # Terminal state, if any
+            T=T,                    # Duration of experiment
+            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],
                 [np.NINF, np.inf],

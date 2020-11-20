@@ -11,7 +11,7 @@ import source.LenhartSystems.Glucose
 import source.LenhartSystems.TimberHarvest
 import source.LenhartSystems.Bioreactor
 import source.LenhartSystems.PredatorPrey
-import source.LenhartSystems.Lab14
+import source.LenhartSystems.InvasivePlant
 
 # SimpleCase parameters default values
 SimpleCase.A = 1.0
@@ -125,9 +125,9 @@ PredatorPrey.M = 1
 PredatorPrey.x_0 = (10, 1, 0)
 PredatorPrey.T = 10
 
-# Lab14 model parameters default values
-Lab14.B = 1
-Lab14.k = 1
-Lab14.eps = 0.01
-Lab14.x_0 = (0.5, 1.0, 1.5, 2.0, 10.0)
-Lab14.T = 10
+# InvasivePlant model parameters default values
+InvasivePlant.B = 1
+InvasivePlant.k = 1
+InvasivePlant.eps = 0.01
+InvasivePlant.x_0 = (0.5, 1.0, 1.5, 2.0, 10.0)
+InvasivePlant.T = 10

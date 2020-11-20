@@ -23,6 +23,7 @@ class TrajectoryOptimizer(object):
   bounds: np.ndarray
   guess: np.ndarray
   unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+  require_adj: bool = False
 
   def __post_init__(self):
     if self.cfg.verbose:
@@ -168,6 +169,7 @@ class IndirectMethodOptimizer(object):
   bounds: np.ndarray   # Possible bounds on x_t and u_t
   guess: np.ndarray    # Initial guess on x_t, u_t and adj_t
   unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+  require_adj: bool = True
 
 
   def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:  #return (optimal_state, optimal_control, optimal_adj)
