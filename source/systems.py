@@ -311,7 +311,7 @@ class Tumour(FiniteHorizonControlSystem):
     _y = np.squeeze(u_t)
     return np.asarray([_p, _q, _y])
   
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+  def cost(self, x_t: np.ndarray, u_t: float) -> float: #TODO this need to be put to zero...
     p, q, y = x_t
     return p
 

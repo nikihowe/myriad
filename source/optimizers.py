@@ -75,8 +75,13 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
   def __init__(self, hp: HParams, cfg: Config, system: FiniteHorizonControlSystem):
     N = hp.intervals # Segments
     h = system.T / N # Segment length
+    state_shape = system.x_0.shape[0]
+    control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = np.zeros((N+1,1)) + system.bounds[-1].mean()
+    u_guess = np.zeros((N+1, control_shape))
+    u_mean = system.bounds[-1 * control_shape:].mean()
+    if not np.isnan(np.sum(u_mean)): #handle bounds with infinite values
+      u_guess += u_mean
     if system.x_T is not None:
       x_guess = np.linspace(system.x_0, system.x_T, num=N+1)
     else:
@@ -121,8 +126,13 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     N_u = hp.intervals * hp.controls_per_interval
     h_x = system.T / N_x
     h_u = system.T / N_u
+    state_shape = system.x_0.shape[0]
+    self.control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = np.zeros((N_u,1)) + system.bounds[-1].mean()
+    u_guess = np.zeros((N_u,self.control_shape))
+    u_mean = system.bounds[-1 * self.control_shape:].mean()
+    if not np.isnan(np.sum(u_mean)):  # handle bounds with infinite values
+      u_guess += u_mean
     if system.x_T is not None:
       x_guess = np.linspace(system.x_0, system.x_T, num=N_x+1)[:-1]
     else:
@@ -141,7 +151,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     
     def constraints(variables: np.ndarray) -> np.ndarray:
       x, u = unravel(variables)
-      u = u.reshape(hp.intervals, hp.controls_per_interval)
+      u = u.reshape(hp.intervals, self.control_shape, hp.controls_per_interval)
       px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
       if system.x_T is not None:
         ex = np.concatenate((x[1:], system.x_T[np.newaxis]))
