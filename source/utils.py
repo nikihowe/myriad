@@ -20,7 +20,6 @@ def integrate(
     return x_t1 + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
   fn = lambda x_t, idx: [rk4_step(x_t, u[idx])] * 2
-
   x_T, ys = lax.scan(fn, x_0, np.arange(N))
   return x_T, np.concatenate((x_0[None], ys))
 

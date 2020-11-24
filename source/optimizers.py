@@ -101,7 +101,7 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
     else:
       _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
     guess, unravel = ravel_pytree((x_guess, u_guess))
-    self.x_guess, self.u_guess= x_guess, u_guess
+    self.x_guess, self.u_guess = x_guess, u_guess
 
     def objective(variables: np.ndarray) -> float:
       def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
@@ -150,9 +150,6 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
 
-    ####
-    # Runnable, but distort solution when x_T is not None
-
     # if system.x_T is not None:
     #   if system.x_T[0] is not None:
     #     x_guess = np.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
@@ -176,7 +173,8 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     def objective(variables: np.ndarray) -> float:
       _, u = unravel(variables)
-      t = np.linspace(0, system.T, num=N_u+1)[:-1] # Support cost function with dependency on t
+      t = np.linspace(0, system.T, num=N_x+1)[:-1] # Support cost function with dependency on t
+      t = np.repeat(t, hp.controls_per_interval)
       _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
       x = x[1:]
       if system.terminal_cost:
@@ -186,11 +184,11 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     
     def constraints(variables: np.ndarray) -> np.ndarray:
       x, u = unravel(variables)
-      u = u.reshape(hp.intervals, control_shape, hp.controls_per_interval)
-      px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
-
-      ####
-      #Runnable, but distort solution when x_T is not None
+      print(x.shape)
+      print(u.shape)
+      u = u.reshape(control_shape, hp.intervals, hp.controls_per_interval) # TODO: This is where it fails !!
+      print(u.shape)
+      px, _ = vmap(integrate, in_axes=(None, 0, 1, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
 
       # if system.x_T is not None:
       #   if system.x_T[0] is not None:
