@@ -120,14 +120,14 @@ class CartPole(FiniteHorizonControlSystem):
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
     q1, q2, q̇1, q̇2 = x_t
     # Eq. 6.1
-    q̈1 = (self.l * self.m2 * np.sin(q2) * q̇2**2 + u_t + self.m2 * self.g * np.cos(q2) * np.sin(q2)) / (self.m1 + self.m2 * (1 - np.cos(q2)**2))
+    q̈1 = (self.l * self.m2 * np.sin(q2) * q̇2**2 + u_t[0] + self.m2 * self.g * np.cos(q2) * np.sin(q2)) / (self.m1 + self.m2 * (1 - np.cos(q2)**2))
     q̈1 = np.squeeze(q̈1)
     # Eq. 6.2
-    q̈2 = - (self.l * self.m2 * np.cos(q2) * q̇2**2 + u_t * np.cos(q2) + (self.m1 + self.m2) * self.g * np.sin(q2)) / (self.l * self.m1 + self.l * self.m2 * (1 - np.cos(q2)**2))
+    q̈2 = - (self.l * self.m2 * np.cos(q2) * q̇2**2 + u_t[0] * np.cos(q2) + (self.m1 + self.m2) * self.g * np.sin(q2)) / (self.l * self.m1 + self.l * self.m2 * (1 - np.cos(q2)**2))
     q̈2 = np.squeeze(q̈2)
     return np.array([q̇1, q̇2, q̈1, q̈2])
   
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+  def cost(self, x_t: np.ndarray, u_t: float, t: float) -> float:
     # Eq. 6.3
     return u_t ** 2
   
@@ -180,11 +180,11 @@ class VanDerPol(FiniteHorizonControlSystem):
 
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
     x0, x1 = x_t
-    _x0 = np.squeeze((1. - x1**2) * x0 - x1 + u_t)
+    _x0 = np.squeeze((1. - x1**2) * x0 - x1 + u_t[0])
     _x1 = np.squeeze(x0)
     return np.asarray([_x0, _x1])
   
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+  def cost(self, x_t: np.ndarray, u_t: float, t:float) -> float:
     return x_t.T @ x_t + u_t ** 2
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
@@ -249,7 +249,7 @@ class SEIR(FiniteHorizonControlSystem):
     ẏ_t = np.array([Ṡ, Ė, İ, Ṅ])
     return ẏ_t
   
-  def cost(self, y_t: np.ndarray, u_t: np.float64) -> np.float64:
+  def cost(self, y_t: np.ndarray, u_t: np.float64, t:float) -> np.float64:
     return self.A * y_t[2] + u_t ** 2
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
@@ -310,9 +310,12 @@ class Tumour(FiniteHorizonControlSystem):
     _q = np.squeeze(q * (self.b - (self.mu + self.d * p**(2/3) + self.G * u_t)))
     _y = np.squeeze(u_t)
     return np.asarray([_p, _q, _y])
-  
-  def cost(self, x_t: np.ndarray, u_t: float) -> float: #TODO this need to be put to zero...
-    p, q, y = x_t
+
+  def cost(self, x_t: np.ndarray, u_t: float, t: float) -> float:
+    return 0
+
+  def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float: #TODO this need to be put to zero...
+    p, q, y = x_T
     return p
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:

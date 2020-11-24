@@ -98,12 +98,12 @@ Glucose.c = 1
 Glucose.A = 2
 Glucose.l = 0.5
 Glucose.x_0 = (0.75, 0.0)
-Glucose.T = 0.4
+Glucose.T = 0.2
 
 # TimberHarvest model parameters default values
 TimberHarvest.r = 0.0
 TimberHarvest.k = 1.0
-TimberHarvest.x_0 = 100
+TimberHarvest.x_0 = 100.0
 TimberHarvest.T = 5
 
 # Bioreactor model parameters default values
@@ -122,7 +122,7 @@ PredatorPrey.B = 5
 PredatorPrey.guess_a = -0.52
 PredatorPrey.guess_b = -0.5
 PredatorPrey.M = 1
-PredatorPrey.x_0 = (10, 1, 0)
+PredatorPrey.x_0 = (10.0, 1.0, 0.0)
 PredatorPrey.T = 10
 
 # InvasivePlant model parameters default values

@@ -55,7 +55,7 @@ class Glucose(FiniteHorizonControlSystem):
             bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
                 [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
-                [np.NINF, np.inf],
+                [0, np.inf],
             ]),
             terminal_cost=False,
             discrete=False,
@@ -69,7 +69,7 @@ class Glucose(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray = None) -> float:
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return self.A*(x_t[0]-self.l)**2 + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -94,6 +94,8 @@ class Glucose(FiniteHorizonControlSystem):
             flag = False
         else:
             flag = True
+
+        x, u, adj = x.T, u.T, adj.T
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])

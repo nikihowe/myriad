@@ -55,15 +55,15 @@ class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state 
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         d_x = np.asarray([
             self.G*u_t[0]*x_t[0] - self.D*x_t[0]**2
             ])
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.K*x_t[0] - u_t[0]
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
+        return -self.K*x_t[0] + u_t[0]  # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
@@ -77,9 +77,16 @@ class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state 
 
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
+
+        # debug : #TODO remove after making adj correctly an option
+        if adj is None:
+            adj = u.copy()  # Only for testing #TODO remove after test
+            flag = False
+        else:
+            flag = True
 
         x, u, adj = x.T, u.T, adj.T
 
@@ -105,12 +112,13 @@ class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state 
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        for idx, adj_i in enumerate(adj):
-            if idx in to_print:
-                plt.plot(ts_adj, adj_i)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+        if flag:
+            plt.subplot(3, 1, 3)
+            for idx, adj_i in enumerate(adj):
+                if idx in to_print:
+                    plt.plot(ts_adj, adj_i)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

@@ -61,7 +61,6 @@ def main(unused_argv):
   optimizer = get_optimizer(hp, cfg, system)
   if optimizer.require_adj:
       x, u, adj = optimizer.solve()
-      print(u)
 
       if cfg.plot_results:
         system.plot_solution(x, u, adj)

@@ -63,7 +63,7 @@ class InvasivePlant(FiniteHorizonControlSystem):
             discrete=True,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         next_x = (x_t + x_t*self.k/(self.eps + x_t)) * (1 - u_t)
 
         return next_x
