@@ -65,7 +65,7 @@ class BearPopulations(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         k = self.r/self.K
         k2 = self.r/self.K**2
 
@@ -77,7 +77,7 @@ class BearPopulations(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return x_t[2] + self.c_p*u_t[0]**2 + self.c_f*u_t[1]**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -102,9 +102,16 @@ class BearPopulations(FiniteHorizonControlSystem):
 
         return np.hstack((char_0,char_1))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
+
+        # debug : #TODO remove after making adj correctly an option
+        if adj is None:
+            adj = u.copy()  # Only for testing #TODO remove after test
+            flag = False
+        else:
+            flag = True
 
         x, u, adj = x.T, u.T, adj.T
 
@@ -130,12 +137,13 @@ class BearPopulations(FiniteHorizonControlSystem):
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        for idx, adj_i in enumerate(adj):
-            if idx in to_print:
-                plt.plot(ts_adj, adj_i)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+        if flag:
+            plt.subplot(3, 1, 3)
+            for idx, adj_i in enumerate(adj):
+                if idx in to_print:
+                    plt.plot(ts_adj, adj_i)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

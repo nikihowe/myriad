@@ -61,9 +61,10 @@ def main(unused_argv):
   optimizer = get_optimizer(hp, cfg, system)
   if optimizer.require_adj:
       x, u, adj = optimizer.solve()
+      print(u)
 
       if cfg.plot_results:
-        system.plot_solution(x, u, adj) #TODO: Make adj an optional argument of Lenhart systems
+        system.plot_solution(x, u, adj)
   else:
       x, u = optimizer.solve()
 

@@ -23,8 +23,8 @@ SimpleCase.T = 1
 # MoldFungicide parameters default values
 MoldFungicide.r = 0.3
 MoldFungicide.M = 10
-MoldFungicide.A = 1
-MoldFungicide.x_0 = 1
+MoldFungicide.A = 1.0
+MoldFungicide.x_0 = 1.0
 MoldFungicide.T = 5
 
 # Bacteria parameters default values
@@ -32,14 +32,14 @@ Bacteria.r = 1
 Bacteria.A = 1
 Bacteria.B = 12
 Bacteria.C = 1
-Bacteria.x_0 = 1
+Bacteria.x_0 = 1.0
 
 # SimpleCaseWithBounds parameters default values
 SimpleCaseWithBounds.A = 1
 SimpleCaseWithBounds.C = 4
 SimpleCaseWithBounds.M_1 = -1
 SimpleCaseWithBounds.M_2 = 2
-SimpleCaseWithBounds.x_0 = 1
+SimpleCaseWithBounds.x_0 = 1.0
 SimpleCaseWithBounds.T = 1
 
 # Cancer parameters default values
@@ -65,7 +65,7 @@ EpidemicSEIRN.c = 0.0001
 EpidemicSEIRN.e = 0.5
 EpidemicSEIRN.g = 0.1
 EpidemicSEIRN.a = 0.2
-EpidemicSEIRN.x_0 = (1000,100,50,15)
+EpidemicSEIRN.x_0 = (1000.0,100.0,50.0,15.0)
 EpidemicSEIRN.T = 20
 
 # HIVTreatment parameters default value
@@ -77,7 +77,7 @@ HIVTreatment.r = 0.03
 HIVTreatment.T_max = 1500
 HIVTreatment.k = 0.000024
 HIVTreatment.N = 300
-HIVTreatment.x_0 = (800,0.04,1.5)
+HIVTreatment.x_0 = (800.0,0.04,1.5)
 HIVTreatment.A = 0.05
 HIVTreatment.T = 20
 
@@ -98,7 +98,7 @@ Glucose.c = 1
 Glucose.A = 2
 Glucose.l = 0.5
 Glucose.x_0 = (0.75, 0.0)
-Glucose.T = 0.2
+Glucose.T = 0.4
 
 # TimberHarvest model parameters default values
 TimberHarvest.r = 0.0

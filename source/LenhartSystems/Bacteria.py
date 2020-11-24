@@ -32,6 +32,7 @@ class Bacteria(FiniteHorizonControlSystem):
         self.r = r
         self.A = A
         self.B = B
+        self.C = C
 
         super().__init__(
             x_0=np.array([x_0]),    # Starting state
@@ -41,17 +42,20 @@ class Bacteria(FiniteHorizonControlSystem):
                 [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
                 [np.NINF, np.inf],
             ]),
-            terminal_cost=False,
+            terminal_cost=True,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        d_x= self.r*x_t + self.A*u_t*x_t - self.B*u_t**2*np.exp(-x_t)
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
+        d_x= self.r*x_t + self.A*u_t[0]*x_t - self.B*u_t[0]**2*np.exp(-x_t)
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return u_t**2 #TODO: Terminal reward missing
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+        return u_t**2   # Maximization problem converted to minimization
+
+    def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float:
+        return -self.C*x_T
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return -adj_t*(self.r+self.A*u_t+self.B*u_t**2*np.exp(-x_t))
@@ -60,9 +64,16 @@ class Bacteria(FiniteHorizonControlSystem):
         char = adj_t*self.A*x_t/(2*(1+self.B*adj_t*np.exp(-x_t)))
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array, multi: bool = False) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array=None, multi: bool = False) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
+
+        # debug : #TODO remove after making adj correctly an option
+        if adj is None:
+            adj = u.copy()  # Only for testing #TODO remove after test
+            flag = False
+        else:
+            flag = True
 
         if not multi:
             x, u, adj = [x], [u], [adj]
@@ -83,11 +94,12 @@ class Bacteria(FiniteHorizonControlSystem):
         plt.title("Optimal use of chemical nutrient in dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        for adj_i in adj:
-            plt.plot(ts_adj, adj_i)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+        if flag:
+            plt.subplot(3, 1, 3)
+            for adj_i in adj:
+                plt.plot(ts_adj, adj_i)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

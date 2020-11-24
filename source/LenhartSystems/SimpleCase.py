@@ -47,8 +47,8 @@ class SimpleCase(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float: ## TODO : rename for max problem?
-        return -self.A*x_t + self.B*u_t**2
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+        return -self.A*x_t + self.B*u_t**2  # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return -self.A + x_t*adj_t

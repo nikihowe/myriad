@@ -58,16 +58,16 @@ class HIVTreatment(FiniteHorizonControlSystem):
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
             bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
+                [0, np.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [0, np.inf],
+                [0, np.inf],
                 [0, 1],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         d_x = np.asarray([
             self.s/(1+x_t[2]) - self.m_1*x_t[0] + self.r*x_t[0]*(1-(x_t[0]+x_t[1])/self.T_max) - u_t[0]*self.k*x_t[0]*x_t[2],
             u_t[0]*self.k*x_t[0]*x_t[2] - self.m_2*x_t[1],
@@ -77,7 +77,7 @@ class HIVTreatment(FiniteHorizonControlSystem):
         return d_x
 
     def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
-        return self.A*x_t[0] - (1-u_t)**2
+        return -self.A*x_t[0] + (1-u_t)**2  # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
@@ -91,9 +91,16 @@ class HIVTreatment(FiniteHorizonControlSystem):
         char = char.reshape(-1,1)
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
+
+        # debug : #TODO remove after making adj correctly an option
+        if adj is None:
+            adj = u.copy()  # Only for testing #TODO remove after test
+            flag = False
+        else:
+            flag = True
 
         x, u, adj = x.T, u.T, adj.T
 
@@ -103,7 +110,7 @@ class HIVTreatment(FiniteHorizonControlSystem):
 
         labels = ["Healthy cells", "Infected cells", "Viral charge"]
 
-        to_print = [2] #curves we want to print out
+        to_print = [0] #curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):
@@ -120,12 +127,14 @@ class HIVTreatment(FiniteHorizonControlSystem):
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        for idx, adj_i in enumerate(adj):
-            if idx in to_print:
-                plt.plot(ts_adj, adj_i)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+
+        if flag:
+            plt.subplot(3, 1, 3)
+            for idx, adj_i in enumerate(adj):
+                if idx in to_print:
+                    plt.plot(ts_adj, adj_i)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

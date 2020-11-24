@@ -61,7 +61,7 @@ class Glucose(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         d_x = np.asarray([
             -self.a*x_t[0] -self.b*x_t[1],
             -self.c*x_t[1] + u_t[0]
@@ -69,12 +69,12 @@ class Glucose(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float: ## TODO : rename for max problem?
-        return self.A*(x_t[0]-self.l)**2 + u_t[0]**2
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray = None) -> float:
+        return self.A*(x_t[0]-self.l)**2 + u_t**2
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.array([
-            -2*self.A*(x_t[0]-self.l) +adj_t[0]*self.a,
+            -2*self.A*(x_t[0]-self.l) + adj_t[0]*self.a,
             adj_t[0]*self.b + adj_t[1]*self.c
         ])
 
@@ -84,15 +84,16 @@ class Glucose(FiniteHorizonControlSystem):
 
         return char_0
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array=None) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        #debug : #TODO remove after making adj correctly an option
+        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj=u.copy() #Only for testing #TODO remove after test
-
-        x, u, adj = x.T, u.T, adj.T
+            adj = u.copy()  # Only for testing #TODO remove after test
+            flag = False
+        else:
+            flag = True
 
         ts_x = np.linspace(0, self.T, x[0].shape[0])
         ts_u = np.linspace(0, self.T, u[0].shape[0])
@@ -116,12 +117,13 @@ class Glucose(FiniteHorizonControlSystem):
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        for idx, adj_i in enumerate(adj):
-            if idx in to_print:
-                plt.plot(ts_adj, adj_i)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+        if flag:
+            plt.subplot(3, 1, 3)
+            for idx, adj_i in enumerate(adj):
+                if idx in to_print:
+                    plt.plot(ts_adj, adj_i)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

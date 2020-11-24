@@ -80,23 +80,24 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
 
     u_guess = np.zeros((N+1, control_shape))
     u_mean = system.bounds[-1 * control_shape:].mean()
-    if not np.isnan(np.sum(u_mean)): #handle bounds with infinite values
+    if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()): #handle bounds with infinite values
       u_guess += u_mean
     if system.x_T is not None:
       x_guess = np.linspace(system.x_0, system.x_T, num=N+1)
     else:
       _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
     guess, unravel = ravel_pytree((x_guess, u_guess))
-    self.x_guess, self.u_guess = x_guess, u_guess
+    self.x_guess, self.u_guess= x_guess, u_guess
 
     def objective(variables: np.ndarray) -> float:
-      def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float) -> float:
-        return (h/2) * (system.cost(x_t1, u_t1) + system.cost(x_t2, u_t2))
+      def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
+        return (h/2) * (system.cost(x_t1, u_t1, t1) + system.cost(x_t2, u_t2, t2))
       x, u = unravel(variables)
+      t = np.linspace(0, system.T, num=N + 1) # Support cost function with dependency on t
       if system.terminal_cost:
-        return system.cost(x[-1], u[-1])
+        return np.sum(system.terminal_cost_fn(x[-1], u[-1])) + np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
       else:
-        return np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
+        return np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
 
     def constraints(variables: np.ndarray) -> np.ndarray:
       def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float) -> np.ndarray:
@@ -106,14 +107,15 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
       x, u = unravel(variables)
       return np.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
     
-    x_bounds = onp.empty((N+1,system.bounds.shape[0]-1,2))
-    x_bounds[:,:,:] = system.bounds[:-1]
+    x_bounds = onp.empty((N+1,system.bounds.shape[0]-control_shape, 2))
+    x_bounds[:,:,:] = system.bounds[:-control_shape]
     x_bounds[0,:,:] = onp.expand_dims(system.x_0, 1)
     if system.x_T is not None:
-      x_bounds[-1,:,:] = onp.expand_dims(system.x_T, 1)
+      x_bounds[-control_shape,:,:] = onp.expand_dims(system.x_T, 1)
     x_bounds = x_bounds.reshape((-1,2))
-    u_bounds = onp.empty((N+1, 2))
-    u_bounds[:] = system.bounds[-1:]
+    u_bounds = onp.empty(((N+1)*control_shape, 2))
+    for i in range(control_shape,0,-1):
+      u_bounds[(control_shape-i)*(N+1):(control_shape-i+1)*(N+1)] = system.bounds[-i]
     bounds = np.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
@@ -127,11 +129,11 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     h_x = system.T / N_x
     h_u = system.T / N_u
     state_shape = system.x_0.shape[0]
-    self.control_shape = system.bounds.shape[0] - state_shape
+    control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = np.zeros((N_u,self.control_shape))
-    u_mean = system.bounds[-1 * self.control_shape:].mean()
-    if not np.isnan(np.sum(u_mean)):  # handle bounds with infinite values
+    u_guess = np.zeros((N_u, control_shape))
+    u_mean = system.bounds[-1 * control_shape:].mean()
+    if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
     if system.x_T is not None:
       x_guess = np.linspace(system.x_0, system.x_T, num=N_x+1)[:-1]
@@ -142,16 +144,17 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     def objective(variables: np.ndarray) -> float:
       _, u = unravel(variables)
+      t = np.linspace(0, system.T, num=N_u+1)[:-1] # Support cost function with dependency on t
       _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
       x = x[1:]
       if system.terminal_cost:
-        return system.cost(x[-1], u[-1])
+        return np.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * np.sum(vmap(system.cost)(x, u, t))
       else:
-        return h_u * np.sum(vmap(system.cost)(x, u))
+        return h_u * np.sum(vmap(system.cost)(x, u, t))
     
     def constraints(variables: np.ndarray) -> np.ndarray:
       x, u = unravel(variables)
-      u = u.reshape(hp.intervals, self.control_shape, hp.controls_per_interval)
+      u = u.reshape(hp.intervals, control_shape, hp.controls_per_interval)
       px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
       if system.x_T is not None:
         ex = np.concatenate((x[1:], system.x_T[np.newaxis]))
@@ -160,12 +163,14 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
         px = px[:-1]
       return np.ravel(px - ex)
 
-    x_bounds = onp.empty((hp.intervals, system.bounds.shape[0]-1, 2))
-    x_bounds[:,:,:] = system.bounds[:-1]
+    x_bounds = onp.empty((hp.intervals, system.bounds.shape[0]-control_shape, 2))
+    x_bounds[:,:,:] = system.bounds[:-control_shape]
     x_bounds[0,:,:] = np.expand_dims(system.x_0, 1)
     x_bounds = x_bounds.reshape((-1,2))
-    u_bounds = onp.empty((hp.intervals * hp.controls_per_interval, 2))
-    u_bounds[:] = system.bounds[-1:]
+    u_bounds = onp.empty((hp.intervals * hp.controls_per_interval*control_shape, 2))
+    N = hp.intervals * hp.controls_per_interval
+    for i in range(control_shape, 0, -1):
+      u_bounds[(control_shape - i) * (N + 1):(control_shape - i + 1) * (N + 1)] = system.bounds[-i]
     bounds = np.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 

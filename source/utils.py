@@ -9,8 +9,6 @@ def integrate(
   u: np.ndarray, # controls
   h: float, # step size
   N: int, # steps
-  v: Optional[np.ndarray] = None,
-  t: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
