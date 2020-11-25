@@ -149,3 +149,6 @@ paper/*.synctex.gz
 
 # macOS
 .DS_Store
+
+# Profiling
+out.prof
