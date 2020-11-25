@@ -5,8 +5,8 @@ from typing import Callable, Tuple
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
 from jax.ops import index_update
-import jax.numpy as np
-import numpy as onp
+import jax.numpy as jnp
+import numpy as np
 from ipopt import minimize_ipopt as minimize
 
 from .config import Config, HParams, OptimizerType, SystemType
@@ -18,11 +18,11 @@ from .utils import integrate, integrate_v2
 class TrajectoryOptimizer(object):
   hp: HParams
   cfg: Config
-  objective: Callable[[np.ndarray], float]
-  constraints: Callable[[np.ndarray], np.ndarray]
-  bounds: np.ndarray
-  guess: np.ndarray
-  unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+  objective: Callable[[jnp.ndarray], float]
+  constraints: Callable[[jnp.ndarray], jnp.ndarray]
+  bounds: jnp.ndarray
+  guess: jnp.ndarray
+  unravel: Callable[[jnp.ndarray], Tuple[jnp.ndarray, jnp.ndarray]]
   require_adj: bool = False
 
   def __post_init__(self):
@@ -37,7 +37,7 @@ class TrajectoryOptimizer(object):
     if self.hp.system == SystemType.INVASIVEPLANT:
       raise NotImplementedError("Discrete systems are not compatible with Trajectory optimizers")
 
-  def solve(self) -> Tuple[np.ndarray, np.ndarray]:
+  def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
     _t1 = time.time()
     solution = minimize(
       fun=jit(self.objective) if self.cfg.jit else self.objective,
@@ -81,56 +81,56 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = np.zeros((N+1, control_shape))
+    u_guess = jnp.zeros((N+1, control_shape))
     u_mean = system.bounds[-1 * control_shape:].mean()
-    if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()): #handle bounds with infinite values
+    if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()): #handle bounds with infinite values
       u_guess += u_mean
     if system.x_T is not None:
       if system.x_T[0] is not None:
-        x_guess = np.linspace(system.x_0[0], system.x_T[0], num=N + 1).reshape(-1,1)
+        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N + 1).reshape(-1,1)
       else:
         _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
         x_guess = x_guess[:, 0].reshape(-1,1)
       for i in range(1,len(system.x_T)):
         if system.x_T[i] is not None:
-          row_guess = np.linspace(system.x_0[i], system.x_T[i], num=N+1).reshape(-1,1)
+          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=N+1).reshape(-1,1)
         else :
           _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
           row_guess = row_guess[:, i].reshape(-1,1)
-        x_guess = np.hstack((x_guess,row_guess))
+        x_guess = jnp.hstack((x_guess,row_guess))
     else:
       _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
     guess, unravel = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
 
-    def objective(variables: np.ndarray) -> float:
-      def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
+    def objective(variables: jnp.ndarray) -> float:
+      def fn(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
         return (h/2) * (system.cost(x_t1, u_t1, t1) + system.cost(x_t2, u_t2, t2))
       x, u = unravel(variables)
-      t = np.linspace(0, system.T, num=N + 1) # Support cost function with dependency on t
+      t = jnp.linspace(0, system.T, num=N + 1) # Support cost function with dependency on t
       if system.terminal_cost:
-        return np.sum(system.terminal_cost_fn(x[-1], u[-1])) + np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
+        return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + jnp.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
       else:
-        return np.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
+        return jnp.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
 
-    def constraints(variables: np.ndarray) -> np.ndarray:
-      def fn(x_t1: np.ndarray, x_t2: np.ndarray, u_t1: float, u_t2: float) -> np.ndarray:
+    def constraints(variables: jnp.ndarray) -> jnp.ndarray:
+      def fn(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float) -> jnp.ndarray:
         left = (h/2) * (system.dynamics(x_t1, u_t1) + system.dynamics(x_t2, u_t2))
         right = x_t2 - x_t1
         return left - right
       x, u = unravel(variables)
-      return np.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
+      return jnp.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
     
-    x_bounds = onp.empty((N+1,system.bounds.shape[0]-control_shape, 2))
+    x_bounds = np.empty((N+1,system.bounds.shape[0]-control_shape, 2))
     x_bounds[:,:,:] = system.bounds[:-control_shape]
-    x_bounds[0,:,:] = onp.expand_dims(system.x_0, 1)
+    x_bounds[0,:,:] = np.expand_dims(system.x_0, 1)
     if system.x_T is not None:
-      x_bounds[-control_shape,:,:] = onp.expand_dims(system.x_T, 1)
+      x_bounds[-control_shape,:,:] = np.expand_dims(system.x_T, 1)
     x_bounds = x_bounds.reshape((-1,2))
-    u_bounds = onp.empty(((N+1)*control_shape, 2))
+    u_bounds = np.empty(((N+1)*control_shape, 2))
     for i in range(control_shape,0,-1):
       u_bounds[(control_shape-i)*(N+1):(control_shape-i+1)*(N+1)] = system.bounds[-i]
-    bounds = np.vstack((x_bounds, u_bounds))
+    bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
     super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel)
@@ -145,70 +145,70 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = np.zeros((N_u, control_shape))
+    u_guess = jnp.zeros((N_u, control_shape))
     u_mean = system.bounds[-1 * control_shape:].mean()
-    if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()):  # handle bounds with infinite values
+    if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
 
     if system.x_T is not None:
       if system.x_T[0] is not None:
-        x_guess = np.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
+        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
       else:
         x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
         x_guess = x_guess[:, 0].reshape(-1,1)
       for i in range(1,len(system.x_T)):
         if system.x_T[i] is not None:
-          row_guess = np.linspace(system.x_0[i], system.x_T[i], num=N_x+1)[:-1].reshape(-1,1)
+          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=N_x+1)[:-1].reshape(-1,1)
         else :
           row_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
           row_guess = row_guess[:, i].reshape(-1,1)
-        x_guess = np.hstack((x_guess,row_guess))
+        x_guess = jnp.hstack((x_guess,row_guess))
     else:
       x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
     guess, unravel = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
 
-    def objective(variables: np.ndarray) -> float:
+    def objective(variables: jnp.ndarray) -> float:
       _, u = unravel(variables)
-      t = np.linspace(0, system.T, num=N_x+1)[:-1] # Support cost function with dependency on t
-      t = np.repeat(t, hp.controls_per_interval)
+      t = jnp.linspace(0, system.T, num=N_x+1)[:-1] # Support cost function with dependency on t
+      t = jnp.repeat(t, hp.controls_per_interval)
       _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
       x = x[1:]
       if system.terminal_cost:
-        return np.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * np.sum(vmap(system.cost)(x, u, t))
+        return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * jnp.sum(vmap(system.cost)(x, u, t))
       else:
-        return h_u * np.sum(vmap(system.cost)(x, u, t))
+        return h_u * jnp.sum(vmap(system.cost)(x, u, t))
     
-    def constraints(variables: np.ndarray) -> np.ndarray:
+    def constraints(variables: jnp.ndarray) -> jnp.ndarray:
       x, u = unravel(variables)
       u = u.reshape(hp.intervals, hp.controls_per_interval, control_shape)
-      u = np.squeeze(u)
+      u = jnp.squeeze(u)
       px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
 
       if system.x_T is not None:
         if system.x_T[0] is not None:
-          ex = np.append(x[1:, 0], system.x_T[0]).reshape(-1, 1)
+          ex = jnp.append(x[1:, 0], system.x_T[0]).reshape(-1, 1)
         else:
           ex = x[:, 0].reshape(-1, 1)
         for col in range(1,x.shape[1]):
           if system.x_T[col] is not None:
-            ex = np.hstack((ex,np.append(x[1:,col], system.x_T[col]).reshape(-1,1)))
+            ex = jnp.hstack((ex,jnp.append(x[1:,col], system.x_T[col]).reshape(-1,1)))
           else :
-            ex = np.hstack((ex,x[:,col].reshape(-1,1)))
+            ex = jnp.hstack((ex,x[:,col].reshape(-1,1)))
       else:
         ex = x[1:]
         px = px[:-1]
-      return np.ravel(px - ex)
+      return jnp.ravel(px - ex)
 
-    x_bounds = onp.empty((hp.intervals, system.bounds.shape[0]-control_shape, 2))
+    x_bounds = np.empty((hp.intervals, system.bounds.shape[0]-control_shape, 2))
     x_bounds[:,:,:] = system.bounds[:-control_shape]
-    x_bounds[0,:,:] = np.expand_dims(system.x_0, 1)
+    x_bounds[0,:,:] = jnp.expand_dims(system.x_0, 1)
     x_bounds = x_bounds.reshape((-1,2))
-    u_bounds = onp.empty((hp.intervals * hp.controls_per_interval*control_shape, 2))
+    u_bounds = np.empty((hp.intervals * hp.controls_per_interval*control_shape, 2))
     N = hp.intervals * hp.controls_per_interval
     for i in range(control_shape, 0, -1):
       u_bounds[(control_shape - i) * (N + 1):(control_shape - i + 1) * (N + 1)] = system.bounds[-i]
-    bounds = np.vstack((x_bounds, u_bounds))
+    bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
     super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel)
@@ -218,25 +218,25 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 class IndirectMethodOptimizer(object):
   hp: HParams
   cfg: Config
-  bounds: np.ndarray   # Possible bounds on x_t and u_t
-  guess: np.ndarray    # Initial guess on x_t, u_t and adj_t
-  unravel: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+  bounds: jnp.ndarray   # Possible bounds on x_t and u_t
+  guess: jnp.ndarray    # Initial guess on x_t, u_t and adj_t
+  unravel: Callable[[jnp.ndarray], Tuple[jnp.ndarray, jnp.ndarray]]
   require_adj: bool = True
 
 
-  def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:  #return (optimal_state, optimal_control, optimal_adj)
+  def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:  #return (optimal_state, optimal_control, optimal_adj)
     raise NotImplementedError
 
-  def stopping_criterion(self, x_iter: Tuple[np.ndarray, np.ndarray], u_iter: Tuple[np.ndarray, np.ndarray], adj_iter: Tuple[np.ndarray, np.ndarray], delta: float = 0.001) -> bool:
+  def stopping_criterion(self, x_iter: Tuple[jnp.ndarray, jnp.ndarray], u_iter: Tuple[jnp.ndarray, jnp.ndarray], adj_iter: Tuple[jnp.ndarray, jnp.ndarray], delta: float = 0.001) -> bool:
     x, old_x = x_iter
     u, old_u = u_iter
     adj, old_adj = adj_iter
 
-    stop_x = np.abs(x).sum(axis=0) * delta - np.abs(x - old_x).sum(axis=0)
-    stop_u = np.abs(u).sum(axis=0)*delta - np.abs(u-old_u).sum(axis=0)
-    stop_adj = np.abs(adj).sum(axis=0) * delta - np.abs(adj - old_adj).sum(axis=0)
+    stop_x = jnp.abs(x).sum(axis=0) * delta - jnp.abs(x - old_x).sum(axis=0)
+    stop_u = jnp.abs(u).sum(axis=0)*delta - jnp.abs(u-old_u).sum(axis=0)
+    stop_adj = jnp.abs(adj).sum(axis=0) * delta - jnp.abs(adj - old_adj).sum(axis=0)
 
-    return np.min(np.hstack((stop_u, stop_x, stop_adj))) < 0
+    return jnp.min(jnp.hstack((stop_u, stop_x, stop_adj))) < 0
 
 
 class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
@@ -250,23 +250,23 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
-    x_guess = np.vstack((system.x_0, np.zeros((self.N, state_shape))))
+    x_guess = jnp.vstack((system.x_0, jnp.zeros((self.N, state_shape))))
     if system.discrete:
-      u_guess = np.zeros((self.N, control_shape))
+      u_guess = jnp.zeros((self.N, control_shape))
     else:
-      u_guess = np.zeros((self.N+1, control_shape))
+      u_guess = jnp.zeros((self.N+1, control_shape))
     if system.adj_T is not None:
-      adj_guess = np.vstack((np.zeros((self.N, state_shape)), system.adj_T))
+      adj_guess = jnp.vstack((jnp.zeros((self.N, state_shape)), system.adj_T))
     else :
-      adj_guess = np.zeros((self.N+1, state_shape))
-    self.t_interval = np.linspace(0, system.T, num=self.N+1).reshape(-1, 1)
+      adj_guess = jnp.zeros((self.N+1, state_shape))
+    self.t_interval = jnp.linspace(0, system.T, num=self.N+1).reshape(-1, 1)
 
     guess, unravel = ravel_pytree((x_guess, u_guess, adj_guess))
     self.x_guess, self.u_guess, self.adj_guess = x_guess, u_guess, adj_guess
 
     x_bounds = system.bounds[:-1]
     u_bounds = system.bounds[-1:]
-    bounds = np.vstack((x_bounds, u_bounds))
+    bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
     #Additional condition if terminal condition are present
@@ -288,15 +288,15 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
     state_shape = self.system.x_0.shape[0]
     control_shape = self.system.bounds.shape[0] - state_shape
 
-    self.x_guess = np.vstack((self.system.x_0, np.zeros((self.N, state_shape))))
-    self.u_guess = np.zeros((self.N + 1, control_shape))
+    self.x_guess = jnp.vstack((self.system.x_0, jnp.zeros((self.N, state_shape))))
+    self.u_guess = jnp.zeros((self.N + 1, control_shape))
     if self.system.adj_T is not None:
-      adj_guess = np.vstack((np.zeros((self.N, state_shape)), self.system.adj_T))
+      adj_guess = jnp.vstack((jnp.zeros((self.N, state_shape)), self.system.adj_T))
     else:
-      adj_guess = np.zeros((self.N + 1, state_shape))
+      adj_guess = jnp.zeros((self.N + 1, state_shape))
     self.adj_guess = index_update(adj_guess, (-1, self.term_cdtion_state), a)
 
-  def solve(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+  def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     if self.terminal_cdtion:
       return self.sequenceSolver()
     n = 0
@@ -316,7 +316,7 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
 
     return self.x_guess, self.u_guess, self.adj_guess
 
-  def sequenceSolver(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+  def sequenceSolver(self) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     self.terminal_cdtion = False
     iter = 0
 
@@ -330,8 +330,8 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
     x_b, _, _ = self.solve()
     Vb = x_b[-1, self.term_cdtion_state] - self.term_value
 
-    while np.abs(Va) > 1e-10:
-      if (np.abs(Va) > np.abs(Vb)):
+    while jnp.abs(Va) > 1e-10:
+      if (jnp.abs(Va) > jnp.abs(Vb)):
         a, b = b, a
         Va, Vb = Vb, Va
 

@@ -1,15 +1,15 @@
 from typing import Callable, Tuple, Optional
 
-import jax.numpy as np
+import jax.numpy as jnp
 from jax import jit, lax
 
 def integrate(
-  dynamics_t: Callable[[np.ndarray, float], np.ndarray], # dynamics function
-  x_0: np.ndarray, # starting state
-  u: np.ndarray, # controls
+  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray], # dynamics function
+  x_0: jnp.ndarray, # starting state
+  u: jnp.ndarray, # controls
   h: float, # step size
   N: int, # steps
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
   def rk4_step(x_t1, u):
@@ -20,19 +20,19 @@ def integrate(
     return x_t1 + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
   fn = lambda x_t, idx: [rk4_step(x_t, u[idx])] * 2
-  x_T, ys = lax.scan(fn, x_0, np.arange(N))
-  return x_T, np.concatenate((x_0[None], ys))
+  x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
+  return x_T, jnp.concatenate((x_0[None], ys))
 
 def integrate_v2(
-  dynamics_t: Callable[[np.ndarray, float], np.ndarray], # dynamics function
-  x_0: np.ndarray, # starting state
-  u: np.ndarray, # controls
+  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray], # dynamics function
+  x_0: jnp.ndarray, # starting state
+  u: jnp.ndarray, # controls
   h: float, # step size  # is negative in backward mode
   N: int, # steps
-  v: Optional[np.ndarray] = None,
-  t: Optional[np.ndarray] = None,
+  v: Optional[jnp.ndarray] = None,
+  t: Optional[jnp.ndarray] = None,
   discrete: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
   def rk4_step(x_t1, u, u_next, v, v_next, t):
@@ -47,11 +47,11 @@ def integrate_v2(
     return x_t1 + (h/6)*(k1 + 2*k2 + 2*k3 + k4)
 
   if v is None:
-    v = np.empty_like(u)
+    v = jnp.empty_like(u)
   if t is None:
-    t = np.empty_like(u)
+    t = jnp.empty_like(u)
 
-  dir = int(np.sign(h))
+  dir = int(jnp.sign(h))
   if discrete:
     if dir >= 0 :
       fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx], t[idx])] * 2
@@ -60,9 +60,9 @@ def integrate_v2(
   else:
     fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
   if dir >= 0 :
-    x_T, ys = lax.scan(fn, x_0, np.arange(N))
-    return x_T, np.concatenate((x_0[None], ys))
+    x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
+    return x_T, jnp.concatenate((x_0[None], ys))
 
   else:
-    x_T, ys = lax.scan(fn, x_0, np.arange(N,0,-1))
-    return x_T, np.concatenate((np.flipud(ys), x_0[None]))
+    x_T, ys = lax.scan(fn, x_0, jnp.arange(N,0,-1))
+    return x_T, jnp.concatenate((jnp.flipud(ys), x_0[None]))
