@@ -7,11 +7,26 @@ class SystemType(Enum):
   VANDERPOL="VANDERPOL"
   SEIR="SEIR"
   TUMOUR="TUMOUR"
+  SIMPLECASE = "SIMPLECASE"
+  MOLDFUNGICIDE = "MOLDFUNGICIDE"
+  BACTERIA = "BACTERIA"
+  SIMPLECASEWITHBOUNDS = "SIMPLECASEWITHBOUNDS"
+  CANCER = "CANCER"
+  FISHHARVEST = "FISHHARVEST"
+  EPIDEMICSEIRN = "EPIDEMICSEIRN"
+  HIVTREATMENT = "HIVTREATMENT"
+  BEARPOPULATIONS = "BEARPOPULATIONS"
+  GLUCOSE = "GLUCOSE"
+  TIMBERHARVEST = "TIMBERHARVEST"
+  BIOREACTOR = "BIOREACTOR"
+  PREDATORPREY = "PREDATORPREY"
+  INVASIVEPLANT = "INVASIVEPLANT"
 
 
 class OptimizerType(Enum):
   COLLOCATION="COLLOCATION"
   SHOOTING="SHOOTING"
+  FBSM="FBSM"
 
 
 # Hyperparameters which change experiment results
@@ -25,6 +40,9 @@ class HParams:
   # Trajectory Optimizer
   intervals: int = 25 # collocation and shooting
   controls_per_interval: int = 5 # multiple shooting
+
+  #Indirect method optimizer
+  steps: int = 1000
 
 
 # Secondary configurations which should not change experiment results

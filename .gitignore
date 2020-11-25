@@ -143,3 +143,6 @@ cython_debug/
 # Paper
 paper/*.pdf
 paper/*.synctex.gz
+
+# Pycharm
+.idea

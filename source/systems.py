@@ -13,29 +13,44 @@ from .config import SystemType, HParams
 class FiniteHorizonControlSystem(object):
   x_0: np.array # state at time 0
   x_T: Optional[np.array] # state at time T
-  T: np.float64 # duration of trajectory
+  T: float # duration of trajectory
   bounds: np.ndarray # State and control bounds
   terminal_cost: bool # Whether only the final state and control are inputs to the cost
+  discrete: bool = False # Whether we are working with a system with continuous cost or not
 
-  def __post_init__(self):
-    self.x_0 = self.x_0.astype(np.float64)
-    if self.x_T is not None:
-      assert self.x_0.shape == self.x_T.shape
-      self.x_T = self.x_T.astype(np.float64)
-    assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
-    assert self.T > 0
+  # def __post_init__(self):
+  #   self.x_0 = self.x_0.astype(np.float64)
+  #   if self.x_T is not None:
+  #     assert self.x_0.shape == self.x_T.shape
+  #     self.x_T = self.x_T.astype(np.float64)
+  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
+  #   assert self.T > 0
 
-  def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
+  def dynamics(self, x_t: np.ndarray, u_t: float, v_t: np.ndarray) -> np.ndarray:
     raise NotImplementedError
   
   def cost(self, x_t: np.ndarray, u_t: float) -> float:
     raise NotImplementedError
 
-  def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
+  def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: Optional[np.array]) -> None:
     raise NotImplementedError
 
 
 def get_system(hp: HParams) -> FiniteHorizonControlSystem:
+  from .LenhartSystems.SimpleCase import SimpleCase #TODO: This is just dirty : to clean
+  from .LenhartSystems.MoldFungicide import MoldFungicide
+  from .LenhartSystems.Bacteria import Bacteria
+  from .LenhartSystems.SimpleCaseWithBounds import SimpleCaseWithBounds
+  from .LenhartSystems.Cancer import Cancer
+  from .LenhartSystems.FishHarvest import FishHarvest
+  from .LenhartSystems.EpidemicSEIRN import EpidemicSEIRN
+  from .LenhartSystems.HIVTreatment import HIVTreatment
+  from .LenhartSystems.BearPopulations import BearPopulations
+  from .LenhartSystems.Glucose import Glucose
+  from .LenhartSystems.TimberHarvest import TimberHarvest
+  from .LenhartSystems.Bioreactor import Bioreactor
+  from .LenhartSystems.PredatorPrey import PredatorPrey
+  from .LenhartSystems.InvasivePlant import InvasivePlant
   if hp.system == SystemType.CARTPOLE:
     return CartPole()
   elif hp.system == SystemType.VANDERPOL:
@@ -44,6 +59,34 @@ def get_system(hp: HParams) -> FiniteHorizonControlSystem:
     return SEIR()
   elif hp.system == SystemType.TUMOUR:
     return Tumour()
+  elif hp.system == SystemType.SIMPLECASE:
+    return SimpleCase()
+  elif hp.system == SystemType.MOLDFUNGICIDE:
+    return MoldFungicide()
+  elif hp.system == SystemType.BACTERIA:
+    return Bacteria()
+  elif hp.system == SystemType.SIMPLECASEWITHBOUNDS:
+    return SimpleCaseWithBounds()
+  elif hp.system == SystemType.CANCER:
+    return Cancer()
+  elif hp.system == SystemType.FISHHARVEST:
+    return FishHarvest()
+  elif hp.system == SystemType.EPIDEMICSEIRN:
+    return EpidemicSEIRN()
+  elif hp.system == SystemType.HIVTREATMENT:
+    return HIVTreatment()
+  elif hp.system == SystemType.BEARPOPULATIONS:
+    return BearPopulations()
+  elif hp.system == SystemType.GLUCOSE:
+    return Glucose()
+  elif hp.system == SystemType.TIMBERHARVEST:
+    return TimberHarvest()
+  elif hp.system == SystemType.BIOREACTOR:
+    return Bioreactor()
+  elif hp.system == SystemType.PREDATORPREY:
+    return PredatorPrey()
+  elif hp.system == SystemType.INVASIVEPLANT:
+    return InvasivePlant()
   else:
     raise KeyError
 
@@ -84,7 +127,7 @@ class CartPole(FiniteHorizonControlSystem):
     q̈2 = np.squeeze(q̈2)
     return np.array([q̇1, q̇2, q̈1, q̈2])
   
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+  def cost(self, x_t: np.ndarray, u_t: float, t: float) -> float:
     # Eq. 6.3
     return u_t ** 2
   
@@ -141,7 +184,7 @@ class VanDerPol(FiniteHorizonControlSystem):
     _x1 = np.squeeze(x0)
     return np.asarray([_x0, _x1])
   
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
+  def cost(self, x_t: np.ndarray, u_t: float, t:float) -> float:
     return x_t.T @ x_t + u_t ** 2
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
@@ -172,10 +215,10 @@ class SEIR(FiniteHorizonControlSystem):
     self.g = 0.1
     self.a = 0.2
 
-    self.S_0 = 1000
-    self.E_0 = 100
-    self.I_0 = 50
-    self.R_0 = 15
+    self.S_0 = 1000.0
+    self.E_0 = 100.0
+    self.I_0 = 50.0
+    self.R_0 = 15.0
     self.N_0 = self.S_0 + self.E_0 + self.I_0 + self.R_0
 
     self.A = 0.1
@@ -206,7 +249,7 @@ class SEIR(FiniteHorizonControlSystem):
     ẏ_t = np.array([Ṡ, Ė, İ, Ṅ])
     return ẏ_t
   
-  def cost(self, y_t: np.ndarray, u_t: np.float64) -> np.float64:
+  def cost(self, y_t: np.ndarray, u_t: np.float64, t:float) -> np.float64:
     return self.A * y_t[2] + u_t ** 2
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
@@ -267,9 +310,12 @@ class Tumour(FiniteHorizonControlSystem):
     _q = np.squeeze(q * (self.b - (self.mu + self.d * p**(2/3) + self.G * u_t)))
     _y = np.squeeze(u_t)
     return np.asarray([_p, _q, _y])
-  
-  def cost(self, x_t: np.ndarray, u_t: float) -> float:
-    p, q, y = x_t
+
+  def cost(self, x_t: np.ndarray, u_t: float, t: float) -> float:
+    return 0
+
+  def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float:
+    p, q, y = x_T
     return p
 
   def plot_solution(self, x: np.ndarray, u: np.ndarray) -> None:
