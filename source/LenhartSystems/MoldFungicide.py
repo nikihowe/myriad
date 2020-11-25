@@ -45,7 +45,7 @@ class MoldFungicide(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= self.r*(self.M - x_t) - u_t[0]*x_t
+        d_x= self.r*(self.M - x_t) - u_t*x_t
 
         return d_x
 
@@ -63,9 +63,8 @@ class MoldFungicide(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag=False
         else: flag=True
 

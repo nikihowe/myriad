@@ -73,11 +73,14 @@ class EpidemicSEIRN(FiniteHorizonControlSystem):  #TODO : Add R calculation at t
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x= np.asarray([
-            self.b*x_t[3] - self.d*x_t[0] - self.c*x_t[0]*x_t[2] - u_t[0]*x_t[0],
-            self.c*x_t[0]*x_t[2] - (self.e+self.d)*x_t[1],
-            self.e*x_t[1] - (self.g+self.a+self.d)*x_t[2],
-            (self.b-self.d)*x_t[3] - self.a*x_t[2]
+        x_0, x_1, x_2, x_3 = x_t
+        if u_t.ndim > 0:
+            u_t, = u_t
+        d_x= np.array([
+            self.b*x_3 - self.d*x_0 - self.c*x_0*x_2 - u_t*x_0,
+            self.c*x_0*x_2 - (self.e+self.d)*x_1,
+            self.e*x_1 - (self.g+self.a+self.d)*x_2,
+            (self.b-self.d)*x_3 - self.a*x_2
         ])
         return d_x
 
@@ -101,9 +104,8 @@ class EpidemicSEIRN(FiniteHorizonControlSystem):  #TODO : Add R calculation at t
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

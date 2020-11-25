@@ -43,7 +43,7 @@ class SimpleCase(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= -0.5*x_t**2 + self.C*u_t[0]
+        d_x= -0.5*x_t**2 + self.C*u_t
 
         return d_x
 
@@ -57,13 +57,15 @@ class SimpleCase(FiniteHorizonControlSystem):
         char = (self.C*adj_t)/(2*self.B)
         return np.minimum(self.bounds[0,1],np.maximum(self.bounds[0,0],char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array=None) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
+            flag = False
+        else:
+            flag = True
 
         ts_x = np.linspace(0, self.T, x.shape[0])
         ts_u = np.linspace(0, self.T, u.shape[0])
@@ -79,10 +81,11 @@ class SimpleCase(FiniteHorizonControlSystem):
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
 
-        plt.subplot(3, 1, 3)
-        plt.plot(ts_adj, adj)
-        plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
-        plt.ylabel("adjoint (lambda)")
+        if flag:
+            plt.subplot(3, 1, 3)
+            plt.plot(ts_adj, adj)
+            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')
         plt.tight_layout()

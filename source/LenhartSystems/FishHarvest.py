@@ -51,11 +51,11 @@ class FishHarvest(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x= -(self.m+u_t[0])*x_t
+        d_x= -(self.m+u_t)*x_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray = None) -> float:
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return -1*self.A*(self.k*t/(t+1))*x_t*u_t + u_t**2  # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -69,9 +69,8 @@ class FishHarvest(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

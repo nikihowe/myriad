@@ -68,15 +68,18 @@ class HIVTreatment(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x = np.asarray([
-            self.s/(1+x_t[2]) - self.m_1*x_t[0] + self.r*x_t[0]*(1-(x_t[0]+x_t[1])/self.T_max) - u_t[0]*self.k*x_t[0]*x_t[2],
-            u_t[0]*self.k*x_t[0]*x_t[2] - self.m_2*x_t[1],
-            self.N*self.m_2*x_t[1] - self.m_3*x_t[2],
+        x_0, x_1, x_2 = x_t
+        if u_t.ndim > 0:
+            u_t, = u_t
+        d_x = np.array([
+            self.s/(1+x_2) - self.m_1*x_0 + self.r*x_0*(1-(x_0+x_1)/self.T_max) - u_t*self.k*x_0*x_2,
+            u_t*self.k*x_0*x_2 - self.m_2*x_1,
+            self.N*self.m_2*x_1 - self.m_3*x_2,
             ])
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float: ## TODO : rename for max problem?
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return -self.A*x_t[0] + (1-u_t)**2  # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -95,9 +98,8 @@ class HIVTreatment(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

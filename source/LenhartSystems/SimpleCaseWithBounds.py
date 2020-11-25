@@ -42,12 +42,12 @@ class SimpleCaseWithBounds(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= -0.5*x_t**2+ self.C*u_t[0]
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+        d_x= -0.5*x_t**2+ self.C*u_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return -self.A*x_t + u_t**2 # Maximization problem converted to minimization
 
     def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -57,13 +57,12 @@ class SimpleCaseWithBounds(FiniteHorizonControlSystem):
         char = (self.C*adj_t)/2
         return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array=None, multi: bool = False) -> None:
+    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None, multi: bool = False) -> None:
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

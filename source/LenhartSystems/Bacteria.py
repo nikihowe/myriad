@@ -46,12 +46,12 @@ class Bacteria(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= self.r*x_t + self.A*u_t[0]*x_t - self.B*u_t[0]**2*np.exp(-x_t)
+    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+        d_x= self.r*x_t + self.A*u_t*x_t - self.B*u_t**2*np.exp(-x_t)
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
         return u_t**2   # Maximization problem converted to minimization
 
     def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float:
@@ -68,9 +68,8 @@ class Bacteria(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

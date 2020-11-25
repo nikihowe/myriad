@@ -120,10 +120,10 @@ class CartPole(FiniteHorizonControlSystem):
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
     q1, q2, q̇1, q̇2 = x_t
     # Eq. 6.1
-    q̈1 = (self.l * self.m2 * np.sin(q2) * q̇2**2 + u_t[0] + self.m2 * self.g * np.cos(q2) * np.sin(q2)) / (self.m1 + self.m2 * (1 - np.cos(q2)**2))
+    q̈1 = (self.l * self.m2 * np.sin(q2) * q̇2**2 + u_t + self.m2 * self.g * np.cos(q2) * np.sin(q2)) / (self.m1 + self.m2 * (1 - np.cos(q2)**2))
     q̈1 = np.squeeze(q̈1)
     # Eq. 6.2
-    q̈2 = - (self.l * self.m2 * np.cos(q2) * q̇2**2 + u_t[0] * np.cos(q2) + (self.m1 + self.m2) * self.g * np.sin(q2)) / (self.l * self.m1 + self.l * self.m2 * (1 - np.cos(q2)**2))
+    q̈2 = - (self.l * self.m2 * np.cos(q2) * q̇2**2 + u_t * np.cos(q2) + (self.m1 + self.m2) * self.g * np.sin(q2)) / (self.l * self.m1 + self.l * self.m2 * (1 - np.cos(q2)**2))
     q̈2 = np.squeeze(q̈2)
     return np.array([q̇1, q̇2, q̈1, q̈2])
   
@@ -180,7 +180,7 @@ class VanDerPol(FiniteHorizonControlSystem):
 
   def dynamics(self, x_t: np.ndarray, u_t: float) -> np.ndarray:
     x0, x1 = x_t
-    _x0 = np.squeeze((1. - x1**2) * x0 - x1 + u_t[0])
+    _x0 = np.squeeze((1. - x1**2) * x0 - x1 + u_t)
     _x1 = np.squeeze(x0)
     return np.asarray([_x0, _x1])
   
@@ -215,10 +215,10 @@ class SEIR(FiniteHorizonControlSystem):
     self.g = 0.1
     self.a = 0.2
 
-    self.S_0 = 1000
-    self.E_0 = 100
-    self.I_0 = 50
-    self.R_0 = 15
+    self.S_0 = 1000.0
+    self.E_0 = 100.0
+    self.I_0 = 50.0
+    self.R_0 = 15.0
     self.N_0 = self.S_0 + self.E_0 + self.I_0 + self.R_0
 
     self.A = 0.1
@@ -314,7 +314,7 @@ class Tumour(FiniteHorizonControlSystem):
   def cost(self, x_t: np.ndarray, u_t: float, t: float) -> float:
     return 0
 
-  def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float: #TODO this need to be put to zero...
+  def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float:
     p, q, y = x_T
     return p
 

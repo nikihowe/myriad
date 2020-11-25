@@ -23,7 +23,7 @@ def integrate(
   x_T, ys = lax.scan(fn, x_0, np.arange(N))
   return x_T, np.concatenate((x_0[None], ys))
 
-def integrate_v2( # TODO: if dynamic ODE has a dependancy on t, need to modify rk4_step
+def integrate_v2(
   dynamics_t: Callable[[np.ndarray, float], np.ndarray], # dynamics function
   x_0: np.ndarray, # starting state
   u: np.ndarray, # controls

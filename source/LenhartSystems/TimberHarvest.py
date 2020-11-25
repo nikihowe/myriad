@@ -55,8 +55,10 @@ class TimberHarvest(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x = np.asarray([
-            self.k*x_t[0]*u_t[0]
+        if u_t.ndim > 0:
+            u_t, = u_t
+        d_x = np.array([
+            self.k*x_t[0]*u_t
             ])
 
         return d_x
@@ -80,9 +82,8 @@ class TimberHarvest(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

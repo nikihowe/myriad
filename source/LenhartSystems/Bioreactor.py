@@ -56,8 +56,10 @@ class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state 
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x = np.asarray([
-            self.G*u_t[0]*x_t[0] - self.D*x_t[0]**2
+        if u_t.ndim > 0:
+            u_t, = u_t
+        d_x = np.array([
+            self.G*u_t*x_t[0] - self.D*x_t[0]**2
             ])
 
         return d_x
@@ -81,9 +83,8 @@ class Bioreactor(FiniteHorizonControlSystem): #TODO: Add resolution for z state 
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

@@ -150,22 +150,19 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     if (not np.isnan(np.sum(u_mean))) and (not np.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
 
-    # if system.x_T is not None:
-    #   if system.x_T[0] is not None:
-    #     x_guess = np.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
-    #   else:
-    #     x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
-    #     x_guess = x_guess[:, 0].reshape(-1,1)
-    #   for i in range(1,len(system.x_T)):
-    #     if system.x_T[i] is not None:
-    #       row_guess = np.linspace(system.x_0[i], system.x_T[i], num=N_x+1)[:-1].reshape(-1,1)
-    #     else :
-    #       row_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
-    #       row_guess = row_guess[:, i].reshape(-1,1)
-    #     x_guess = np.hstack((x_guess,row_guess))
-
     if system.x_T is not None:
-      x_guess = np.linspace(system.x_0, system.x_T, num=N_x + 1)[:-1]
+      if system.x_T[0] is not None:
+        x_guess = np.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
+      else:
+        x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
+        x_guess = x_guess[:, 0].reshape(-1,1)
+      for i in range(1,len(system.x_T)):
+        if system.x_T[i] is not None:
+          row_guess = np.linspace(system.x_0[i], system.x_T[i], num=N_x+1)[:-1].reshape(-1,1)
+        else :
+          row_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
+          row_guess = row_guess[:, i].reshape(-1,1)
+        x_guess = np.hstack((x_guess,row_guess))
     else:
       x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
     guess, unravel = ravel_pytree((x_guess, u_guess))
@@ -184,24 +181,20 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     
     def constraints(variables: np.ndarray) -> np.ndarray:
       x, u = unravel(variables)
-      print(x.shape)
-      print(u.shape)
-      u = u.reshape(control_shape, hp.intervals, hp.controls_per_interval) # TODO: This is where it fails !!
-      print(u.shape)
-      px, _ = vmap(integrate, in_axes=(None, 0, 1, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
+      u = u.reshape(hp.intervals, hp.controls_per_interval, control_shape)
+      u = np.squeeze(u)
+      px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
 
-      # if system.x_T is not None:
-      #   if system.x_T[0] is not None:
-      #     ex = np.append(x[1:, 0], system.x_T[0]).reshape(-1, 1)
-      #   else:
-      #     ex = x[:, 0].reshape(-1, 1)
-      #   for col in range(1,x.shape[1]):
-      #     if system.x_T[col] is not None:
-      #       ex = np.hstack((ex,np.append(x[1:,col], system.x_T[col]).reshape(-1,1)))
-      #     else :
-      #       ex = np.hstack((ex,x[:,col].reshape(-1,1)))
       if system.x_T is not None:
-        ex = np.concatenate((x[1:], system.x_T[np.newaxis]))
+        if system.x_T[0] is not None:
+          ex = np.append(x[1:, 0], system.x_T[0]).reshape(-1, 1)
+        else:
+          ex = x[:, 0].reshape(-1, 1)
+        for col in range(1,x.shape[1]):
+          if system.x_T[col] is not None:
+            ex = np.hstack((ex,np.append(x[1:,col], system.x_T[col]).reshape(-1,1)))
+          else :
+            ex = np.hstack((ex,x[:,col].reshape(-1,1)))
       else:
         ex = x[1:]
         px = px[:-1]

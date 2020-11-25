@@ -68,11 +68,13 @@ class BearPopulations(FiniteHorizonControlSystem):
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
         k = self.r/self.K
         k2 = self.r/self.K**2
+        x_0, x_1, x_2 = x_t
+        u_0, u_1 = u_t
 
-        d_x = np.asarray([
-            self.r*x_t[0] - k*x_t[0]**2 + k*self.m_f*(1-x_t[0]/self.K)*x_t[1]**2 - u_t[0]*x_t[0],
-            self.r*x_t[1] - k*x_t[1]**2 + k*self.m_p*(1-x_t[1]/self.K)*x_t[0]**2 - u_t[1]*x_t[1],
-            k*(1-self.m_p)*x_t[0]**2 + k*(1-self.m_f)*x_t[1]**2 + k2*self.m_f*x_t[0]*x_t[1]**2 + k2*self.m_p*(x_t[0]**2)*x_t[1],
+        d_x = np.array([
+            self.r*x_0 - k*x_0**2 + k*self.m_f*(1-x_0/self.K)*x_1**2 - u_0*x_0,
+            self.r*x_1 - k*x_1**2 + k*self.m_p*(1-x_1/self.K)*x_0**2 - u_1*x_1,
+            k*(1-self.m_p)*x_0**2 + k*(1-self.m_f)*x_1**2 + k2*self.m_f*x_0*x_1**2 + k2*self.m_p*(x_0**2)*x_1,
             ])
 
         return d_x
@@ -106,9 +108,8 @@ class BearPopulations(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True

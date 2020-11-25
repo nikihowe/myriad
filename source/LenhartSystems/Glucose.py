@@ -62,9 +62,13 @@ class Glucose(FiniteHorizonControlSystem):
         )
 
     def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x = np.asarray([
-            -self.a*x_t[0] -self.b*x_t[1],
-            -self.c*x_t[1] + u_t[0]
+        x_0, x_1 = x_t
+        if u_t.ndim > 0:
+            u_t, = u_t
+
+        d_x = np.array([
+            -self.a*x_0 -self.b*x_1,
+            -self.c*x_1 + u_t
             ])
 
         return d_x
@@ -88,9 +92,8 @@ class Glucose(FiniteHorizonControlSystem):
         sns.set(style='darkgrid')
         plt.figure(figsize=(12,12))
 
-        # debug : #TODO remove after making adj correctly an option
         if adj is None:
-            adj = u.copy()  # Only for testing #TODO remove after test
+            adj = u.copy()
             flag = False
         else:
             flag = True
