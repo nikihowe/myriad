@@ -76,38 +76,38 @@ def get_optimizer(hp: HParams, cfg: Config, system: FiniteHorizonControlSystem) 
 
 class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
   def __init__(self, hp: HParams, cfg: Config, system: FiniteHorizonControlSystem):
-    N = hp.intervals # Segments
-    h = system.T / N # Segment length
+    num_intervals = hp.intervals # Segments
+    h = system.T / num_intervals # Segment length
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
 
-    u_guess = jnp.zeros((N+1, control_shape))
+    u_guess = jnp.zeros((num_intervals+1, control_shape))
     u_mean = system.bounds[-1 * control_shape:].mean()
     if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()): #handle bounds with infinite values
       u_guess += u_mean
     if system.x_T is not None:
       if system.x_T[0] is not None:
-        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N + 1).reshape(-1,1)
+        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=num_intervals + 1).reshape(-1,1)
       else:
-        _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
+        _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
         x_guess = x_guess[:, 0].reshape(-1,1)
       for i in range(1,len(system.x_T)):
         if system.x_T[i] is not None:
-          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=N+1).reshape(-1,1)
+          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=num_intervals+1).reshape(-1,1)
         else :
-          _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
+          _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
           row_guess = row_guess[:, i].reshape(-1,1)
         x_guess = jnp.hstack((x_guess,row_guess))
     else:
-      _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, N)
-    guess, unravel = ravel_pytree((x_guess, u_guess))
+      _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
+    guess, unravel_decision_variables = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
 
     def objective(variables: jnp.ndarray) -> float:
       def fn(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
         return (h/2) * (system.cost(x_t1, u_t1, t1) + system.cost(x_t2, u_t2, t2))
-      x, u = unravel(variables)
-      t = jnp.linspace(0, system.T, num=N + 1) # Support cost function with dependency on t
+      x, u = unravel_decision_variables(variables)
+      t = jnp.linspace(0, system.T, num=num_intervals+1) # Support cost function with dependency on t
       if system.terminal_cost:
         return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + jnp.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
       else:
@@ -118,22 +118,22 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
         left = (h/2) * (system.dynamics(x_t1, u_t1) + system.dynamics(x_t2, u_t2))
         right = x_t2 - x_t1
         return left - right
-      x, u = unravel(variables)
+      x, u = unravel_decision_variables(variables)
       return jnp.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
     
-    x_bounds = np.empty((N+1,system.bounds.shape[0]-control_shape, 2))
+    x_bounds = np.empty((num_intervals+1,system.bounds.shape[0]-control_shape, 2))
     x_bounds[:,:,:] = system.bounds[:-control_shape]
     x_bounds[0,:,:] = np.expand_dims(system.x_0, 1)
     if system.x_T is not None:
       x_bounds[-control_shape,:,:] = np.expand_dims(system.x_T, 1)
     x_bounds = x_bounds.reshape((-1,2))
-    u_bounds = np.empty(((N+1)*control_shape, 2))
+    u_bounds = np.empty(((num_intervals+1)*control_shape, 2))
     for i in range(control_shape,0,-1):
-      u_bounds[(control_shape-i)*(N+1):(control_shape-i+1)*(N+1)] = system.bounds[-i]
+      u_bounds[(control_shape-i)*(num_intervals+1):(control_shape-i+1)*(num_intervals+1)] = system.bounds[-i]
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
-    super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel)
+    super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
 
 
 class MultipleShootingOptimizer(TrajectoryOptimizer):
@@ -152,7 +152,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     if system.x_T is not None:
       if system.x_T[0] is not None:
-        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N_x + 1)[:-1].reshape(-1,1)
+        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N_x+1)[:-1].reshape(-1,1)
       else:
         x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
         x_guess = x_guess[:, 0].reshape(-1,1)
