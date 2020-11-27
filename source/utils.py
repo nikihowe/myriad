@@ -12,12 +12,12 @@ def integrate(
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
-  def rk4_step(x_t1, u):
-    k1 = dynamics_t(x_t1, u)
-    k2 = dynamics_t(x_t1 + h * k1 / 2, u)
-    k3 = dynamics_t(x_t1 + h * k2 / 2, u)
-    k4 = dynamics_t(x_t1 + h * k3, u)
-    return x_t1 + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+  def rk4_step(x, u):
+    k1 = dynamics_t(x, u)
+    k2 = dynamics_t(x + h * k1 / 2, u)
+    k3 = dynamics_t(x + h * k2 / 2, u)
+    k4 = dynamics_t(x + h * k3, u)
+    return x + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
   fn = lambda x_t, idx: [rk4_step(x_t, u[idx])] * 2
   x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
