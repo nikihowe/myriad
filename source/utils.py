@@ -61,7 +61,7 @@ def integrate_v2(
     else:
       fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx-1], t[idx-1])] * 2
   else:
-    fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
+    fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + direction], v[idx], v[idx + direction], t[idx])] * 2
   if direction >= 0:
     x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
     return x_T, jnp.concatenate((x_0[None], ys))
