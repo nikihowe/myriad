@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
-
-import jax.numpy as np
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
+
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class SimpleCase(FiniteHorizonControlSystem):
+class SimpleCase(IndirectFHCS):
     def __init__(self, A, B, C, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 5, Lab 1)
@@ -31,35 +33,38 @@ class SimpleCase(FiniteHorizonControlSystem):
         self.adj_T = None   # Final condition over the adjoint, if any
 
         super().__init__(
-            x_0=np.array([x_0]),    # Starting state
+            x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
+            bounds=jnp.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= -0.5*x_t**2 + self.C*u_t
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+        d_x = -0.5*x_t**2 + self.C*u_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return -self.A*x_t + self.B*u_t**2  # Maximization problem converted to minimization
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
         return -self.A + x_t*adj_t
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
         char = (self.C*adj_t)/(2*self.B)
-        return np.minimum(self.bounds[0,1],np.maximum(self.bounds[0,0],char))
+        return jnp.minimum(self.bounds[0, 1], jnp.maximum(self.bounds[0, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
@@ -67,9 +72,9 @@ class SimpleCase(FiniteHorizonControlSystem):
         else:
             flag = True
 
-        ts_x = np.linspace(0, self.T, x.shape[0])
-        ts_u = np.linspace(0, self.T, u.shape[0])
-        ts_adj = np.linspace(0, self.T, adj.shape[0])
+        ts_x = jnp.linspace(0, self.T, x.shape[0])
+        ts_u = jnp.linspace(0, self.T, u.shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj.shape[0])
 
         plt.subplot(3, 1, 1)
         plt.plot(ts_x, x)

@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class PredatorPrey(FiniteHorizonControlSystem):
+class PredatorPrey(IndirectFHCS):
     def __init__(self, d_1, d_2, A, B, guess_a, guess_b, M, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 22, Lab 13)
@@ -45,7 +47,7 @@ class PredatorPrey(FiniteHorizonControlSystem):
         :param x_0: Initial density of the pest and prey population (x_0, x_1)
         :param T: Horizon
         """
-        self.adj_T = np.array([1, 0, 0]) # Final condition over the adjoint, if any
+        self.adj_T = jnp.array([1, 0, 0])  # Final condition over the adjoint, if any
         self.d_1 = d_1
         self.d_2 = d_2
         self.A = A
@@ -53,58 +55,62 @@ class PredatorPrey(FiniteHorizonControlSystem):
         self.guess_b = guess_b
 
         super().__init__(
-            x_0=np.array([
+            x_0=jnp.array([
                 x_0[0],
                 x_0[1],
                 x_0[2]
-            ]),                     # Starting state
-            x_T=[None, None, B],    # Terminal state, if any
-            T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
+            ]),  # Starting state
+            x_T=[None, None, B],  # Terminal state, if any
+            T=T,  # Duration of experiment
+            bounds=jnp.array([  # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],
+                [jnp.NINF, jnp.inf],
                 [0, M]
             ]),
             terminal_cost=True,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
         x_0, x_1, x_2 = x_t
         if u_t.ndim > 0:
             u_t, = u_t
 
-        d_x = np.array([
-            (1 - x_1)*x_0 - self.d_1*x_0*u_t,
-            (x_0 - 1)*x_1 - self.d_2*x_1*u_t,
+        d_x = jnp.array([
+            (1 - x_1) * x_0 - self.d_1 * x_0 * u_t,
+            (x_0 - 1) * x_1 - self.d_2 * x_1 * u_t,
             u_t,
-            ])
+        ])
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
-        return self.A*0.5*u_t[0]**2
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
+        return self.A * 0.5 * u_t[0] ** 2
 
-    def terminal_cost_fn(self, x_T: np.ndarray, u_T: np.ndarray, T: np.ndarray=None) -> float:
+    def terminal_cost_fn(self, x_T: Optional[jnp.ndarray], u_T: Optional[jnp.ndarray],
+                         T: Optional[jnp.ndarray] = None) -> float:
         return x_T[0]
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return np.array([
-            adj_t[0]*(x_t[1] -1 + self.d_1*u_t[0]) - adj_t[1]*x_t[1],
-            adj_t[0]*x_t[0] + adj_t[1]*(1 - x_t[0] + self.d_2*u_t[0]),
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        return jnp.array([
+            adj_t[0] * (x_t[1] - 1 + self.d_1 * u_t[0]) - adj_t[1] * x_t[1],
+            adj_t[0] * x_t[0] + adj_t[1] * (1 - x_t[0] + self.d_2 * u_t[0]),
             0
         ])
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = (adj_t[:, 0]*self.d_1*x_t[:, 0] + adj_t[:, 1]*self.d_2*x_t[:, 1] - adj_t[:, 2])/self.A
-        char = char.reshape(-1,1)
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        char = (adj_t[:, 0] * self.d_1 * x_t[:, 0] + adj_t[:, 1] * self.d_2 * x_t[:, 1] - adj_t[:, 2]) / self.A
+        char = char.reshape(-1, 1)
 
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
+        return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
@@ -114,13 +120,13 @@ class PredatorPrey(FiniteHorizonControlSystem):
 
         x, u, adj = x.T, u.T, adj.T
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         labels = ["Prey Population", "Predator Population"]
 
-        to_print = [0,1] #curves we want to print out
+        to_print = [0, 1]  # curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):

@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class BearPopulations(FiniteHorizonControlSystem):
+class BearPopulations(IndirectFHCS):
     def __init__(self, r, K, m_p, m_f, c_p, c_f, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 15, Lab 9)
@@ -38,7 +40,7 @@ class BearPopulations(FiniteHorizonControlSystem):
         :param x_0: Initial state (x_0, x_1, x_2)
         :param T: Horizon
         """
-        self.adj_T = None # Final condition over the adjoint, if any
+        self.adj_T = None   # Final condition over the adjoint, if any
         self.r = r
         self.K = K
         self.m_p = m_p
@@ -47,17 +49,17 @@ class BearPopulations(FiniteHorizonControlSystem):
         self.c_f = c_f
 
         super().__init__(
-            x_0=np.array([
+            x_0=jnp.array([
                 x_0[0],
                 x_0[1],
                 x_0[2],
             ]),                     # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
+            bounds=jnp.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],
+                [jnp.NINF, jnp.inf],
                 [0, 1],
                 [0, 1],
             ]),
@@ -65,13 +67,14 @@ class BearPopulations(FiniteHorizonControlSystem):
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
         k = self.r/self.K
         k2 = self.r/self.K**2
         x_0, x_1, x_2 = x_t
         u_0, u_1 = u_t
 
-        d_x = np.array([
+        d_x = jnp.array([
             self.r*x_0 - k*x_0**2 + k*self.m_f*(1-x_0/self.K)*x_1**2 - u_0*x_0,
             self.r*x_1 - k*x_1**2 + k*self.m_p*(1-x_1/self.K)*x_0**2 - u_1*x_1,
             k*(1-self.m_p)*x_0**2 + k*(1-self.m_f)*x_1**2 + k2*self.m_f*x_0*x_1**2 + k2*self.m_p*(x_0**2)*x_1,
@@ -79,34 +82,39 @@ class BearPopulations(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return x_t[2] + self.c_p*u_t[0]**2 + self.c_f*u_t[1]**2
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
         k = self.r / self.K
         k2 = self.r / self.K**2
 
-        return np.array([
-            adj_t[0]*(2*k*x_t[0] + k2*self.m_f*x_t[1]**2 + u_t[0] - self.r) - adj_t[1]*(2*k*self.m_p*(1-x_t[1]/self.K)*x_t[0]) + adj_t[2]*(2*k*(self.m_p-1)*x_t[0] - k2*self.m_f*x_t[1]**2 - 2*k2*self.m_p*x_t[0]*x_t[1]),
-            adj_t[1]*(2*k*x_t[1] + k2*self.m_p*x_t[0]**2 + u_t[1] - self.r) - adj_t[0]*(2*k*self.m_f*(1-x_t[0]/self.K)*x_t[1]) + adj_t[2]*(2*k*(self.m_f-1)*x_t[1] - 2*k2*self.m_f*x_t[0]*x_t[1] - k2*self.m_p*x_t[0]**2),
+        return jnp.array([
+            adj_t[0]*(2*k*x_t[0] + k2*self.m_f*x_t[1]**2 + u_t[0] - self.r)
+            - adj_t[1]*(2*k*self.m_p*(1-x_t[1]/self.K)*x_t[0])
+            + adj_t[2]*(2*k*(self.m_p-1)*x_t[0] - k2*self.m_f*x_t[1]**2 - 2*k2*self.m_p*x_t[0]*x_t[1]),
+            adj_t[1]*(2*k*x_t[1] + k2*self.m_p*x_t[0]**2 + u_t[1] - self.r)
+            - adj_t[0]*(2*k*self.m_f*(1-x_t[0]/self.K)*x_t[1])
+            + adj_t[2]*(2*k*(self.m_f-1)*x_t[1] - 2*k2*self.m_f*x_t[0]*x_t[1] - k2*self.m_p*x_t[0]**2),
             -1,
         ])
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char_0 = adj_t[:,0]*x_t[:,0]/(2*self.c_p)
-        char_0 = char_0.reshape(-1,1)
-        char_0 = np.minimum(self.bounds[-2, 1], np.maximum(self.bounds[-2, 0], char_0))
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        char_0 = adj_t[:, 0]*x_t[:, 0]/(2*self.c_p)
+        char_0 = char_0.reshape(-1, 1)
+        char_0 = jnp.minimum(self.bounds[-2, 1], jnp.maximum(self.bounds[-2, 0], char_0))
 
         char_1 = adj_t[:, 1] * x_t[:, 1]/(2 * self.c_f)
         char_1 = char_1.reshape(-1, 1)
-        char_1 = np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char_1))
+        char_1 = jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char_1))
 
+        return jnp.hstack((char_0, char_1))
 
-        return np.hstack((char_0,char_1))
-
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
@@ -116,13 +124,13 @@ class BearPopulations(FiniteHorizonControlSystem):
 
         x, u, adj = x.T, u.T, adj.T
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         labels = ["Park bear pop", "Forest bear pop", "Outside bear pop"]
 
-        to_print = [0,1,2] #curves we want to print out
+        to_print = [0, 1, 2]    # curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):

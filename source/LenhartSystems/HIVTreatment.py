@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class HIVTreatment(FiniteHorizonControlSystem):
+class HIVTreatment(IndirectFHCS):
     def __init__(self, s, m_1, m_2, m_3, r, T_max, k, N, x_0, A, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 14, Lab 8)
@@ -38,7 +40,7 @@ class HIVTreatment(FiniteHorizonControlSystem):
         :param A: Weight parameter balancing the cost
         :param T: Horizon
         """
-        self.adj_T = None # Final condition over the adjoint, if any
+        self.adj_T = None   # Final condition over the adjoint, if any
         self.s = s
         self.m_1 = m_1
         self.m_2 = m_2
@@ -50,28 +52,29 @@ class HIVTreatment(FiniteHorizonControlSystem):
         self.A = A
 
         super().__init__(
-            x_0=np.array([
+            x_0=jnp.array([
                 x_0[0],
                 x_0[1],
                 x_0[2],
             ]),                     # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [0, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [0, np.inf],
-                [0, np.inf],
+            bounds=jnp.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [0, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [0, jnp.inf],
+                [0, jnp.inf],
                 [0, 1],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
         x_0, x_1, x_2 = x_t
         if u_t.ndim > 0:
             u_t, = u_t
-        d_x = np.array([
+        d_x = jnp.array([
             self.s/(1+x_2) - self.m_1*x_0 + self.r*x_0*(1-(x_0+x_1)/self.T_max) - u_t*self.k*x_0*x_2,
             u_t*self.k*x_0*x_2 - self.m_2*x_1,
             self.N*self.m_2*x_1 - self.m_3*x_2,
@@ -79,24 +82,27 @@ class HIVTreatment(FiniteHorizonControlSystem):
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return -self.A*x_t[0] + (1-u_t)**2  # Maximization problem converted to minimization
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return np.array([
-            -self.A + adj_t[0]*(self.m_1 - self.r*(1-(x_t[0]+x_t[1])/self.T_max) + self.r*x_t[0]/self.T_max + u_t[0]*self.k*x_t[2]) - adj_t[1]*u_t[0]*self.k*x_t[2],
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        return jnp.array([
+            -self.A + adj_t[0]*(self.m_1 - self.r*(1-(x_t[0]+x_t[1])/self.T_max) + self.r*x_t[0]/self.T_max
+                                + u_t[0]*self.k*x_t[2]) - adj_t[1]*u_t[0]*self.k*x_t[2],
             adj_t[0]*self.r*x_t[0]/self.T_max + adj_t[1]*self.m_2 - adj_t[2]*self.N*self.m_2,
             adj_t[0]*(self.s/(1+x_t[2])**2 + u_t[0]*self.k*x_t[0]) - adj_t[1]*u_t[0]*self.k*x_t[0] + adj_t[2]*self.m_3,
         ])
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        char = 1 + 0.5*self.k*x_t[:,0]*x_t[:,2]*(adj_t[:,1]-adj_t[:,0])
-        char = char.reshape(-1,1)
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        char = 1 + 0.5*self.k*x_t[:, 0]*x_t[:, 2]*(adj_t[:, 1]-adj_t[:, 0])
+        char = char.reshape(-1, 1)
+        return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
@@ -106,13 +112,13 @@ class HIVTreatment(FiniteHorizonControlSystem):
 
         x, u, adj = x.T, u.T, adj.T
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         labels = ["Healthy cells", "Infected cells", "Viral charge"]
 
-        to_print = [0] #curves we want to print out
+        to_print = [0]  # curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):
@@ -128,7 +134,6 @@ class HIVTreatment(FiniteHorizonControlSystem):
                 plt.plot(ts_u, u_i)
         plt.title("Optimal control of dynamic system via forward-backward sweep")
         plt.ylabel("control (u)")
-
 
         if flag:
             plt.subplot(3, 1, 3)

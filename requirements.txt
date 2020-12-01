@@ -8,3 +8,5 @@ seaborn
 simple-parsing
 cython
 ipopt
+gin-config
+absl-py
