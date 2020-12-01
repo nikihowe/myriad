@@ -146,3 +146,9 @@ paper/*.synctex.gz
 
 # Pycharm
 .idea
+
+# macOS
+.DS_Store
+
+# Profiling
+out.prof

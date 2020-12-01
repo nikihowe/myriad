@@ -33,12 +33,12 @@ class OptimizerType(Enum):
 @dataclass(eq=True, frozen=True)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.CARTPOLE
-  optimizer: OptimizerType = OptimizerType.COLLOCATION
+  system: SystemType = SystemType.BIOREACTOR
+  optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
   ipopt_max_iter: int = 3000
   # Trajectory Optimizer
-  intervals: int = 25 # collocation and shooting
+  intervals: int = 15 # collocation and shooting
   controls_per_interval: int = 5 # multiple shooting
 
   #Indirect method optimizer

@@ -1,7 +1,7 @@
 import random
 
 import jax
-import numpy as onp
+import numpy as np
 import simple_parsing
 import gin
 
@@ -47,7 +47,7 @@ def main(unused_argv):
 
   # Set our seeds for reproducibility
   random.seed(hp.seed)
-  onp.random.seed(hp.seed)
+  np.random.seed(hp.seed)
 
   #Load config, then build system
   gin_files = ['./source/gin-configs/default.gin']

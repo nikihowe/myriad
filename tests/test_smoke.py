@@ -3,7 +3,7 @@ from source.systems import get_system
 import unittest
 
 import jax
-import numpy as onp
+import numpy as np
 
 from source.config import Config, SystemType, HParams, OptimizerType
 from source.optimizers import get_optimizer
@@ -19,7 +19,7 @@ class SmokeTest(unittest.TestCase):
           hp = HParams(system=system, optimizer=optimizer, ipopt_max_iter=100)
           cfg = Config(verbose=True, plot_results=True)
           random.seed(hp.seed)
-          onp.random.seed(hp.seed)
+          np.random.seed(hp.seed)
           _system = get_system(hp)
           optimizer = get_optimizer(hp, cfg, _system)
           x, u = optimizer.solve()
