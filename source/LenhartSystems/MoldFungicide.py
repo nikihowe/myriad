@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class MoldFungicide(FiniteHorizonControlSystem):
+class MoldFungicide(IndirectFHCS):
     def __init__(self, r, M, A, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
@@ -33,47 +35,50 @@ class MoldFungicide(FiniteHorizonControlSystem):
         self.A = A
 
         super().__init__(
-            x_0=np.array([x_0]),    # Starting state
+            x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
+            bounds=jnp.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray=None, t: np.ndarray=None) -> np.ndarray:
-        d_x= self.r*(self.M - x_t) - u_t*x_t
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+        d_x = self.r*(self.M - x_t) - u_t*x_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray=None) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return self.A*x_t**2 + u_t**2
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
         return adj_t*(self.r + u_t) - 2*self.A*x_t
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
         char = 0.5*adj_t*x_t
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
+        return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array=None, multi: bool = False) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
-            flag=False
-        else: flag=True
+            flag = False
+        else:
+            flag = True
 
-        if not multi:
-            x, u, adj = [x], [u], [adj]
+        x, u, adj = [x], [u], [adj]
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         plt.subplot(3, 1, 1)
         for x_i in x:

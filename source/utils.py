@@ -1,14 +1,15 @@
-from typing import Callable, Tuple, Optional
+from typing import Callable, Tuple, Optional, Union
 
 import jax.numpy as jnp
 from jax import jit, lax
 
+
 def integrate(
-  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray], # dynamics function
-  x_0: jnp.ndarray, # starting state
-  u: jnp.ndarray, # controls
-  h: float, # step size
-  N: int, # steps
+  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray],  # dynamics function
+  x_0: jnp.ndarray,  # starting state
+  u: jnp.ndarray,  # controls
+  h: float,  # step size
+  N: int,  # steps
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
   @jit
@@ -23,12 +24,14 @@ def integrate(
   x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
   return x_T, jnp.concatenate((x_0[None], ys))
 
+
 def integrate_v2(
-  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray], # dynamics function
-  x_0: jnp.ndarray, # starting state
-  u: jnp.ndarray, # controls
-  h: float, # step size  # is negative in backward mode
-  N: int, # steps
+  dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray], Optional[jnp.ndarray], Optional[jnp.ndarray]],
+                       jnp.ndarray],  # dynamics function
+  x_0: jnp.ndarray,  # starting state
+  u: jnp.ndarray,  # controls
+  h: float,  # step size  # is negative in backward mode
+  N: int,  # steps
   v: Optional[jnp.ndarray] = None,
   t: Optional[jnp.ndarray] = None,
   discrete: bool = False,
@@ -51,18 +54,18 @@ def integrate_v2(
   if t is None:
     t = jnp.empty_like(u)
 
-  dir = int(jnp.sign(h))
+  direction = int(jnp.sign(h))
   if discrete:
-    if dir >= 0 :
+    if direction >= 0:
       fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx], t[idx])] * 2
     else:
       fn = lambda x_t, idx: [dynamics_t(x_t, u[idx], v[idx-1], t[idx-1])] * 2
   else:
-    fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + dir], v[idx], v[idx + dir], t[idx])] * 2
-  if dir >= 0 :
+    fn = lambda x_t, idx: [rk4_step(x_t, u[idx], u[idx + direction], v[idx], v[idx + direction], t[idx])] * 2
+  if direction >= 0:
     x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
     return x_T, jnp.concatenate((x_0[None], ys))
 
   else:
-    x_T, ys = lax.scan(fn, x_0, jnp.arange(N,0,-1))
+    x_T, ys = lax.scan(fn, x_0, jnp.arange(N, 0, -1))
     return x_T, jnp.concatenate((jnp.flipud(ys), x_0[None]))

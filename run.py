@@ -12,18 +12,18 @@ from source.config import Config, HParams
 from source.optimizers import get_optimizer
 from source.systems import get_system
 
-#Prepare experiment settings   #TODO: Use only 1 parsing technique?
+# Prepare experiment settings   # TODO: Use only 1 parsing technique?
 parser = simple_parsing.ArgumentParser()
 parser.add_arguments(HParams, dest="hparams")
 parser.add_arguments(Config, dest="config")
-parser.add_argument("--gin_bindings", type=str)  #Needed for the parser to work in conjonction to absl.flags
+parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjonction to absl.flags
 
 key_dict = HParams.__dict__.copy()
 key_dict.update(Config.__dict__)
 for key in key_dict.keys():
   if "__" not in key:
-    flags.DEFINE_string(key, None,    #Parser arguments need to be accepted by the flags
-        'Backward compatibility with previous parser')
+    flags.DEFINE_string(key, None,    # Parser arguments need to be accepted by the flags
+                        'Backward compatibility with previous parser')
 
 flags.DEFINE_multi_string(
     'gin_bindings', [],
@@ -31,6 +31,7 @@ flags.DEFINE_multi_string(
     '(e.g. "Lab1.A=1.0").')
 
 FLAGS = flags.FLAGS
+
 
 def main(unused_argv):
   """Main method.
@@ -49,7 +50,7 @@ def main(unused_argv):
   random.seed(hp.seed)
   np.random.seed(hp.seed)
 
-  #Load config, then build system
+  # Load config, then build system
   gin_files = ['./source/gin-configs/default.gin']
   gin_bindings = FLAGS.gin_bindings
   gin.parse_config_files_and_bindings(gin_files,
@@ -69,6 +70,7 @@ def main(unused_argv):
 
       if cfg.plot_results:
           system.plot_solution(x, u)
+
 
 if __name__=='__main__':
   app.run(main)

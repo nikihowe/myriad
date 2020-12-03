@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class Cancer(FiniteHorizonControlSystem):
+class Cancer(IndirectFHCS):
     def __init__(self, r, a, delta, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 10, Lab 5)
@@ -32,41 +34,44 @@ class Cancer(FiniteHorizonControlSystem):
         :param x_0: Initial normalized density of the tumor
         :param T: Horizon
         """
-        self.adj_T = None # Final condition over the adjoint, if any
+        self.adj_T = None   # Final condition over the adjoint, if any
         self.r = r
         self.a = a
         self.delta = delta
 
         super().__init__(
-            x_0=np.array([x_0]),    # Starting state
+            x_0=jnp.array([x_0]),   # Starting state
             x_T=None,               # Terminal state, if any
-            T=T,  #                 Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [0, np.inf],
+            T=T,                    # Duration of experiment
+            bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [0, jnp.inf],
             ]),
             terminal_cost=False,
             discrete=False,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
-        d_x= self.r*x_t*np.log(1/x_t) - u_t*self.delta*x_t
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+        d_x = self.r * x_t * jnp.log(1 / x_t) - u_t * self.delta * x_t
 
         return d_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return self.a*x_t**2 + u_t**2
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        return adj_t*(self.r + self.delta*u_t - self.r*np.log(1/x_t)) - 2*self.a*x_t
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        return adj_t * (self.r + self.delta * u_t - self.r * jnp.log(1 / x_t)) - 2 * self.a * x_t
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
         char = 0.5*adj_t*self.delta*x_t
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char))
+        return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array = None, multi: bool = False) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         if adj is None:
             adj = u.copy()
@@ -74,12 +79,11 @@ class Cancer(FiniteHorizonControlSystem):
         else:
             flag = True
 
-        if not multi:
-            x, u, adj = [x], [u], [adj]
+        x, u, adj = [x], [u], [adj]
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         plt.subplot(3, 1, 1)
         for x_i in x:

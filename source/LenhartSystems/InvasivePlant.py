@@ -1,12 +1,14 @@
-from ..systems import FiniteHorizonControlSystem
+from ..systems import IndirectFHCS
+from typing import Union, Optional
 import gin
 
-import jax.numpy as np
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 @gin.configurable
-class InvasivePlant(FiniteHorizonControlSystem):
+class InvasivePlant(IndirectFHCS):
     def __init__(self, B, k, eps, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 24, Lab 14)
@@ -38,21 +40,21 @@ class InvasivePlant(FiniteHorizonControlSystem):
         :param x_0: Initial radius of the different populations
         :param T: Horizon
         """
-        self.adj_T = np.ones(5) # Final condition over the adjoint, if any
+        self.adj_T = jnp.ones(5)    # Final condition over the adjoint, if any
         self.B = B
         self.k = k
         self.eps = eps
 
         super().__init__(
-            x_0=np.array(x_0),      # Starting state
+            x_0=jnp.array(x_0),      # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
-            bounds=np.array([       # Bounds over the states (x_0, x_1 ...) are given first,
-                [np.NINF, np.inf],      # followed by bounds over controls (u_0,u_1,...)
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
-                [np.NINF, np.inf],
+            bounds=jnp.array([       # Bounds over the states (x_0, x_1 ...) are given first,
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],
+                [jnp.NINF, jnp.inf],
+                [jnp.NINF, jnp.inf],
+                [jnp.NINF, jnp.inf],
                 [0, 1],
                 [0, 1],
                 [0, 1],
@@ -63,39 +65,42 @@ class InvasivePlant(FiniteHorizonControlSystem):
             discrete=True,
         )
 
-    def dynamics(self, x_t: np.ndarray, u_t: np.ndarray, v_t: np.ndarray = None, t: np.ndarray = None) -> np.ndarray:
+    def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                 v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
         next_x = (x_t + x_t*self.k/(self.eps + x_t)) * (1 - u_t)
 
         return next_x
 
-    def cost(self, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> float:
+    def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
         return self.B*(u_t**2).sum()
 
-    def adj_ODE(self, adj_t: np.ndarray, x_t: np.ndarray, u_t: np.ndarray, t: np.ndarray) -> np.ndarray:
+    def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+                t: Optional[jnp.ndarray]) -> jnp.ndarray:
         prev_adj = adj_t * (1-u_t) * (1 + self.eps*self.k/(self.eps + x_t)**2)
 
-        return  prev_adj
+        return prev_adj
 
-    def optim_characterization(self, adj_t: np.ndarray, x_t: np.ndarray, t: np.ndarray) -> np.ndarray:
-        shifted_adj = adj_t[1:,:]
+    def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                               t: Optional[jnp.ndarray]) -> jnp.ndarray:
+        shifted_adj = adj_t[1:, :]
         shifted_x_t = x_t[:-1, :]
         char = 0.5*shifted_adj/self.B * (shifted_x_t + shifted_x_t*self.k/(self.eps + shifted_x_t))
 
-        return np.minimum(self.bounds[-1, 1], np.maximum(self.bounds[-1, 0], char)) # bounds are the same for all control
+        return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))   # same bounds for all control
 
-    def plot_solution(self, x: np.ndarray, u: np.ndarray, adj: np.array) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
 
         x, u, adj = x.T, u.T, adj.T
 
-        ts_x = np.linspace(0, self.T, x[0].shape[0])
-        ts_u = np.linspace(0, self.T-1, u[0].shape[0])
-        ts_adj = np.linspace(0, self.T, adj[0].shape[0])
+        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
+        ts_u = jnp.linspace(0, self.T - 1, u[0].shape[0])
+        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
         labels = ["Focus 1", "Focus 2", "Focus 3", "Focus 4", "Focus 5"]
 
-        to_print = [0,1,2,3,4] #curves we want to print out
+        to_print = [0, 1, 2, 3, 4]  # curves we want to print out
 
         plt.subplot(3, 1, 1)
         for idx, x_i in enumerate(x):
