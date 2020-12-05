@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import time
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, Optional
 
 from jax import grad, jacrev, jit, vmap
 from jax.flatten_util import ravel_pytree
@@ -21,7 +21,11 @@ class TrajectoryOptimizer(object):
   objective: Callable[[jnp.ndarray], float]
   constraints: Callable[[jnp.ndarray], jnp.ndarray]
   bounds: jnp.ndarray
+  x_bounds: Optional[jnp.ndarray]
+  u_bounds: Optional[jnp.ndarray]
   guess: jnp.ndarray
+  x_guess: Optional[jnp.ndarray]
+  u_guess: Optional[jnp.ndarray]
   unravel: Callable[[jnp.ndarray], Tuple[jnp.ndarray, jnp.ndarray]]
   require_adj: bool = False
 
