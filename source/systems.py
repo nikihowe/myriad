@@ -12,6 +12,7 @@ from .config import SystemType, HParams
 
 @dataclass
 class FiniteHorizonControlSystem(object):
+  _type: SystemType
   x_0: jnp.array  # state at time 0
   x_T: Optional[jnp.array]  # state at time T
   T: float  # duration of trajectory
@@ -27,7 +28,7 @@ class FiniteHorizonControlSystem(object):
   #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
   #   assert self.T > 0
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> jnp.ndarray:
     raise NotImplementedError
   
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> float:
@@ -119,21 +120,22 @@ class CartPole(FiniteHorizonControlSystem):
     # Physical parameters for the cart-pole example (Table 3)
     self.m1 = 1.0  # kg mass of cart
     self.m2 = 0.3  # kg mass of pole
-    self.l = 0.5  # m pole length
+    self.l = 0.5   # m pole length
     self.g = 9.81  # m/s^2 gravity acceleration
     self.u_max = 20  # N maximum actuator force
-    self.d_max = 2.0  # m extent of the rail that cart travels on
-    self.d = 1.0  # m distance traveled during swing-up
+    self.d_max = 2.0 # m extent of the rail that cart travels on
+    self.d = 1.0   # m distance traveled during swing-up
 
     super().__init__(
-      x_0 = jnp.zeros(4),  # Starting state (Eq. 6.9)
-      x_T = jnp.array([self.d, jnp.pi, 0, 0]),  # Ending state (Eq. 6.9)
+      _type = SystemType.CARTPOLE,
+      x_0 = jnp.array([0., 0., 0., 0.]),  # Starting state (Eq. 6.9)
+      x_T = jnp.array([self.d, jnp.pi, 0., 0.]),  # Ending state (Eq. 6.9)
       T = 2.0,  # s duration of swing-up,
       bounds = jnp.array([
         [-self.d_max, self.d_max],  # Eq. 6.7
         [-2*jnp.pi, 2*jnp.pi],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
         [-self.u_max, self.u_max],  # Control bounds (Eq. 6.8)
       ]),
       terminal_cost = False,
@@ -192,13 +194,14 @@ class CartPole(FiniteHorizonControlSystem):
 class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
     super().__init__(
+      _type = SystemType.VANDERPOL,
       x_0 = jnp.array([0., 1.]),
       x_T = jnp.zeros(2),
       T = 10.0,
       bounds = jnp.array([
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
-        [-0.75, 1.0],
+        [-jnp.inf, jnp.inf], # state 1
+        [-jnp.inf, jnp.inf], # state 2
+        [-0.75, 1.0],        # control
       ]),
       terminal_cost = False,
     )
@@ -250,14 +253,15 @@ class SEIR(FiniteHorizonControlSystem):
     self.M = 1000
 
     super().__init__(
+      _type = SystemType.SEIR,
       x_0 = jnp.array([self.S_0, self.E_0, self.I_0, self.N_0]),
       x_T = None,
       T = 20,
       bounds = jnp.array([
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
         [0.0, 1.0],
       ]),
       terminal_cost = False,
@@ -317,6 +321,7 @@ class Tumour(FiniteHorizonControlSystem):
     y_0 = 0 # Initial cumulative dosage
     assert p_0 >= q_0 # condition for well-posed problem
     super().__init__(
+      _type = SystemType.TUMOUR,
       x_0 = jnp.array([p_0, q_0, y_0]),
       x_T = None,
       T = t_F,

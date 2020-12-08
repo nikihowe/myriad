@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -55,6 +56,7 @@ class PredatorPrey(IndirectFHCS):
         self.guess_b = guess_b
 
         super().__init__(
+            _type=SystemType.PREDATORPREY,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],

@@ -1,30 +1,44 @@
 from typing import Callable, Tuple, Optional, Union
 
 import jax.numpy as jnp
-from jax import jit, lax
+from jax import jit, lax, vmap
 
 
 def integrate(
   dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray],  # dynamics function
   x_0: jnp.ndarray,  # starting state
-  u: jnp.ndarray,  # controls
+  interval_us: jnp.ndarray,  # controls
   h: float,  # step size
   N: int,  # steps
+  ts: Optional[jnp.ndarray] = None, # allow for optional time-dependent dynamics
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
+  # TODO: fix these (coming from later branch)
+  # TODO: allow use of times
+  # TODO: state interpolation
   @jit
-  def rk4_step(x, u):
+  def rk4_step(x, u, t1=None, t2=None):
     k1 = dynamics_t(x, u)
     k2 = dynamics_t(x + h * k1 / 2, u)
     k3 = dynamics_t(x + h * k2 / 2, u)
     k4 = dynamics_t(x + h * k3, u)
     return x + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
-  fn = lambda x_t, idx: [rk4_step(x_t, u[idx])] * 2
-  x_T, ys = lax.scan(fn, x_0, jnp.arange(N))
-  return x_T, jnp.concatenate((x_0[None], ys))
+  def fn(carried_state, idx):
+    if ts is not None:
+      one_step_forward = rk4_step(carried_state, interval_us[idx], *ts[idx:idx+2])
+    else:
+      one_step_forward = rk4_step(carried_state, interval_us[idx])
+    return one_step_forward, one_step_forward # (carry, y)
+
+  x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
+  return x_T, jnp.concatenate((x_0[None], all_next_states))
 
 
+# Used for the augmented state cost calculation
+integrate_in_parallel = jit(vmap(integrate, in_axes=(None, 0, 0, None, None, 0)), static_argnums=(0, 4))
+
+# Used for the adjoint integration
 def integrate_v2(
   dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray], Optional[jnp.ndarray], Optional[jnp.ndarray]],
                        jnp.ndarray],  # dynamics function

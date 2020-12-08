@@ -11,21 +11,18 @@ from ipopt import minimize_ipopt as minimize
 
 from .config import Config, HParams, OptimizerType, SystemType
 from .systems import FiniteHorizonControlSystem, IndirectFHCS
-from .utils import integrate, integrate_v2
+from .utils import integrate, integrate_in_parallel, integrate_v2
 
 
 @dataclass
 class TrajectoryOptimizer(object):
+  _type: OptimizerType
   hp: HParams
   cfg: Config
   objective: Callable[[jnp.ndarray], float]
   constraints: Callable[[jnp.ndarray], jnp.ndarray]
   bounds: jnp.ndarray
-  x_bounds: Optional[jnp.ndarray]
-  u_bounds: Optional[jnp.ndarray]
   guess: jnp.ndarray
-  x_guess: Optional[jnp.ndarray]
-  u_guess: Optional[jnp.ndarray]
   unravel: Callable[[jnp.ndarray], Tuple[jnp.ndarray, jnp.ndarray]]
   require_adj: bool = False
 
@@ -47,15 +44,15 @@ class TrajectoryOptimizer(object):
       fun=jit(self.objective) if self.cfg.jit else self.objective,
       x0=self.guess,
       method='SLSQP',
-      constraints=[{
+      constraints=({
         'type': 'eq',
         'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
         'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
-      }],
+      }),
       bounds=self.bounds,
       jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
       options={
-        'max_iter': self.hp.ipopt_max_iter,
+        'maxiter': self.hp.ipopt_max_iter,
       }
     )
     _t2 = time.time()
@@ -113,23 +110,29 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
 
     u_guess = jnp.zeros((num_intervals+1, control_shape))
     u_mean = system.bounds[-1 * control_shape:].mean()
+
     if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
+
     if system.x_T is not None:
       # We need to handle the cases where a terminal bound is specified only for some state variables, not all
-      if system.x_T[0] is not None:
-        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=num_intervals + 1).reshape(-1, 1)
-      else:
-        _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
-        x_guess = x_guess[:, 0].reshape(-1, 1)
-      for i in range(1, len(system.x_T)):
+      row_guesses = []
+      # TODO: make sure that nh correctly understood that the special case which has been commented
+      #       out below is properly handled by the expansion of the loop
+      # if system.x_T[0] is not None:
+      #   x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=num_intervals + 1).reshape(-1, 1)
+      # else: # the first state component has no final constraints
+      #   _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
+      #   x_guess = x_guess[:, 0].reshape(-1, 1)
+      for i in range(0, len(system.x_T)):
         if system.x_T[i] is not None:
           row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=num_intervals+1).reshape(-1, 1)
         else:
           _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
           row_guess = row_guess[:, i].reshape(-1, 1)
-        x_guess = jnp.hstack((x_guess, row_guess))
-    else:
+        row_guesses.append(row_guess)
+      x_guess = jnp.hstack(row_guesses)
+    else: # no final state requirement
       _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
     guess, unravel_decision_variables = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
@@ -165,7 +168,7 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
-    super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
+    super().__init__(OptimizerType.COLLOCATION, hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
 
 
 class MultipleShootingOptimizer(TrajectoryOptimizer):
@@ -182,61 +185,98 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
 
+    # TODO: have one more control at the final time also
+
     if system.x_T is not None:
       # We need to handle the cases where a terminal bound is specified only for some state variables, not all
-      if system.x_T[0] is not None:
-        x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N_x+1)[:-1].reshape(-1, 1)
-      else:
-        x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
-        x_guess = x_guess[:, 0].reshape(-1, 1)
-      for i in range(1, len(system.x_T)):
+      # if system.x_T[0] is not None:
+      #   x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=N_x+1)[:-1].reshape(-1, 1)
+      # else:
+      #   x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
+      #   x_guess = x_guess[:, 0].reshape(-1, 1)
+      row_guesses = [] # TODO: check if this behaves the same as the earlier code
+      # For the state variables which have a required end state, interpolate between start and end;
+      # otherwise, use rk4 with initial controls as a first guess at intermediate and end state values
+      for i in range(0, len(system.x_T)):
         if system.x_T[i] is not None:
-          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=N_x+1)[:-1].reshape(-1, 1)
+          row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=N_x+1).reshape(-1, 1)
         else:
-          row_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
+          _, row_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)
           row_guess = row_guess[:, i].reshape(-1, 1)
-        x_guess = jnp.hstack((x_guess, row_guess))
+        row_guesses.append(row_guess)
+      x_guess = jnp.hstack(row_guesses)
     else:
-      x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)[1][:-1]
+      _, x_guess = integrate(system.dynamics, system.x_0, u_guess[::hp.controls_per_interval], h_x, N_x)
     guess, unravel = ravel_pytree((x_guess, u_guess))
+    assert len(x_guess) == N_x + 1 # we have one state decision var for each node, including start and end
     self.x_guess, self.u_guess = x_guess, u_guess
 
+    # Augment the dynamics so we can integrate cost the same way we do state
+    def augmented_dynamics(x_and_c: jnp.ndarray, u: float) -> jnp.ndarray:
+      x, c = x_and_c[:-1], x_and_c[-1]
+      return jnp.append(system.dynamics(x, u), system.cost(x, u))
+
     def objective(variables: jnp.ndarray) -> float:
-      _, u = unravel(variables)
-      t = jnp.linspace(0, system.T, num=N_x+1)[:-1]  # Support cost function with dependency on t
+      # This code runs faster, but only does a linear interpolation for cost.
+      # Better to have the interpolation match the integration scheme,
+      # and just use Euler / Heun if we need shooting to be faster
+
+      # xs, us = unravel(variables)
+      # t = jnp.linspace(0, system.T, num=N_x+1)[:-1]  # Support cost function with dependency on t
+      # t = jnp.repeat(t, hp.controls_per_interval)
+      # _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
+      # x = x[:-1]
+      # if system.terminal_cost:
+      #   return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * jnp.sum(vmap(system.cost)(x, u, t))
+      # else:
+      #   return h_u * jnp.sum(vmap(system.cost)(x, u, t))
+      
+      # ---
+      xs, us = unravel(variables)
+      t = jnp.linspace(0, system.T, num=N_x+1)  # Support cost function with dependency on t
       t = jnp.repeat(t, hp.controls_per_interval)
-      _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
-      x = x[1:]
+
+      starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
+
+      # Integrate cost in parallel
+      states_and_costs, _ = integrate_in_parallel(
+        augmented_dynamics, starting_xs_and_costs, us.reshape(hp.intervals, hp.controls_per_interval),
+        h_u, hp.controls_per_interval, None)
+
+      costs = jnp.sum(states_and_costs[:,-1])
       if system.terminal_cost:
-        return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * jnp.sum(vmap(system.cost)(x, u, t))
-      else:
-        return h_u * jnp.sum(vmap(system.cost)(x, u, t))
+        last_augmented_state = states_and_costs[-1]
+        costs += system.terminal_cost_fn(last_augmented_state[:-1], us[-1])
+      
+      return jnp.sum(costs)
+
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
-      x, u = unravel(variables)
-      u = u.reshape(hp.intervals, hp.controls_per_interval, control_shape)
-      u = jnp.squeeze(u)
-      px, _ = vmap(integrate, in_axes=(None, 0, 0, None, None))(system.dynamics, x, u, h_u, hp.controls_per_interval)
+      xs, us = unravel(variables)
+      us = us.reshape(hp.intervals, hp.controls_per_interval, control_shape)
+      us = jnp.squeeze(us) # removes the control shape dimension if it's 1
+      px, _ = integrate_in_parallel(system.dynamics, xs[:-1], us, h_u, hp.controls_per_interval, None)
+      return jnp.ravel(px - xs[1:])
 
-      if system.x_T is not None:
-        if system.x_T[0] is not None:
-          ex = jnp.append(x[1:, 0], system.x_T[0]).reshape(-1, 1)
-        else:
-          ex = x[:, 0].reshape(-1, 1)
-        for col in range(1, x.shape[1]):
-          if system.x_T[col] is not None:
-            ex = jnp.hstack((ex, jnp.append(x[1:, col], system.x_T[col]).reshape(-1, 1)))
-          else:
-            ex = jnp.hstack((ex, x[:, col].reshape(-1, 1)))
-      else:
-        ex = x[1:]
-        px = px[:-1]
-      return jnp.ravel(px - ex)
+    ############################
+    # State and Control Bounds #
+    ############################
 
-    x_bounds = np.empty((hp.intervals, system.bounds.shape[0]-control_shape, 2))
+    # State decision variables at every node
+    x_bounds = np.empty((hp.intervals + 1, system.bounds.shape[0] - control_shape, 2))
     x_bounds[:, :, :] = system.bounds[:-control_shape]
+
+    # Starting state
     x_bounds[0, :, :] = jnp.expand_dims(system.x_0, 1)
+
+    # Ending state
+    if system.x_T is not None:
+      x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
+
     x_bounds = x_bounds.reshape((-1, 2))
+
+    # Conrol decision variables at every node, plus at intermediate points
+    # TODO: put one more control at the final state
     u_bounds = np.empty((hp.intervals * hp.controls_per_interval*control_shape, 2))
     N = hp.intervals * hp.controls_per_interval
     for i in range(control_shape, 0, -1):
@@ -244,7 +284,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
-    super().__init__(hp, cfg, objective, constraints, bounds, guess, unravel)
+    super().__init__(OptimizerType.SHOOTING, hp, cfg, objective, constraints, bounds, guess, unravel)
 
 
 class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
