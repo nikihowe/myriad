@@ -10,11 +10,14 @@ def integrate(
   interval_us: jnp.ndarray,  # controls
   h: float,  # step size
   N: int,  # steps
+  ts: Optional[jnp.ndarray] = None, # allow for optional time-dependent dynamics
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # nh : hold u constant for each integration step (zero-order interpolation)
-  # TODO: fix this (coming from later branch)
+  # TODO: fix these (coming from later branch)
+  # TODO: allow use of times
+  # TODO: state interpolation
   @jit
-  def rk4_step(x, u):
+  def rk4_step(x, u, t1=None, t2=None):
     k1 = dynamics_t(x, u)
     k2 = dynamics_t(x + h * k1 / 2, u)
     k3 = dynamics_t(x + h * k2 / 2, u)
@@ -22,7 +25,10 @@ def integrate(
     return x + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
   def fn(carried_state, idx):
-    one_step_forward = rk4_step(carried_state, interval_us[idx])
+    if ts is not None:
+      one_step_forward = rk4_step(carried_state, interval_us[idx], *ts[idx:idx+2])
+    else:
+      one_step_forward = rk4_step(carried_state, interval_us[idx])
     return one_step_forward, one_step_forward # (carry, y)
 
   x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
@@ -30,7 +36,7 @@ def integrate(
 
 
 # Used for the augmented state cost calculation
-integrate_in_parallel = jit(vmap(integrate, in_axes=(None, 0, 0, None, None)), static_argnums=(0, 4))
+integrate_in_parallel = jit(vmap(integrate, in_axes=(None, 0, 0, None, None, 0)), static_argnums=(0, 4))
 
 # Used for the adjoint integration
 def integrate_v2(
