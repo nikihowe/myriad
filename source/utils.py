@@ -30,7 +30,7 @@ def integrate(
 
 
 # Used for the augmented state cost calculation
-integrate_in_parallel = jit(vmap(integrate, in_axes=(None, 0, 0, None, None)), static_argnums=0)
+integrate_in_parallel = jit(vmap(integrate, in_axes=(None, 0, 0, None, None)), static_argnums=(0, 4))
 
 # Used for the adjoint integration
 def integrate_v2(
