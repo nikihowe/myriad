@@ -28,7 +28,7 @@ class FiniteHorizonControlSystem(object):
   #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
   #   assert self.T > 0
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> jnp.ndarray:
     raise NotImplementedError
   
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> float:
