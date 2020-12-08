@@ -29,17 +29,27 @@ class OptimizerType(Enum):
   FBSM="FBSM"
 
 
+class NLPSolverType(Enum):
+  # SCIPY="SCIPY"
+  IPOPT="IPOPT"
+  # INEXACTNEWTON="INEXACTNEWTON"
+  EXTRAGRADIENT="EXTRAGRADIENT"
+
+
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=True)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.BIOREACTOR
-  optimizer: OptimizerType = OptimizerType.FBSM
+  system: SystemType = SystemType.CARTPOLE
+  optimizer: OptimizerType = OptimizerType.SHOOTING
+  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
+  # system: SystemType = SystemType.FISHHARVEST
+  # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
-  ipopt_max_iter: int = 3000
+  ipopt_max_iter: int = 5000
   # Trajectory Optimizer
-  intervals: int = 15 # collocation and shooting
-  controls_per_interval: int = 5 # multiple shooting
+  intervals: int = 20 # collocation and shooting
+  controls_per_interval: int = 3 # multiple shooting
 
   #Indirect method optimizer
   steps: int = 1000
