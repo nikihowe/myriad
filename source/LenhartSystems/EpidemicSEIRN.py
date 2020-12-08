@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -45,16 +46,8 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
         :param A: Weight parameter balancing between the reduction of the infectious population and the vaccination cost
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.b = b
-        self.d = d
-        self.c = c
-        self.e = e
-        self.g = g
-        self.a = a
-        self.A = A
-
         super().__init__(
+            _type=SystemType.EPIDEMICSEIRN,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],
@@ -73,6 +66,15 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.b = b
+        self.d = d
+        self.c = c
+        self.e = e
+        self.g = g
+        self.a = a
+        self.A = A
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

@@ -48,13 +48,6 @@ class PredatorPrey(IndirectFHCS):
         :param x_0: Initial density of the pest and prey population (x_0, x_1)
         :param T: Horizon
         """
-        self.adj_T = jnp.array([1, 0, 0])  # Final condition over the adjoint, if any
-        self.d_1 = d_1
-        self.d_2 = d_2
-        self.A = A
-        self.guess_a = guess_a
-        self.guess_b = guess_b
-
         super().__init__(
             _type=SystemType.PREDATORPREY,
             x_0=jnp.array([
@@ -73,6 +66,13 @@ class PredatorPrey(IndirectFHCS):
             terminal_cost=True,
             discrete=False,
         )
+
+        self.adj_T = jnp.array([1, 0, 0])  # Final condition over the adjoint, if any
+        self.d_1 = d_1
+        self.d_2 = d_2
+        self.A = A
+        self.guess_a = guess_a
+        self.guess_b = guess_b
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

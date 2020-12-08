@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -40,14 +41,8 @@ class Glucose(IndirectFHCS):
         :param x_0: Initial blood glucose level and insulin level (x_0,x_1)
         :param T: Horizon (Should be kept under 0.45)
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.a = a
-        self.b = b
-        self.c = c
-        self.A = A
-        self.l = l
-
         super().__init__(
+            _type=SystemType.GLUCOSE,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],
@@ -62,6 +57,13 @@ class Glucose(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.a = a
+        self.b = b
+        self.c = c
+        self.A = A
+        self.l = l
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

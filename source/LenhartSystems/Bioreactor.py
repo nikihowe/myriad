@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -38,12 +39,8 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
         :param x_0: Initial bacteria concentration
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.K = K
-        self.G = G
-        self.D = D
-
         super().__init__(
+            _type=SystemType.BIOREACTOR,
             x_0=jnp.array([
                 x_0[0],
             ]),                     # Starting state
@@ -56,6 +53,11 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.K = K
+        self.G = G
+        self.D = D
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
