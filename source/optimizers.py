@@ -185,6 +185,8 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     if (not jnp.isnan(jnp.sum(u_mean))) and (not jnp.isinf(u_mean).any()):  # handle bounds with infinite values
       u_guess += u_mean
 
+    # TODO: have one more control at the final time also
+
     if system.x_T is not None:
       # We need to handle the cases where a terminal bound is specified only for some state variables, not all
       # if system.x_T[0] is not None:
@@ -209,26 +211,51 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     assert len(x_guess) == N_x + 1 # we have one state decision var for each node, including start and end
     self.x_guess, self.u_guess = x_guess, u_guess
 
+    # Augment the dynamics so we can integrate cost the same way we do state
     def augmented_dynamics(x_and_c: jnp.ndarray, u: float) -> jnp.ndarray:
       x, c = x_and_c[:-1], x_and_c[-1]
       return jnp.append(system.dynamics(x, u), system.cost(x, u))
 
     def objective(variables: jnp.ndarray) -> float:
-      _, u = unravel(variables)
-      t = jnp.linspace(0, system.T, num=N_x+1)[:-1]  # Support cost function with dependency on t
+      # This code runs faster, but only does a linear interpolation for cost.
+      # Better to have the interpolation match the integration scheme,
+      # and just use Euler / Heun if we need shooting to be faster
+
+      # xs, us = unravel(variables)
+      # t = jnp.linspace(0, system.T, num=N_x+1)[:-1]  # Support cost function with dependency on t
+      # t = jnp.repeat(t, hp.controls_per_interval)
+      # _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
+      # x = x[:-1]
+      # if system.terminal_cost:
+      #   return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * jnp.sum(vmap(system.cost)(x, u, t))
+      # else:
+      #   return h_u * jnp.sum(vmap(system.cost)(x, u, t))
+      
+      # ---
+      xs, us = unravel(variables)
+      t = jnp.linspace(0, system.T, num=N_x+1)  # Support cost function with dependency on t
       t = jnp.repeat(t, hp.controls_per_interval)
-      _, x = integrate(system.dynamics, system.x_0, u, h_u, N_u)
-      x = x[1:]
+
+      starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
+
+      # Integrate cost in parallel
+      states_and_costs, _ = integrate_in_parallel(
+        augmented_dynamics, starting_xs_and_costs, us.reshape(hp.intervals, hp.controls_per_interval),
+        h_u, hp.controls_per_interval, None)
+
+      costs = jnp.sum(states_and_costs[:,-1])
       if system.terminal_cost:
-        return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + h_u * jnp.sum(vmap(system.cost)(x, u, t))
-      else:
-        return h_u * jnp.sum(vmap(system.cost)(x, u, t))
+        last_augmented_state = states_and_costs[-1]
+        costs += system.terminal_cost_fn(last_augmented_state[:-1], us[-1])
+      
+      return jnp.sum(costs)
+
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
       xs, us = unravel(variables)
       us = us.reshape(hp.intervals, hp.controls_per_interval, control_shape)
       us = jnp.squeeze(us) # removes the control shape dimension if it's 1
-      px, _ = integrate_in_parallel(system.dynamics, xs[:-1], us, h_u, hp.controls_per_interval)
+      px, _ = integrate_in_parallel(system.dynamics, xs[:-1], us, h_u, hp.controls_per_interval, None)
       return jnp.ravel(px - xs[1:])
 
     ############################
