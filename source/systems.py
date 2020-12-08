@@ -134,8 +134,8 @@ class CartPole(FiniteHorizonControlSystem):
       bounds = jnp.array([
         [-self.d_max, self.d_max],  # Eq. 6.7
         [-2*jnp.pi, 2*jnp.pi],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
         [-self.u_max, self.u_max],  # Control bounds (Eq. 6.8)
       ]),
       terminal_cost = False,
@@ -258,10 +258,10 @@ class SEIR(FiniteHorizonControlSystem):
       x_T = None,
       T = 20,
       bounds = jnp.array([
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
-        [jnp.nan, jnp.nan],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
+        [-jnp.inf, jnp.inf],
         [0.0, 1.0],
       ]),
       terminal_cost = False,
