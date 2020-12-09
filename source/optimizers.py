@@ -7,7 +7,7 @@ from jax.flatten_util import ravel_pytree
 from jax.ops import index_update
 import jax.numpy as jnp
 import numpy as np
-from ipopt import minimize_ipopt as minimize
+from ipopt import minimize_ipopt
 
 from .config import Config, HParams, OptimizerType, SystemType, NLPSolverType
 from .systems import FiniteHorizonControlSystem, IndirectFHCS
@@ -41,38 +41,25 @@ class TrajectoryOptimizer(object):
 
   def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
     _t1 = time.time()
+    opt_inputs = {
+      'fun': jit(self.objective) if self.cfg.jit else self.objective,
+      'x0': self.guess,
+      'method': 'SLSQP',
+      'constraints': ({
+        'type': 'eq',
+        'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
+        'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
+      }),
+      'bounds': self.bounds,
+      'jac': jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
+      'options': {
+        "maxiter": self.hp.ipopt_max_iter
+      }
+    }
     if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
-      solution = extra_gradient(
-        fun=jit(self.objective) if self.cfg.jit else self.objective,
-        x0=self.guess,
-        method='SLSQP',
-        constraints=({
-          'type': 'eq',
-          'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
-          'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
-        }),
-        bounds=self.bounds,
-        jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
-        options={
-          'maxiter': self.hp.ipopt_max_iter,
-        }
-      )
+      solution = extra_gradient(**opt_inputs)
     else:
-      solution = minimize(
-        fun=jit(self.objective) if self.cfg.jit else self.objective,
-        x0=self.guess,
-        method='SLSQP',
-        constraints=({
-          'type': 'eq',
-          'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
-          'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
-        }),
-        bounds=self.bounds,
-        jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
-        options={
-          'maxiter': self.hp.ipopt_max_iter,
-        }
-      )
+      solution = minimize_ipopt(**opt_inputs)
     _t2 = time.time()
     if self.cfg.verbose:
       print(f'Solved in {_t2 - _t1} seconds.')
