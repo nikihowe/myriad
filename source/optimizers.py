@@ -9,9 +9,10 @@ import jax.numpy as jnp
 import numpy as np
 from ipopt import minimize_ipopt as minimize
 
-from .config import Config, HParams, OptimizerType, SystemType
+from .config import Config, HParams, OptimizerType, SystemType, NLPSolverType
 from .systems import FiniteHorizonControlSystem, IndirectFHCS
 from .utils import integrate, integrate_in_parallel, integrate_v2
+from .nlp_solvers import extra_gradient
 
 
 @dataclass
@@ -40,21 +41,38 @@ class TrajectoryOptimizer(object):
 
   def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
     _t1 = time.time()
-    solution = minimize(
-      fun=jit(self.objective) if self.cfg.jit else self.objective,
-      x0=self.guess,
-      method='SLSQP',
-      constraints=({
-        'type': 'eq',
-        'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
-        'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
-      }),
-      bounds=self.bounds,
-      jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
-      options={
-        'maxiter': self.hp.ipopt_max_iter,
-      }
-    )
+    if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
+      solution = extra_gradient(
+        fun=jit(self.objective) if self.cfg.jit else self.objective,
+        x0=self.guess,
+        method='SLSQP',
+        constraints=({
+          'type': 'eq',
+          'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
+          'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
+        }),
+        bounds=self.bounds,
+        jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
+        options={
+          'maxiter': self.hp.ipopt_max_iter,
+        }
+      )
+    else:
+      solution = minimize(
+        fun=jit(self.objective) if self.cfg.jit else self.objective,
+        x0=self.guess,
+        method='SLSQP',
+        constraints=({
+          'type': 'eq',
+          'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
+          'jac': jit(jacrev(self.constraints)) if self.cfg.jit else jacrev(self.constraints),
+        }),
+        bounds=self.bounds,
+        jac=jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
+        options={
+          'maxiter': self.hp.ipopt_max_iter,
+        }
+      )
     _t2 = time.time()
     if self.cfg.verbose:
       print(f'Solved in {_t2 - _t1} seconds.')
