@@ -24,7 +24,7 @@ class TrajectoryOptimizer(object):
   constraints: Callable[[jnp.ndarray], jnp.ndarray]
   bounds: jnp.ndarray
   guess: jnp.ndarray
-  unravel: Callable[[jnp.ndarray], Tuple[jnp.ndarray, jnp.ndarray]]
+  unravel: Callable[[jnp.ndarray], Tuple]
   require_adj: bool = False
 
   def __post_init__(self):
@@ -64,7 +64,10 @@ class TrajectoryOptimizer(object):
     if self.cfg.verbose:
       print(f'Solved in {_t2 - _t1} seconds.')
 
-    x, u = self.unravel(solution.x)
+    if self.hp.order == IntegrationOrder.QUADRATIC and self._type == OptimizerType.COLLOCATION:
+      x, x_mid, u, u_mid = self.unravel(solution.x)
+    else:
+      x, u = self.unravel(solution.x)
     return x, u
 
 
@@ -96,7 +99,13 @@ class IndirectMethodOptimizer(object):
 def get_optimizer(hp: HParams, cfg: Config, system: Union[FiniteHorizonControlSystem, IndirectFHCS]
                   ) -> Union[TrajectoryOptimizer, IndirectMethodOptimizer]:
   if hp.optimizer == OptimizerType.COLLOCATION:
-    optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
+    if hp.order == IntegrationOrder.CONSTANT:
+      print("CONSTANT collocation not yet implemented; using LINEAR collocation for now")
+      optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
+    elif hp.order == IntegrationOrder.LINEAR:
+      optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
+    else: # Quadtratic
+      optimizer = HermiteSimpsonCollocationOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.SHOOTING:
     optimizer = MultipleShootingOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.FBSM:
@@ -142,24 +151,25 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
     guess, unravel_decision_variables = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
 
+    def trapezoid_cost(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
+      return (h/2) * (system.cost(x_t1, u_t1, t1) + system.cost(x_t2, u_t2, t2))
+
     def objective(variables: jnp.ndarray) -> float:
-      def fn(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float, t1: float, t2: float) -> float:
-        return (h/2) * (system.cost(x_t1, u_t1, t1) + system.cost(x_t2, u_t2, t2))
       x, u = unravel_decision_variables(variables)
       t = jnp.linspace(0, system.T, num=num_intervals+1)  # Support cost function with dependency on t
+      cost = jnp.sum(vmap(trapezoid_cost)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
       if system.terminal_cost:
-        return jnp.sum(system.terminal_cost_fn(x[-1], u[-1])) + jnp.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1],
-                                                                                 t[1:]))
-      else:
-        return jnp.sum(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:], t[:-1], t[1:]))
+        cost += jnp.sum(system.terminal_cost_fn(x[-1], u[-1]))
+      return cost
+
+    def trapezoid_defect(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float) -> jnp.ndarray:
+      left = (h/2) * (system.dynamics(x_t1, u_t1) + system.dynamics(x_t2, u_t2))
+      right = x_t2 - x_t1
+      return left - right
 
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
-      def fn(x_t1: jnp.ndarray, x_t2: jnp.ndarray, u_t1: float, u_t2: float) -> jnp.ndarray:
-        left = (h/2) * (system.dynamics(x_t1, u_t1) + system.dynamics(x_t2, u_t2))
-        right = x_t2 - x_t1
-        return left - right
       x, u = unravel_decision_variables(variables)
-      return jnp.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
+      return jnp.ravel(vmap(trapezoid_defect)(x[:-1], x[1:], u[:-1], u[1:]))
 
     ############################
     # State and Control Bounds #
@@ -176,6 +186,121 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
       u_bounds[(control_shape-i)*(num_intervals+1):(control_shape-i+1)*(num_intervals+1)] = system.bounds[-i]
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
+
+    super().__init__(OptimizerType.COLLOCATION, hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
+
+
+class HermiteSimpsonCollocationOptimizer(TrajectoryOptimizer):
+
+  def __init__(self, hp: HParams, cfg: Config, system: FiniteHorizonControlSystem):
+    num_intervals = hp.intervals
+    interval_duration = system.T / hp.intervals
+
+    u_guess, mid_u_guess = jnp.ones(num_intervals + 1) * 0.1, jnp.zeros(num_intervals) * 0.1
+
+    # Initial guess for state and controls
+    # O . . . O (guess dots)
+    if system.x_T is not None:
+      full_x_guess = jnp.linspace(system.x_0, system.x_T, num=hp.intervals + 1)
+
+      # make the mid states linear too (interpolate between collocation points)
+      mid_x_guess = np.copy((full_x_guess[:-1] + full_x_guess[1:])/2)
+      # Now remove the end points from the state guesses
+      x_guess = jnp.linspace(system.x_0, system.x_T, num=hp.intervals + 1)[1:-1]
+    # O . . . . (guess dots)
+    else:
+      # _, x_guess = integrate(system.dynamics, system.x_0, u_guess, interval_duration, num_intervals)[1:] # should be right
+      x_guess = jnp.ones(shape=(num_intervals, len(system.x_0))) * 0.25
+      mid_x_guess = jnp.ones(shape=(num_intervals, len(system.x_0))) * 0.25
+
+    initial_variables = (x_guess, mid_x_guess, u_guess, mid_u_guess)
+
+    guess, unravel_decision_variables = ravel_pytree(initial_variables)
+    self.x_guess, self.u_guess = x_guess, u_guess
+
+    ############################
+    # State and Control Bounds #
+    ############################
+
+    u_bounds = np.empty((num_intervals + 1, 2))
+    u_bounds[:] = system.bounds[-1:]
+
+    mid_u_bounds = np.empty((num_intervals, 2))
+    mid_u_bounds[:] = system.bounds[-1:]
+
+    single_x_bounds = system.bounds[:-1].flatten()
+
+    if system.x_T is not None:
+      x_bounds = jnp.tile(single_x_bounds, reps=(num_intervals - 1, 1))
+      mid_x_bounds = jnp.tile(single_x_bounds, reps=(num_intervals, 1))
+    else:
+      x_bounds = jnp.tile(single_x_bounds, reps=(num_intervals, 1))
+      mid_x_bounds = jnp.tile(single_x_bounds, reps=(num_intervals, 1))
+
+    x_bounds = x_bounds.reshape(-1, 2)
+    mid_x_bounds = mid_x_bounds.reshape(-1, 2)
+
+    bounds = jnp.vstack((x_bounds, mid_x_bounds, u_bounds, mid_u_bounds))
+    self.x_bounds, self.u_bounds = x_bounds, u_bounds
+
+    # Convenience function
+    def get_start_and_next_states_and_controls(variables: jnp.ndarray) -> Tuple[jnp.array, jnp.ndarray, jnp.ndarray,
+                                                                                jnp.array, jnp.ndarray, jnp.ndarray]:
+      xs, mid_xs, us, mid_us = unravel_decision_variables(variables)
+
+      if system.x_T is not None:
+        starting_states = jnp.concatenate((system.x_0[jnp.newaxis], xs))
+        desired_next_states = jnp.concatenate((xs, system.x_T[jnp.newaxis]))
+      else: # last "decision state" is actually final state in this case
+        starting_states = jnp.concatenate((system.x_0[jnp.newaxis], xs[:-1]))
+        desired_next_states = xs
+
+      return starting_states, mid_xs, desired_next_states, \
+             us[:-1],         mid_us, us[1:]
+
+    # Hermite-Simpson collocation constraints (calculates midpoint constraints on-the-fly)
+    def hs_defect(state, mid_state, next_state, control, mid_control, next_control):
+      rhs = next_state - state
+      lhs = (interval_duration / 6) \
+          * ( system.dynamics(state, control)
+              + 4 * system.dynamics(mid_state, mid_control)
+              + system.dynamics(next_state, next_control) )
+      return rhs - lhs
+
+    # Hermite-Simpson interpolation constraints
+    def hs_interpolation(state, mid_state, next_state, control, mid_control, next_control):
+      return (mid_state
+              - (1/2) * (state + next_state)
+              - (interval_duration/8) * (system.dynamics(state, control) - system.dynamics(next_state, next_control)))
+
+    # This is the "J" from the tutorial (6.5)
+    def hs_cost(state, mid_state, next_state, control, mid_control, next_control):
+      return (interval_duration/6) \
+              * ( system.cost(state, control)
+                  + 4 * system.cost(mid_state, mid_control)
+                  + system.cost(next_state, next_control) )
+
+    #######################
+    # Cost and Constraint #
+    #######################
+    def objective(variables):
+      unraveled_vars = get_start_and_next_states_and_controls(variables)
+      return jnp.sum(vmap(hs_cost)(*unraveled_vars))
+
+    def hs_equality_constraints(variables):
+      unraveled_vars = get_start_and_next_states_and_controls(variables)
+      return jnp.ravel(vmap(hs_defect)(*unraveled_vars))
+
+    def hs_interpolation_constraints(variables):
+      unraveled_vars = get_start_and_next_states_and_controls(variables)
+      return jnp.ravel(vmap(hs_interpolation)(*unraveled_vars))
+
+    def constraints(variables): # vstack or hstack?
+      equality_defects = hs_equality_constraints(variables)
+      interpolation_defects = hs_interpolation_constraints(variables)
+      print('equalities', equality_defects.shape)
+      print('interpolations', interpolation_defects.shape)
+      return jnp.hstack((equality_defects, interpolation_defects))
 
     super().__init__(OptimizerType.COLLOCATION, hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
 
