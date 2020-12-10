@@ -5,7 +5,7 @@ import unittest
 import jax
 import numpy as np
 
-from source.config import Config, SystemType, HParams, OptimizerType
+from source.config import Config, SystemType, HParams, OptimizerType, NLPSolverType, IntegrationOrder
 from source.optimizers import get_optimizer
 
 
@@ -15,16 +15,18 @@ class SmokeTest(unittest.TestCase):
     jax.config.update("jax_enable_x64", True)
     for system in SystemType:
       for optimizer in OptimizerType:
-        with self.subTest(system=system.name, optimizer=optimizer.name):
-          hp = HParams(system=system, optimizer=optimizer, ipopt_max_iter=100)
+        with self.subTest(system=system, optimizer=optimizer):
+          hp = HParams(system=system, optimizer=optimizer, order=IntegrationOrder.CONSTANT)
           cfg = Config(verbose=True, plot_results=True)
           random.seed(hp.seed)
           np.random.seed(hp.seed)
           _system = get_system(hp)
           optimizer = get_optimizer(hp, cfg, _system)
+          print("calling optimizer", optimizer)
           x, u = optimizer.solve()
+          print("solution", x.shape)
           _system.plot_solution(x, u)
-
+# TODO: why does it not work to also iterate through nlpsolvers?
 
 if __name__=='__main__':
   unittest.main()

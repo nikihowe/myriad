@@ -133,12 +133,12 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
         if system.x_T[i] is not None:
           row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=num_intervals+1).reshape(-1, 1)
         else:
-          _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
+          _, row_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals, None, hp.order)
           row_guess = row_guess[:, i].reshape(-1, 1)
         row_guesses.append(row_guess)
       x_guess = jnp.hstack(row_guesses)
     else: # no final state requirement
-      _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
+      _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals, None, hp.order)
     guess, unravel_decision_variables = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
 
@@ -160,6 +160,10 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
         return left - right
       x, u = unravel_decision_variables(variables)
       return jnp.ravel(vmap(fn)(x[:-1], x[1:], u[:-1], u[1:]))
+
+    ############################
+    # State and Control Bounds #
+    ############################
     
     x_bounds = np.empty((num_intervals+1, system.bounds.shape[0]-control_shape, 2))
     x_bounds[:, :, :] = system.bounds[:-control_shape]
@@ -183,18 +187,19 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     interval_size = system.T / hp.intervals
     state_shape = system.x_0.shape[0]
     control_shape = system.bounds.shape[0] - state_shape
+    midpoints_const = 2 if hp.order == IntegrationOrder.QUADRATIC else 1
 
     #################
     # Initial Guess #
     #################
-
-    controls_guess = jnp.zeros((num_steps + 1, control_shape))
+    
+    # Controls
+    controls_guess = jnp.zeros((midpoints_const*num_steps + 1, control_shape))
     controls_mean = system.bounds[-1 * control_shape:].mean()
     if (not jnp.isnan(jnp.sum(controls_mean))) and (not jnp.isinf(controls_mean).any()):  # handle bounds with infinite values
       controls_guess += controls_mean
 
-    # print("reorganized controls", reorganized_controls.shape)
-
+    # States
     if system.x_T is not None:
       row_guesses = [] # TODO: check if this behaves the same as the earlier code
       # For the state variables which have a required end state, interpolate between start and end;
@@ -203,12 +208,12 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
         if system.x_T[i] is not None:
           row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=hp.intervals+1).reshape(-1, 1)
         else:
-          _, row_guess = integrate(system.dynamics, system.x_0, controls_guess[::hp.controls_per_interval], h_x, hp.intervals)
+          _, row_guess = integrate(system.dynamics, system.x_0, controls_guess[::midpoints_const*hp.controls_per_interval], interval_size, hp.intervals, None, hp.order)
           row_guess = row_guess[:, i].reshape(-1, 1)
         row_guesses.append(row_guess)
       x_guess = jnp.hstack(row_guesses)
     else:
-      _, x_guess = integrate(system.dynamics, system.x_0, controls_guess[::hp.controls_per_interval], h_x, hp.intervals)
+      _, x_guess = integrate(system.dynamics, system.x_0, controls_guess[::midpoints_const*hp.controls_per_interval], interval_size, hp.intervals, None, hp.order)
     guess, unravel = ravel_pytree((x_guess, controls_guess))
     assert len(x_guess) == hp.intervals + 1 # we have one state decision var for each node, including start and end
     self.x_guess, self.u_guess = x_guess, controls_guess
@@ -237,8 +242,8 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [ 9. ,  9.1]
     #                             [10. , 10.1]
     def reorganize_controls(us):# This still works, even for higher-order control shape
-      return jnp.hstack([us[:-1].reshape(-1, hp.controls_per_interval, control_shape),
-                         us[::hp.controls_per_interval][1:][:,jnp.newaxis]]).squeeze()
+      return jnp.hstack([us[:-1].reshape(-1, midpoints_const*hp.controls_per_interval, control_shape),
+                         us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]]).squeeze()
 
 
     def objective(variables: jnp.ndarray) -> float:
@@ -271,8 +276,8 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       if system.terminal_cost:
         last_augmented_state = states_and_costs[-1]
         costs += system.terminal_cost_fn(last_augmented_state[:-1], us[-1])
-      
-      return jnp.sum(costs)
+
+      return costs
 
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
@@ -286,7 +291,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     ############################
 
     # State decision variables at every node
-    x_bounds = np.empty((hp.intervals + 1, system.bounds.shape[0] - control_shape, 2))
+    x_bounds = np.zeros((hp.intervals + 1, system.bounds.shape[0] - control_shape, 2))
     x_bounds[:, :, :] = system.bounds[:-control_shape]
 
     # Starting state
@@ -296,15 +301,16 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     if system.x_T is not None:
       x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
 
+    # Reshape for ipopt's minimize
     x_bounds = x_bounds.reshape((-1, 2))
 
-    # Conrol decision variables at every node, plus at intermediate points
-    # TODO: put one more control at the final state
-    print("making bounds")
-    u_bounds = np.empty(((hp.intervals * hp.controls_per_interval + 1) * control_shape, 2))
-    N = hp.intervals * hp.controls_per_interval
+    # Control decision variables at every node, and if QUADRATIC order, also at midpoints
+    u_bounds = np.empty(((midpoints_const*num_steps + 1) * control_shape, 2)) # Include midpoints too
     for i in range(control_shape, 0, -1):
-      u_bounds[(control_shape - i) * (N + 1):(control_shape - i + 1) * (N + 1)] = system.bounds[-i]
+      u_bounds[(control_shape - i) * (midpoints_const*num_steps + 1):(control_shape - i + 1) * (midpoints_const*num_steps + 1)] = system.bounds[-i]
+
+    print("u bounds", u_bounds)
+    # Stack all bounds together for the NLP solver
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 

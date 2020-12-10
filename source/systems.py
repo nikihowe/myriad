@@ -326,10 +326,10 @@ class Tumour(FiniteHorizonControlSystem):
       x_T = None,
       T = t_F,
       bounds = jnp.array([
-        [0, p_], # p
-        [0, q_], # q
-        [0, A], # y
-        [0, a], # control
+        [0., p_], # p
+        [0., q_], # q
+        [0., A], # y
+        [0., a], # control
       ]),
       terminal_cost = True,
     )
@@ -342,7 +342,10 @@ class Tumour(FiniteHorizonControlSystem):
     return jnp.asarray([_p, _q, _y])
 
   def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> float:
-    return 0
+    # nh: I think this should be changed to u^2, otherwise there
+    # is no penalty for oscillating in u
+    # return u_t * u_t
+    return 0.
 
   def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: jnp.ndarray, T: jnp.ndarray = None) -> float:
     p, q, y = x_T
