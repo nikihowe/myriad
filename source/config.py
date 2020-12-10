@@ -36,13 +36,20 @@ class NLPSolverType(Enum):
   EXTRAGRADIENT="EXTRAGRADIENT"
 
 
+class IntegrationOrder(Enum):
+  CONSTANT="CONSTANT"
+  LINEAR="LINEAR"
+  QUADRATIC="QUADRATIC"
+
+
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=True)
 class HParams:
   seed: int = 2020
   system: SystemType = SystemType.CARTPOLE
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
+  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
+  order: IntegrationOrder = IntegrationOrder.QUADRATIC
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
