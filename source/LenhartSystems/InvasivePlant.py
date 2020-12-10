@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -40,12 +41,8 @@ class InvasivePlant(IndirectFHCS):
         :param x_0: Initial radius of the different populations
         :param T: Horizon
         """
-        self.adj_T = jnp.ones(5)    # Final condition over the adjoint, if any
-        self.B = B
-        self.k = k
-        self.eps = eps
-
         super().__init__(
+            _type=SystemType.INVASIVEPLANT,
             x_0=jnp.array(x_0),      # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
@@ -64,6 +61,11 @@ class InvasivePlant(IndirectFHCS):
             terminal_cost=False,
             discrete=True,
         )
+
+        self.adj_T = jnp.ones(5)  # Final condition over the adjoint, if any
+        self.B = B
+        self.k = k
+        self.eps = eps
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

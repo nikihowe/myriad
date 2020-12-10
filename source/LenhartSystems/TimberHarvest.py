@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -38,11 +39,8 @@ class TimberHarvest(IndirectFHCS):
         :param x_0: Initial raw timber production
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.r = r
-        self.k = k
-
         super().__init__(
+            _type=SystemType.TIMBERHARVEST,
             x_0=jnp.array([
                 x_0,
             ]),                     # Starting state
@@ -55,6 +53,10 @@ class TimberHarvest(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.r = r
+        self.k = k
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

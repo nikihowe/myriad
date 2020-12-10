@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -30,13 +31,8 @@ class Bacteria(IndirectFHCS):
         :param C: Payoff associated to the final bacteria population concentration
         :param x_0: Initial bacteria population concentration
         """
-        self.adj_T = jnp.array([C])  # Final condition over the adjoint, if any
-        self.r = r
-        self.A = A
-        self.B = B
-        self.C = C
-
         super().__init__(
+            _type=SystemType.BACTERIA,
             x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=1,                    # Duration of experiment
@@ -47,6 +43,12 @@ class Bacteria(IndirectFHCS):
             terminal_cost=True,
             discrete=False,
         )
+
+        self.adj_T = jnp.array([C])  # Final condition over the adjoint, if any
+        self.r = r
+        self.A = A
+        self.B = B
+        self.C = C
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

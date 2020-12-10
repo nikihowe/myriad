@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -40,18 +41,8 @@ class HIVTreatment(IndirectFHCS):
         :param A: Weight parameter balancing the cost
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.s = s
-        self.m_1 = m_1
-        self.m_2 = m_2
-        self.m_3 = m_3
-        self.r = r
-        self.T_max = T_max
-        self.k = k
-        self.N = N
-        self.A = A
-
         super().__init__(
+            _type=SystemType.HIVTREATMENT,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],
@@ -68,6 +59,17 @@ class HIVTreatment(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.s = s
+        self.m_1 = m_1
+        self.m_2 = m_2
+        self.m_3 = m_3
+        self.r = r
+        self.T_max = T_max
+        self.k = k
+        self.N = N
+        self.A = A
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
