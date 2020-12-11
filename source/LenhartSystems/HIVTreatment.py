@@ -16,9 +16,9 @@ class HIVTreatment(IndirectFHCS):
         Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
         infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.
 
-        The model describe the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
+        This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
         presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
-        the infectivity of the virus. The goal is to maximize the numbers of uninfected CD4⁺T cells.
+        the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
         Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
 
          .. math::

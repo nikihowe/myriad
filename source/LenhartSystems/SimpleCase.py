@@ -13,7 +13,7 @@ class SimpleCase(IndirectFHCS):
     def __init__(self, A, B, C, x_0, T):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 5, Lab 1)
-        A simple introductory environment example of the form :
+        A simple introductory environment example of the form:
 
         .. math::
 

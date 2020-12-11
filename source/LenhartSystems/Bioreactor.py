@@ -17,11 +17,11 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
         The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
         1995.
 
-        This environment is an example of model where the cost is linear w/r to the control. It can still be solved by
-        the FBSM algorithm since the optimal control are of the "bang-bang" type, i.e. it jumps from one boundary value
-        to the other.
+        This environment is an example of a model where the cost is linear with respect to the control.
+        It can still be solved by the FBSM algorithm since the optimal control are of the "bang-bang" type,
+        i.e. it jumps from one boundary value to the other.
 
-        This environment try to model the evolution of a bacteria population (x(t)) that helps in the degradation of a
+        This environment models the evolution of a bacteria population (x(t)) that helps in the degradation of a
         contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
         growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
         allows for the simplification of the problem into:

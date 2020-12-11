@@ -14,8 +14,8 @@ class Bacteria(IndirectFHCS):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 7, Lab 3)
 
-        This environment model the concentration level of a bacteria population that we try to control by providing
-        a chemical nutrient that stimulate growth. However, the use of the chemical leads to the production of
+        This environment models the concentration level of a bacteria population that we try to control by providing
+        a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
         a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
         concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
 

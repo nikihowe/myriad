@@ -17,9 +17,9 @@ class PredatorPrey(IndirectFHCS):
         This particular environment is inspired from Bean San Goh, George Leitmann, and Thomas L. Vincent.
         Optimal control of a prey-predator system. Mathematical Biosciences, 19, 1974.
 
-        This environment model the evolution of a pest (prey) population (x_0(t)) and a predator population (x_1(t)) in
-        the presence of a pesticide (u(t)) that affects both the pest and predator population. The objective in mind is
-        to minimize the final pest population, while limiting the cost usage of the pesticide. Thus:
+        This environment models the evolution of a pest (prey) population (x_0(t)) and a predator population (x_1(t)) in
+        the presence of a pesticide (u(t)) that affects both the pest and predator populations. The objective in mind is
+        to minimize the final pest population, while limiting the usage of the pesticide. Thus:
 
         .. math::
 

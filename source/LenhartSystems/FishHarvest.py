@@ -16,7 +16,7 @@ class FishHarvest(IndirectFHCS):
         The model was was adapted from Wayne M. Getz. Optimal control and principles in population management.
         Proceedings of Symposia in Applied Mathematics, 30:63–82, 1984.
 
-        This environment model the population level (scaled) of a fish population to be harvested, and that was
+        This environment models the population level (scaled) of a fish population to be harvested, which was
         introduced into a fishery of some kind (so the initial level of population is known). The time before harvesting
         is too small for reproduction to occur, but the average mass of the fish will grow over time following
         :math:`\frac{kt}{t+1}`. The state (x) is the population level, while the control (u) is the harvest rate.

@@ -19,15 +19,15 @@ class InvasivePlant(IndirectFHCS):
         L. J. Gross. Optimal control for management of an invasive plant species. Mathematical Biosciences and
         Engineering, to appear, 2007.
 
-        The scenario considered in the environment implemented here has been modified from its original formulation so
+        The scenario considered in this environment has been modified from its original formulation so
         so that the state terminal cost term is linear instead of quadratic. Obviously, the optimal solutions are
-        different from the original problem, but the behaviors are similar.
+        different from the original problem, but the model behavior is similar.
 
         In this environment, we look at the growth of an invasive species that has a main focus population (x_i) and
         4 smaller satellite populations (x_{i\neq j}. The area occupied by the different population are assumed to be
-        circular, with a growth that can be represented via the total radius of the population area. Annual intervention
-        are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the intervention are
-        annual, we are in presence of a discrete time model. We aim to:
+        circular, with a growth that can be represented via the total radius of the population area. Annual interventions
+        are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the interventions are
+        annual, we are in a discrete time model. We aim to:
 
         .. math::
 

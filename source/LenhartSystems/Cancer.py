@@ -16,11 +16,11 @@ class Cancer(IndirectFHCS):
         The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
         competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
 
-        The tumor is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
-        cell-kill due to the chemotherapy treatment is proportional to the tumor population
+        The tumour is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
+        cell-kill due to the chemotherapy treatment is proportional to the tumor population.
 
-        This environment model the normalized density of a cancerous tumor undergoing chemotherapy. The state (x) is the
-        normalized density of the tumor, while the control (u) is the strength of the drug used for chemotherapy.
+        This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state (x) is the
+        normalized density of the tumour, while the control (u) is the strength of the drug used for chemotherapy.
         We are trying to minimize:
 
         .. math::

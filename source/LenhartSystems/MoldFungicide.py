@@ -14,7 +14,7 @@ class MoldFungicide(IndirectFHCS):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
 
-        This environment model the concentration level of a mold population that we try to control by
+        This environment models the concentration level of a mould population that we try to control by
         applying a fungicide. The state (x) is the population concentration, while the control (u) is
         the amount of fungicide added. We are trying to minimize:
 
