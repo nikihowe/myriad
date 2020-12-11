@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -18,15 +19,15 @@ class InvasivePlant(IndirectFHCS):
         L. J. Gross. Optimal control for management of an invasive plant species. Mathematical Biosciences and
         Engineering, to appear, 2007.
 
-        The scenario considered in the environment implemented here has been modified from its original formulation so
+        The scenario considered in this environment has been modified from its original formulation so
         so that the state terminal cost term is linear instead of quadratic. Obviously, the optimal solutions are
-        different from the original problem, but the behaviors are similar.
+        different from the original problem, but the model behavior is similar.
 
         In this environment, we look at the growth of an invasive species that has a main focus population (x_i) and
         4 smaller satellite populations (x_{i\neq j}. The area occupied by the different population are assumed to be
-        circular, with a growth that can be represented via the total radius of the population area. Annual intervention
-        are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the intervention are
-        annual, we are in presence of a discrete time model. We aim to:
+        circular, with a growth that can be represented via the total radius of the population area. Annual interventions
+        are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the interventions are
+        annual, we are in a discrete time model. We aim to:
 
         .. math::
 
@@ -40,12 +41,8 @@ class InvasivePlant(IndirectFHCS):
         :param x_0: Initial radius of the different populations
         :param T: Horizon
         """
-        self.adj_T = jnp.ones(5)    # Final condition over the adjoint, if any
-        self.B = B
-        self.k = k
-        self.eps = eps
-
         super().__init__(
+            _type=SystemType.INVASIVEPLANT,
             x_0=jnp.array(x_0),      # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
@@ -64,6 +61,11 @@ class InvasivePlant(IndirectFHCS):
             terminal_cost=False,
             discrete=True,
         )
+
+        self.adj_T = jnp.ones(5)  # Final condition over the adjoint, if any
+        self.B = B
+        self.k = k
+        self.eps = eps
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -16,11 +17,11 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
         The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
         1995.
 
-        This environment is an example of model where the cost is linear w/r to the control. It can still be solved by
-        the FBSM algorithm since the optimal control are of the "bang-bang" type, i.e. it jumps from one boundary value
-        to the other.
+        This environment is an example of a model where the cost is linear with respect to the control.
+        It can still be solved by the FBSM algorithm since the optimal control are of the "bang-bang" type,
+        i.e. it jumps from one boundary value to the other.
 
-        This environment try to model the evolution of a bacteria population (x(t)) that helps in the degradation of a
+        This environment models the evolution of a bacteria population (x(t)) that helps in the degradation of a
         contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
         growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
         allows for the simplification of the problem into:
@@ -38,12 +39,8 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
         :param x_0: Initial bacteria concentration
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.K = K
-        self.G = G
-        self.D = D
-
         super().__init__(
+            _type=SystemType.BIOREACTOR,
             x_0=jnp.array([
                 x_0[0],
             ]),                     # Starting state
@@ -56,6 +53,11 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.K = K
+        self.G = G
+        self.D = D
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

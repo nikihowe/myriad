@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -12,7 +13,7 @@ class SimpleCaseWithBounds(IndirectFHCS):
     def __init__(self, A, C, M_1, M_2, x_0, T):
         """
                 Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 9, Lab 4)
-                A simple introductory environment example of the form :
+                A simple introductory environment example of the form:
 
                 .. math::
 
@@ -27,12 +28,8 @@ class SimpleCaseWithBounds(IndirectFHCS):
                 :param x_0: Initial state
                 :param T: Horizon
                 """
-        self.A = A
-        self.C = C
-
-        self.adj_T = None  # Final condition over the adjoint, if any
-
         super().__init__(
+            _type=SystemType.SIMPLECASEWITHBOUNDS,
             x_0=jnp.array([x_0]),  # Starting state
             x_T=None,  # Terminal state, if any
             T=T,  # Duration of experiment
@@ -43,6 +40,10 @@ class SimpleCaseWithBounds(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.A = A
+        self.C = C
+        self.adj_T = None  # Final condition over the adjoint, if any
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

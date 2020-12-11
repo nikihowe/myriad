@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -15,12 +16,13 @@ class Glucose(IndirectFHCS):
         Model is presented in more details in Martin Eisen. Mathematical Methods and Models in the Biological Sciences.
         Prentice Hall, Englewood Cliffs, New Jersey, 1988.
 
-        This environment try to model the blood glucose (x_0(t0) level of a diabetic person in the presence of injected
-        insulin (u(t)) and the net hormonal concentration (x_1(t)) of the insulin in the person system. In this model,
-        the diabetic person is assumed to be unable to produce natural insulin via its pancreas.
+        This environment models the blood glucose (x_0(t0) level of a diabetic person in the presence of injected
+        insulin (u(t)), along with the net hormonal concentration (x_1(t)) of insulin in the person's system.
+        In this model, the diabetic person is assumed to be unable to produce natural insulin via their pancreas.
 
-        Note that the model was developed for regulating blood glucose levels over a short window of time. As thus, T
-        should be kept under 0.45 for the model to make sense (T here is measured in day, 0.45 corresponds to ~11 hours)
+        Note that the model was developed for regulating blood glucose levels over a short window of time. As such, T
+        should be kept under 0.45 in order for the model to make sense.
+        (T is measured in days, so 0.45 corresponds to ~11 hours)
 
         The goal of the control is to maintain the blood glucose level close to a desired level, l, while also taking
         into account that there is a cost associated to the treatment. Thus the objective is:
@@ -40,14 +42,8 @@ class Glucose(IndirectFHCS):
         :param x_0: Initial blood glucose level and insulin level (x_0,x_1)
         :param T: Horizon (Should be kept under 0.45)
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.a = a
-        self.b = b
-        self.c = c
-        self.A = A
-        self.l = l
-
         super().__init__(
+            _type=SystemType.GLUCOSE,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],
@@ -62,6 +58,13 @@ class Glucose(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.a = a
+        self.b = b
+        self.c = c
+        self.A = A
+        self.l = l
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

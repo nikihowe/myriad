@@ -18,6 +18,8 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
 
   constraint_fun = constraints['fun']
   max_iter = 10*options['maxiter'] if 'maxiter' in options else 30_000
+  eta_x = options['eta_x'] if 'eta_x' in options else 0.01 # primals
+  eta_v = options['eta_v'] if 'eta_v' in options else 0.01 # duals
 
   # will deal with bounds later
   @jit
@@ -26,14 +28,12 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
 
   @jit
   def step(x, lmbda):
-    eta = 0.01 # TODO: tune this, and have different ones
-               # for the primal and dual variables
-    x_bar = jnp.clip(x - eta * grad(lagrangian, argnums=0)(x, lmbda),
+    x_bar = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x, lmbda),
       a_min=bounds[:,0], a_max=bounds[:,1])
-    lmbda_bar = lmbda + eta * grad(lagrangian, argnums=1)(x, lmbda)
-    x_new = jnp.clip(x - eta * grad(lagrangian, argnums=0)(x_bar, lmbda_bar),
+    lmbda_bar = lmbda + eta_v * grad(lagrangian, argnums=1)(x, lmbda)
+    x_new = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x_bar, lmbda_bar),
       a_min=bounds[:,0], a_max=bounds[:,1])
-    lmbda_new = lmbda + eta * grad(lagrangian, argnums=1)(x_bar, lmbda_bar)
+    lmbda_new = lmbda + eta_v * grad(lagrangian, argnums=1)(x_bar, lmbda_bar)
     return (x_new, lmbda_new)
 
   def solve(x, lmbda):

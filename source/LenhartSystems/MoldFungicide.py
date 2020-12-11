@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -13,7 +14,7 @@ class MoldFungicide(IndirectFHCS):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
 
-        This environment model the concentration level of a mold population that we try to control by
+        This environment models the concentration level of a mould population that we try to control by
         applying a fungicide. The state (x) is the population concentration, while the control (u) is
         the amount of fungicide added. We are trying to minimize:
 
@@ -29,12 +30,8 @@ class MoldFungicide(IndirectFHCS):
         :param x_0: Initial mold population concentration
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.r = r
-        self.M = M
-        self.A = A
-
         super().__init__(
+            _type=SystemType.MOLDFUNGICIDE,
             x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
@@ -45,6 +42,11 @@ class MoldFungicide(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.r = r
+        self.M = M
+        self.A = A
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

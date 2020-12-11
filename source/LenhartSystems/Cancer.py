@@ -1,4 +1,5 @@
 from ..systems import IndirectFHCS
+from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -15,11 +16,11 @@ class Cancer(IndirectFHCS):
         The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
         competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
 
-        The tumor is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
-        cell-kill due to the chemotherapy treatment is proportional to the tumor population
+        The tumour is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
+        cell-kill due to the chemotherapy treatment is proportional to the tumor population.
 
-        This environment model the normalized density of a cancerous tumor undergoing chemotherapy. The state (x) is the
-        normalized density of the tumor, while the control (u) is the strength of the drug used for chemotherapy.
+        This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state (x) is the
+        normalized density of the tumour, while the control (u) is the strength of the drug used for chemotherapy.
         We are trying to minimize:
 
         .. math::
@@ -34,12 +35,8 @@ class Cancer(IndirectFHCS):
         :param x_0: Initial normalized density of the tumor
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.r = r
-        self.a = a
-        self.delta = delta
-
         super().__init__(
+            _type=SystemType.CANCER,
             x_0=jnp.array([x_0]),   # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
@@ -50,6 +47,11 @@ class Cancer(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.r = r
+        self.a = a
+        self.delta = delta
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
