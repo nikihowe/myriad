@@ -8,7 +8,7 @@ from collections import namedtuple
 from functools import partial
 import time
 
-from .config import NLPSolverType, HParams
+from source.config import NLPSolverType, HParams
 
 # NOTE: eta requires tuning for each system. Right now, it's an ok speed 
 #       for van der pol, but slow for everything else

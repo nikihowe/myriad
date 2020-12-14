@@ -5,18 +5,19 @@ import numpy as np
 import simple_parsing
 import gin
 
-from absl import app
-from absl import flags
+from absl import app, flags
 
 from source.config import Config, HParams
 from source.optimizers import get_optimizer
 from source.systems import get_system
 
+from source.neural_ode import run_net
+
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
 parser = simple_parsing.ArgumentParser()
 parser.add_arguments(HParams, dest="hparams")
 parser.add_arguments(Config, dest="config")
-parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjonction to absl.flags
+parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
 
 key_dict = HParams.__dict__.copy()
 key_dict.update(Config.__dict__)
@@ -73,4 +74,5 @@ def main(unused_argv):
 
 
 if __name__=='__main__':
-  app.run(main)
+  # app.run(main)
+  run_net()

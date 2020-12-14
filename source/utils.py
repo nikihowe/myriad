@@ -3,7 +3,7 @@ from typing import Callable, Tuple, Optional, Union
 import jax.numpy as jnp
 from jax import jit, lax, vmap
 
-from .config import IntegrationOrder
+from source.config import IntegrationOrder
 
 
 def integrate(

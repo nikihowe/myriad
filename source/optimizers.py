@@ -9,10 +9,10 @@ import jax.numpy as jnp
 import numpy as np
 from ipopt import minimize_ipopt
 
-from .config import Config, HParams, OptimizerType, SystemType, NLPSolverType, IntegrationOrder
-from .systems import FiniteHorizonControlSystem, IndirectFHCS
-from .utils import integrate, integrate_in_parallel, integrate_v2
-from .nlp_solvers import extra_gradient
+from source.config import Config, HParams, OptimizerType, SystemType, NLPSolverType, IntegrationOrder
+from source.systems import FiniteHorizonControlSystem, IndirectFHCS
+from source.utils import integrate, integrate_in_parallel, integrate_v2
+from source.nlp_solvers import extra_gradient
 
 
 @dataclass

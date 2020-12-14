@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from .config import SystemType, HParams
+from source.config import SystemType, HParams
 
 
 @dataclass
