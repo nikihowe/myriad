@@ -169,22 +169,22 @@ class CartPole(FiniteHorizonControlSystem):
 
     plt.subplot(3, 1, 1)
     plt.ylabel('position (m)')
-    plt.xlim(0, 2)
+    plt.xlim(0, 2.01)
     plt.ylim(0, 1.5)
     plt.plot(ts_x, x['q1'], '-bo', clip_on=False, zorder=10)
 
     plt.subplot(3, 1, 2)
     plt.ylabel('angle (rad)')
     plt.plot(ts_x, x['q2'], '-bo', clip_on=False, zorder=10)
-    plt.xlim(0, 2)
+    plt.xlim(0, 2.01)
     plt.ylim(-2, 4)
 
     plt.subplot(3, 1, 3)
     plt.ylabel('force (N)')
     # plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
     plt.step(ts_u, u, where="post", clip_on=False)
-    plt.xlim(0, 2)
-    plt.ylim(-20, 10)
+    plt.xlim(0, 2.01)
+    plt.ylim(-20, 11)
 
     plt.xlabel('time (s)')
     plt.tight_layout()
@@ -326,10 +326,10 @@ class Tumour(FiniteHorizonControlSystem):
       x_T = None,
       T = t_F,
       bounds = jnp.array([
-        [0, p_], # p
-        [0, q_], # q
-        [0, A], # y
-        [0, a], # control
+        [0., p_], # p
+        [0., q_], # q
+        [0., A], # y
+        [0., a], # control
       ]),
       terminal_cost = True,
     )
@@ -342,7 +342,10 @@ class Tumour(FiniteHorizonControlSystem):
     return jnp.asarray([_p, _q, _y])
 
   def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> float:
-    return 0
+    # nh: I think this should be changed to u^2, otherwise there
+    # is no penalty for oscillating in u
+    # return u_t * u_t
+    return 0.
 
   def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: jnp.ndarray, T: jnp.ndarray = None) -> float:
     p, q, y = x_T

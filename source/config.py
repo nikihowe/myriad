@@ -36,20 +36,28 @@ class NLPSolverType(Enum):
   EXTRAGRADIENT="EXTRAGRADIENT"
 
 
+class IntegrationOrder(Enum):
+  CONSTANT="CONSTANT"
+  LINEAR="LINEAR"
+  QUADRATIC="QUADRATIC"
+
+
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=True)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.CARTPOLE
+  system: SystemType = SystemType.SEIR
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
+  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
+  order: IntegrationOrder = IntegrationOrder.QUADRATIC
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
-  ipopt_max_iter: int = 5000
+  ipopt_max_iter: int = 10_000
   # Trajectory Optimizer
-  intervals: int = 20 # collocation and shooting
-  controls_per_interval: int = 3 # multiple shooting
+  intervals: int = 10 # collocation and shooting 
+  # TODO: make it include the single shooting case of 1 interval. Right now that breaks
+  controls_per_interval: int = 2 # multiple shooting
 
   #Indirect method optimizer
   steps: int = 1000
