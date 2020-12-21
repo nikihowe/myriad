@@ -434,7 +434,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     for i in range(control_shape, 0, -1):
       u_bounds[(control_shape - i) * (midpoints_const*num_steps + 1):(control_shape - i + 1) * (midpoints_const*num_steps + 1)] = system.bounds[-i]
 
-    print("u bounds", u_bounds)
+    # print("u bounds", u_bounds)
     # Stack all bounds together for the NLP solver
     bounds = jnp.vstack((x_bounds, u_bounds))
     self.x_bounds, self.u_bounds = x_bounds, u_bounds

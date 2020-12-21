@@ -37,7 +37,7 @@ class FiniteHorizonControlSystem(object):
   def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Optional[jnp.array], T: Optional[jnp.array] = None) -> float:
     return 0
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, other_x: Optional[jnp.ndarray]) -> None:
     raise NotImplementedError
 
 
@@ -158,8 +158,16 @@ class CartPole(FiniteHorizonControlSystem):
     # Eq. 6.3
     return u_t ** 2
   
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
+                    other_x: Optional[jnp.ndarray], other_u: Optional[jnp.ndarray]) -> None:
     x = pd.DataFrame(x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
+
+    plan_with_node = False
+    if other_u is not None and other_x is not None:
+      plan_with_node = True
+
+    if other_x is not None:
+      other_x = pd.DataFrame(other_x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
 
     # Plot optimal trajectory (Figure 10)
     sns.set(style='darkgrid')
@@ -167,30 +175,44 @@ class CartPole(FiniteHorizonControlSystem):
     ts_x = jnp.linspace(0, self.T, x.shape[0])
     ts_u = jnp.linspace(0, self.T, u.shape[0])
 
-    plt.subplot(3, 1, 1)
-    plt.ylabel('position (m)')
-    plt.xlim(0, 2.01)
-    plt.ylim(0, 1.5)
-    plt.plot(ts_x, x['q1'], '-bo', clip_on=False, zorder=10)
 
-    plt.subplot(3, 1, 2)
-    plt.ylabel('angle (rad)')
-    plt.plot(ts_x, x['q2'], '-bo', clip_on=False, zorder=10)
-    plt.xlim(0, 2.01)
-    plt.ylim(-2, 4)
+    ax = plt.subplot(3, 1, 1)
+    ax.set_ylabel('position (m)')
+    ax.set_xlim(0, 2.01)
+    # plt.ylim(0, 1.5)
+    ax.plot(ts_x, x['q1'], '-bo', clip_on=False, label="True trajectory, using true optimal controls")
+    if plan_with_node: # planning with NODE
+      ax.plot(ts_x, other_x['q1'], '-bo', color="green", clip_on=False, label="True trajectory, using controls calculated with NODE")
+    elif other_x is not None: # only learning with NODE
+      ax.plot(ts_x, other_x['q1'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory, using true optimal controls")
+    ax.legend(loc="lower right")
 
-    plt.subplot(3, 1, 3)
-    plt.ylabel('force (N)')
+    ax = plt.subplot(3, 1, 2)
+    ax.set_ylabel('angle (rad)')
+    ax.plot(ts_x, x['q2'], '-bo', clip_on=False, label="True trajectory, using true optimal controls")
+    ax.set_xlim(0, 2.01)
+    # plt.ylim(-2, 4)
+    if plan_with_node:
+      ax.plot(ts_x, other_x['q2'], '-bo', color="green", clip_on=False, label="True trajectory, using controls calculated with NODE")
+    elif other_x is not None:
+      ax.plot(ts_x, other_x['q2'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory, using true optimal controls")
+    ax.legend(loc="lower right")
+
+    ax = plt.subplot(3, 1, 3)
+    ax.set_ylabel('force (N)')
     # plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
-    plt.step(ts_u, u, where="post", clip_on=False)
-    plt.xlim(0, 2.01)
-    plt.ylim(-20, 11)
+    ax.step(ts_u, u, where="post", clip_on=False, label="Planning with true dynamics")
+    ax.set_xlim(0, 2.01)
+    # plt.ylim(-20, 11)
+    if other_u is not None:
+      ax.step(ts_u, other_u, where="post", color="green", clip_on=False, label="Planning with NODE-Simulated dynamics")
+    ax.legend(loc="lower right")
+    ax.set_xlabel('time (s)')
 
-    plt.xlabel('time (s)')
     plt.tight_layout()
     plt.show()
 
-    
+
 class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
     super().__init__(
@@ -215,15 +237,20 @@ class VanDerPol(FiniteHorizonControlSystem):
   def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> float:
     return x_t.T @ x_t + u_t ** 2
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, other_x: Optional[jnp.ndarray]) -> None:
     x = pd.DataFrame(x, columns=['x0', 'x1'])
+    if other_x is not None:
+      other_x = pd.DataFrame(other_x, columns=['x0', 'x1'])
 
     sns.set(style='darkgrid')
     plt.figure(figsize=(9, 4))
     ts_u = jnp.linspace(0, self.T, u.shape[0])
 
     plt.subplot(1, 2, 1)
-    plt.plot(x['x0'], x['x1'])
+    plt.plot(x['x0'], x['x1'], label="True trajectory")
+    if other_x is not None:
+      plt.plot(other_x['x0'], other_x['x1'], color="green", label="Learned trajectory")
+      plt.legend()
     
     plt.subplot(1, 2, 2)
     plt.step(ts_u, u, where="post")

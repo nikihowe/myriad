@@ -41,23 +41,22 @@ class IntegrationOrder(Enum):
   LINEAR="LINEAR"
   QUADRATIC="QUADRATIC"
 
-
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=True)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.VANDERPOL
-  optimizer: OptimizerType = OptimizerType.COLLOCATION
+  system: SystemType = SystemType.CARTPOLE
+  optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   order: IntegrationOrder = IntegrationOrder.LINEAR
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
-  ipopt_max_iter: int = 10_000
+  ipopt_max_iter: int = 1_000
   # Trajectory Optimizer
   intervals: int = 30 # collocation and shooting 
   # TODO: make it include the single shooting case of 1 interval. Right now that breaks
-  controls_per_interval: int = 2 # multiple shooting
+  controls_per_interval: int = 1 # multiple shooting
 
   #Indirect method optimizer
   steps: int = 1000

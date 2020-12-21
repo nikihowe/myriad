@@ -41,7 +41,7 @@ class Cancer(IndirectFHCS):
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
             bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
-                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0,u_1,...)
+                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0, u_1,...)
                 [0, jnp.inf],
             ]),
             terminal_cost=False,
@@ -71,9 +71,13 @@ class Cancer(IndirectFHCS):
         char = 0.5*adj_t*self.delta*x_t
         return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))
 
-    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
+    def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
+                      adj: Optional[jnp.ndarray] = None, 
+                      other_x: Optional[jnp.ndarray] = None,
+                      other_u: Optional[jnp.ndarray] = None) -> None:
+        print("plotting solution")
         sns.set(style='darkgrid')
-        plt.figure(figsize=(12, 12))
+        plt.figure(figsize=(8, 9))
 
         if adj is None:
             adj = u.copy()
@@ -81,29 +85,39 @@ class Cancer(IndirectFHCS):
         else:
             flag = True
 
-        x, u, adj = [x], [u], [adj]
+        plan_with_node = False
+        if other_u is not None and other_x is not None:
+            plan_with_node = True
 
-        ts_x = jnp.linspace(0, self.T, x[0].shape[0])
-        ts_u = jnp.linspace(0, self.T, u[0].shape[0])
+        adj = [adj]
+
+        ts_x = jnp.linspace(0, self.T, x.shape[0])
+        ts_u = jnp.linspace(0, self.T, u.shape[0])
         ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
 
-        plt.subplot(3, 1, 1)
-        for x_i in x:
-            plt.plot(ts_x, x_i)
-        plt.title("Optimal state of dynamic system via forward-backward sweep")
+        ax = plt.subplot(3, 1, 1)
+        plt.plot(ts_x, x, "o-", label="True trajectory, using true optimal controls")
+        if plan_with_node:
+            plt.plot(ts_x, other_x, '-o', color="green", label="True trajectory, using controls calculated with NODE")
+        elif other_x is not None:
+            plt.plot(ts_x, other_x, "o-", color="green", label="NODE-Simulated trajectory, using optimal controls")
+        ax.legend()
+        plt.title("State of dynamic system")
         plt.ylabel("state (x)")
 
-        plt.subplot(3, 1, 2)
-        for u_i in u:
-            plt.plot(ts_u, u_i)
-        plt.title("Optimal control of dynamic system via forward-backward sweep")
+        ax = plt.subplot(3, 1, 2)
+        plt.plot(ts_u, u, '-o', label="Planning with true dynamics")
+        if other_u is not None:
+            plt.plot(ts_u, other_u, '-o', label="Planning with NODE-Simulated dynamics")
+        ax.legend()
+        plt.title("Control of dynamic system")
         plt.ylabel("control (u)")
 
         if flag:
             plt.subplot(3, 1, 3)
             for adj_i in adj:
                 plt.plot(ts_adj, adj_i)
-            plt.title("Optimal adjoint of dynamic system via forward-backward sweep")
+            plt.title("Adjoint of dynamic system")
             plt.ylabel("adjoint (lambda)")
 
         plt.xlabel('time (s)')

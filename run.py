@@ -60,19 +60,24 @@ def main(unused_argv):
   system = get_system(hp)
 
   # Run experiment
-  optimizer = get_optimizer(hp, cfg, system)
-  if optimizer.require_adj:
-      x, u, adj = optimizer.solve()
+  # optimizer = get_optimizer(hp, cfg, system)
+  # if optimizer.require_adj:
+  #     x, u, adj = optimizer.solve()
 
-      if cfg.plot_results:
-        system.plot_solution(x, u, adj)
-  else:
-      x, u = optimizer.solve()
+  #     if cfg.plot_results:
+  #       system.plot_solution(x, u, adj)
+  # else:
+  #     x, u = optimizer.solve()
 
-      if cfg.plot_results:
-          system.plot_solution(x, u)
+  #     if cfg.plot_results:
+  #         system.plot_solution(x, u)
+
+  # Run neural network
+
+  run_net(hp, cfg, use_params="source/params/CARTPOLE_2020-12-18.p", save=False)
+  # run_net(hp, cfg, use_params=None, save=True)
 
 
 if __name__=='__main__':
-  # app.run(main)
-  run_net()
+  app.run(main)
+  # run_net()

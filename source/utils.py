@@ -13,7 +13,7 @@ def integrate(
   h: float,  # step size
   N: int,  # steps
   ts: Optional[jnp.ndarray], # allow for optional time-dependent dynamics
-  integration_order: IntegrationOrder, # allows user to choose interpolation for controls
+  integration_order: Optional[IntegrationOrder], # allows user to choose interpolation for controls
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # TODO: implement use of times
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
@@ -36,6 +36,8 @@ def integrate(
     return x + h*dynamics_t(x, u)
 
   def fn(carried_state, idx):
+    if not integration_order:
+      integration_order == IntegrationOrder.CONSTANT
     if integration_order == IntegrationOrder.CONSTANT:
       if ts is not None:
         one_step_forward = euler_step(carried_state, interval_us[idx], *ts[idx:idx+2])
