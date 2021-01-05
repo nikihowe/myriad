@@ -7,7 +7,7 @@ from .config import IntegrationOrder
 
 
 def integrate(
-  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray],  # dynamics function
+  dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray]], jnp.ndarray],  # dynamics function
   x_0: jnp.ndarray,  # starting state
   interval_us: jnp.ndarray,  # controls
   h: float,  # step size

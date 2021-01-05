@@ -13,8 +13,8 @@ from .config import SystemType, HParams
 @dataclass
 class FiniteHorizonControlSystem(object):
   _type: SystemType
-  x_0: jnp.array  # state at time 0
-  x_T: Optional[jnp.array]  # state at time T
+  x_0: jnp.ndarray  # state at time 0
+  x_T: Optional[jnp.ndarray]  # state at time T
   T: float  # duration of trajectory
   bounds: jnp.ndarray  # State and control bounds
   terminal_cost: bool  # Whether only the final state and control are inputs to the cost
@@ -28,13 +28,13 @@ class FiniteHorizonControlSystem(object):
   #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
   #   assert self.T > 0
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
     raise NotImplementedError
   
-  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.array]) -> float:
+  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -> float:
     raise NotImplementedError
 
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Optional[jnp.array], T: Optional[jnp.array] = None) -> float:
+  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -> float:
     return 0
 
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
@@ -43,7 +43,7 @@ class FiniteHorizonControlSystem(object):
 
 @dataclass
 class IndirectFHCS(FiniteHorizonControlSystem, ABC):
-  adj_T: Optional[jnp.array] = None  # adjoint at time T
+  adj_T: Optional[jnp.ndarray] = None  # adjoint at time T
   guess_a: Optional[float] = None  # Initial guess for secant method
   guess_b: Optional[float] = None  # Initial guess for secant method
 
@@ -267,7 +267,7 @@ class SEIR(FiniteHorizonControlSystem):
       terminal_cost = False,
     )
 
-  def dynamics(self, y_t: jnp.ndarray, u_t: jnp.float64) -> jnp.ndarray:
+  def dynamics(self, y_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
     S, E, I, N = y_t
 
     Ṡ = jnp.squeeze(self.b*N - self.d*S - self.c*S*I - u_t*S)
@@ -278,7 +278,7 @@ class SEIR(FiniteHorizonControlSystem):
     ẏ_t = jnp.array([Ṡ, Ė, İ, Ṅ])
     return ẏ_t
   
-  def cost(self, y_t: jnp.ndarray, u_t: jnp.float64, t: float = None) -> jnp.float64:
+  def cost(self, y_t: jnp.ndarray, u_t: float, t: float = None) -> float:
     return self.A * y_t[2] + u_t ** 2
 
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
