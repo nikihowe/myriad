@@ -12,6 +12,7 @@
     ├── systems         # Dynamical systems
         └── ...
     ├── config.py       # Configuration and data types
+    ├── gym.py          # Gym interface for systems
     ├── optimizers.py   # Trajectory optimization algorithms
     └── utils.py        # Helper methods
 ├── tests
@@ -36,12 +37,6 @@ python3 -m venv env
 source env/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
-```
-
-### Gin
-
-```bash
-pip install gin-config
 ```
 
 ## Running experiments
