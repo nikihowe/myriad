@@ -317,7 +317,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #################
     # Initial Guess #
     #################
-    
+
     # Controls
     controls_guess = jnp.zeros((midpoints_const*num_steps + 1, control_shape))
     controls_mean = system.bounds[-1 * control_shape:].mean()
@@ -351,7 +351,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
 
     # Go from having controls like (num_controls + 1, control_shape) (left)
-    #                      to like (-1, num_controls_per_interval + 1, control_shape) (right)
+    #                      to like (hp.intervals, num_controls_per_interval + 1, control_shape) (right)
     # [ 1. ,  1.1]                [ 1. ,  1.1]
     # [ 2. ,  2.1]                [ 2. ,  2.1]
     # [ 3. ,  3.1]                [ 3. ,  3.1]
@@ -367,7 +367,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [ 9. ,  9.1]
     #                             [10. , 10.1]
     def reorganize_controls(us):# This still works, even for higher-order control shape
-      return jnp.hstack([us[:-1].reshape(-1, midpoints_const*hp.controls_per_interval, control_shape),
+      return jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
                          us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]]).squeeze()
 
 
