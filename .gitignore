@@ -152,3 +152,6 @@ paper/*.synctex.gz
 
 # Profiling
 out.prof
+
+# Saved parameters
+source/params/*.p
