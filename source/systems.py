@@ -37,7 +37,8 @@ class FiniteHorizonControlSystem(object):
   def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Optional[jnp.array], T: Optional[jnp.array] = None) -> float:
     return 0
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, other_x: Optional[jnp.ndarray]) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
+                    other_x: Optional[jnp.ndarray], save_title: Optional[str] = None) -> None:
     raise NotImplementedError
 
 
@@ -159,7 +160,8 @@ class CartPole(FiniteHorizonControlSystem):
     return u_t ** 2
   
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
-                    other_x: Optional[jnp.ndarray], other_u: Optional[jnp.ndarray]) -> None:
+                    other_x: Optional[jnp.ndarray], other_u: Optional[jnp.ndarray],
+                    save_title: Optional[str] = None) -> None:
     x = pd.DataFrame(x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
 
     plan_with_node = False
@@ -210,7 +212,10 @@ class CartPole(FiniteHorizonControlSystem):
     ax.set_xlabel('time (s)')
 
     plt.tight_layout()
-    plt.show()
+    if save_title:
+      plt.savefig(save_title)
+    else:
+      plt.show()
 
 
 class VanDerPol(FiniteHorizonControlSystem):

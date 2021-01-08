@@ -74,7 +74,10 @@ class Cancer(IndirectFHCS):
     def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
                       adj: Optional[jnp.ndarray] = None, 
                       other_x: Optional[jnp.ndarray] = None,
-                      other_u: Optional[jnp.ndarray] = None) -> None:
+                      other_u: Optional[jnp.ndarray] = None,
+                      save_title: Optional[str] = None) -> None:
+        print("size of x", x.shape)
+        print("size of u", u.shape)
         print("plotting solution")
         sns.set(style='darkgrid')
         plt.figure(figsize=(8, 9))
@@ -98,9 +101,9 @@ class Cancer(IndirectFHCS):
         ax = plt.subplot(3, 1, 1)
         plt.plot(ts_x, x, "o-", label="True trajectory, using true optimal controls")
         if plan_with_node:
-            plt.plot(ts_x, other_x, '-o', color="green", label="True trajectory, using controls calculated with NODE")
+            plt.plot(ts_x, other_x, '.-', color="green", label="True trajectory, using controls calculated with NODE")
         elif other_x is not None:
-            plt.plot(ts_x, other_x, "o-", color="green", label="NODE-Simulated trajectory, using optimal controls")
+            plt.plot(ts_x, other_x, '.-', color="green", label="NODE-Simulated trajectory, using optimal controls")
         ax.legend()
         plt.title("State of dynamic system")
         plt.ylabel("state (x)")
@@ -122,4 +125,8 @@ class Cancer(IndirectFHCS):
 
         plt.xlabel('time (s)')
         plt.tight_layout()
-        plt.show()
+
+        if save_title:
+            plt.savefig(save_title)
+        else:
+            plt.show()
