@@ -30,7 +30,7 @@ def integrate(
     k1 = dynamics_t(x, u1)
     k2 = dynamics_t(x + h*k1, u2)
     return x + (h/2) * (k1 + k2)
-  
+
   @jit
   def euler_step(x, u, ts=None):
     return x + h*dynamics_t(x, u)
@@ -45,7 +45,7 @@ def integrate(
         one_step_forward = euler_step(carried_state, interval_us[idx])
     elif integration_order == IntegrationOrder.LINEAR:
       if ts is not None:
-        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1] *ts[idx:idx+2])
+        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], *ts[idx:idx+2])
       else:
         one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1])
     elif integration_order == IntegrationOrder.QUADRATIC:
@@ -59,9 +59,9 @@ def integrate(
 
     return one_step_forward, one_step_forward # (carry, y)
 
+  print("integrating")
   x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
   return x_T, jnp.concatenate((x_0[None], all_next_states))
-
 
 # Used for the augmented state cost calculation
 integrate_in_parallel = vmap(integrate, in_axes=(None, 0, 0, None, None, 0, None))#, static_argnums=(0, 5, 6)
