@@ -11,7 +11,7 @@ from source.config import Config, HParams
 from source.optimizers import get_optimizer
 from source.systems import get_system
 
-from source.neural_ode import run_net
+from source.opt_control_neural_ode import run_net
 
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
 parser = simple_parsing.ArgumentParser()
@@ -73,9 +73,22 @@ def main(unused_argv):
   #         system.plot_solution(x, u)
 
   # Run neural network
+  run_net(hp, cfg, num_training_steps=10_000, save=False)
 
-  run_net(hp, cfg, use_params="source/params/CARTPOLE_2020-12-18.p", save=False)
-  # run_net(hp, cfg, use_params=None, save=True)
+
+  # Train for different amounts of time
+  # for n in [i*10_000 for i in range(1, 11)]:
+  #   print("num_training_steps", n)
+  #   run_net(hp, cfg, num_training_steps=n, save=True)
+
+  # Test the quality of the different trainings
+  # from datetime import date
+  # for n in [i*10_000 for i in range(1, 11)]:
+  #   date_string = date.today().strftime("%Y-%m-%d")
+  #   name = "source/params/{}_{}_{}.p".format(hp.system.name, n, date_string)
+  #   run_net(hp, cfg, use_params=name,
+  #           save_plot_title="{}_{}".format(hp.system.name, n))
+  #   break
 
 
 if __name__=='__main__':
