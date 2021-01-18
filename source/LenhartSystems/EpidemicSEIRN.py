@@ -52,7 +52,7 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
                 x_0[0],
                 x_0[1],
                 x_0[2],
-                jnp.sum(x_0),
+                jnp.sum(jnp.asarray(x_0)),
             ]),                     # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
