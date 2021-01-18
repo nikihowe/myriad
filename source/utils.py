@@ -59,7 +59,6 @@ def integrate(
 
     return one_step_forward, one_step_forward # (carry, y)
 
-  print("integrating")
   x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
   return x_T, jnp.concatenate((x_0[None], all_next_states))
 
