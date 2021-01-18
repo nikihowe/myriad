@@ -62,7 +62,8 @@ class TrajectoryOptimizer(object):
       solution = minimize_ipopt(**opt_inputs)
     _t2 = time.time()
     if self.cfg.verbose:
-      print(f'Solved in {_t2 - _t1} seconds.')
+      print('Solver exited with success:', solution.success)
+      print(f'Completed in {_t2 - _t1} seconds.')
 
     if self.hp.order == IntegrationOrder.QUADRATIC and self._type == OptimizerType.COLLOCATION:
       x, x_mid, u, u_mid = self.unravel(solution.x)
