@@ -184,9 +184,9 @@ class CartPole(FiniteHorizonControlSystem):
     # plt.ylim(0, 1.5)
     ax.plot(ts_x, x['q1'], '-bo', clip_on=False, label="True trajectory, using true optimal controls")
     if plan_with_node: # planning with NODE
-      ax.plot(ts_x, other_x['q1'], '-bo', color="green", clip_on=False, label="True trajectory, using controls calculated with NODE")
+      ax.plot(ts_u, other_x['q1'], '-bo', color="green", clip_on=False, label="True trajectory, using controls calculated with NODE")
     elif other_x is not None: # only learning with NODE
-      ax.plot(ts_x, other_x['q1'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory, using true optimal controls")
+      ax.plot(ts_u, other_x['q1'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory, using true optimal controls")
     ax.legend(loc="lower right")
 
     ax = plt.subplot(3, 1, 2)
@@ -195,9 +195,9 @@ class CartPole(FiniteHorizonControlSystem):
     ax.set_xlim(0, 2.01)
     # plt.ylim(-2, 4)
     if plan_with_node:
-      ax.plot(ts_x, other_x['q2'], '-bo', color="green", clip_on=False, label="True trajectory, using controls calculated with NODE")
+      ax.plot(ts_u, other_x['q2'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory")
     elif other_x is not None:
-      ax.plot(ts_x, other_x['q2'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory, using true optimal controls")
+      ax.plot(ts_u, other_x['q2'], '-bo', color="green", clip_on=False, label="NODE-Simulated trajectory")
     ax.legend(loc="lower right")
 
     ax = plt.subplot(3, 1, 3)
