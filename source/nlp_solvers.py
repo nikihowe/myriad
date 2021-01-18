@@ -18,8 +18,8 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
 
   constraint_fun = constraints['fun']
   max_iter = 10*options['maxiter'] if 'maxiter' in options else 30_000
-  eta_x = options['eta_x'] if 'eta_x' in options else 0.01 # primals
-  eta_v = options['eta_v'] if 'eta_v' in options else 0.01 # duals
+  eta_x = options['eta_x'] if 'eta_x' in options else 1e-6 # primals
+  eta_v = options['eta_v'] if 'eta_v' in options else 1e-6 # duals
 
   # will deal with bounds later
   @jit
@@ -37,17 +37,19 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
     return (x_new, lmbda_new)
 
   def solve(x, lmbda):
+    success = False
     x_old = x + 20 # just so we don't terminate immediately
     for i in range(max_iter):
       if i % 1000 == 0:
         print("x", x)
-      if i % 100 and jnp.allclose(x_old, x, rtol=0., atol=1e-5): # tune tolerance according to need
+      if i % 100 and jnp.allclose(x_old, x, rtol=0., atol=1e-10): # tune tolerance according to need
+        success = True
         break
       x_old = x
       x, lmbda = step(x, lmbda)
-    return x, lmbda
+    return x, lmbda, success
 
   lmbda_init = jnp.ones_like(constraint_fun(x0))
-  x, lmbda = solve(x0, lmbda_init)
+  x, lmbda, success = solve(x0, lmbda_init)
 
-  return namedtuple('solution', ['x', 'v'])(x, lmbda)
+  return namedtuple('solution', ['x', 'v', 'success'])(x, lmbda, success)
