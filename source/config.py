@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-
 class SystemType(Enum):
   CARTPOLE="CARTPOLE"
   VANDERPOL="VANDERPOL"
@@ -22,12 +21,10 @@ class SystemType(Enum):
   PREDATORPREY = "PREDATORPREY"
   INVASIVEPLANT = "INVASIVEPLANT"
 
-
 class OptimizerType(Enum):
   COLLOCATION="COLLOCATION"
   SHOOTING="SHOOTING"
   FBSM="FBSM"
-
 
 class NLPSolverType(Enum):
   # SCIPY="SCIPY"
@@ -35,32 +32,38 @@ class NLPSolverType(Enum):
   # INEXACTNEWTON="INEXACTNEWTON"
   EXTRAGRADIENT="EXTRAGRADIENT"
 
-
 class IntegrationOrder(Enum):
   CONSTANT="CONSTANT"
   LINEAR="LINEAR"
   QUADRATIC="QUADRATIC"
+
+class SamplingApproach(Enum):
+  UNIFORM="UNIFORM"
+  PLANNING="PLANNING"
 
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
   system: SystemType = SystemType.CANCER
-  optimizer: OptimizerType = OptimizerType.SHOOTING
+  optimizer: OptimizerType = OptimizerType.COLLOCATION
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   order: IntegrationOrder = IntegrationOrder.LINEAR
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
-  ipopt_max_iter: int = 1_000
+  ipopt_max_iter: int = 1000
   # Trajectory Optimizer
-  intervals: int = 50 # collocation and shooting 
+  intervals: int = 20 # collocation and shooting 
   # TODO: make it include the single shooting case of 1 interval. Right now that breaks
-  controls_per_interval: int = 2 # multiple shooting
+  controls_per_interval: int = 4 # multiple shooting
 
   #Indirect method optimizer
   steps: int = 1000
 
+  def __post_init__(self):
+    if self.optimizer == OptimizerType.COLLOCATION:
+      self.controls_per_interval = 1
 
 # Secondary configurations which should not change experiment results
 @dataclass(eq=True, frozen=True)

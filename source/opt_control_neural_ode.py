@@ -21,7 +21,8 @@ from typing import Any, Generator, Mapping, Tuple, Optional
 Batch = Any
 OptState = Any
 
-from source.config import HParams, Config, SystemType, OptimizerType, IntegrationOrder
+from source.config import HParams, Config
+from source.config import SystemType, OptimizerType, IntegrationOrder, SamplingApproach
 from source.optimizers import TrajectoryOptimizer, get_optimizer
 from source.systems import FiniteHorizonControlSystem, get_system
 from source.utils import integrate, integrate_in_parallel
@@ -31,159 +32,205 @@ from source.utils import integrate, integrate_in_parallel
 # Neural ODE for opt control #
 ##############################
 
+# TODO: make the passing around and splitting of keys more consistent through the code
+# TODO: perhaps put helper and plotting functions in a separate module
 def make_neural_ode(
   hp: HParams,
   cfg: Config,
   learning_rate: jnp.float32 = 0.001,
-  num_training_steps: jnp.float32 = 10_001,
-  use_params: Optional[str] = None,
   train_size: jnp.int32 = 100_000,
-  mb_size: jnp.int32 = 128,
+  validation_size: jnp.int32 = 20_000,
+  test_size: jnp.int32 = 20_000,
+  minibatch_size: jnp.int32 = 128,
   order: IntegrationOrder = IntegrationOrder.CONSTANT, # only constant works
-  learning_approach: str = "simple",
-  save_title: Optional[str] = None
+  sampling_approach: SamplingApproach = SamplingApproach.UNIFORM,
+  params_source: Optional[str] = None,
+  plot_title: Optional[str] = None,
+  key: jnp.ndarray = random.PRNGKey(42)
   ):
 
   system = get_system(hp)
   optimizer = get_optimizer(hp, cfg, system)
   stepsize = system.T / (hp.intervals*hp.controls_per_interval) # Segment length
 
-  # See the same function in optimizers.py for an explanation of what this does
-  # def reorganize_controls(us):
-  #   state_shape = system.x_0.shape[0]
-  #   control_shape = system.bounds.shape[0] - state_shape
-  #   print("control shape", control_shape)
-  #   midpoints_const = 2 if hp.order == IntegrationOrder.QUADRATIC else 1
-
-  #   first = us[:,:-1].reshape(train_size, hp.intervals, midpoints_const*hp.controls_per_interval, control_shape)
-  #   print("first", first.shape)
-  #   second = us[:,::midpoints_const*hp.controls_per_interval][:,1:][:,:,jnp.newaxis,jnp.newaxis]
-  #   print("second", second.shape)
-  #   print("concatenated", jnp.concatenate([first, second], axis=2).squeeze().shape)
-  #   return jnp.concatenate([first, second], axis=2).squeeze()
-
-  # NOTE: for now, this will only work with scalar controls.
-  def get_many_xu_trajectories(key=random.PRNGKey(42)):
+  # NOTE: this might only work with scalar controls.
+  # TODO: check and if necessary, extend to case with vector controls.
+  def generate_uniform_dataset(key):
     key, subkey = random.split(key)
 
     # We need upper and lower bounds in order to generate random control
     # vectors for training.
     u_lower = system.bounds[-1, 0]
     u_upper = system.bounds[-1, 1]
-    print("u lower", u_lower)
-    print("u upper", u_upper)
-    if system._type == SystemType.CANCER:
+    if system._type == SystemType.CANCER: # CANCER usually has an infinite upper bound
       u_upper = 2.
-    train_us = random.uniform(subkey, (train_size, hp.intervals*hp.controls_per_interval + 1),
-                              minval=u_lower, maxval=u_upper)
-    if system._type == SystemType.VANDERPOL: # avoid vanderpol explosion
-      train_us = train_us * 0.1
-
-    # new_us = reorganize_controls(train_us)
-    # new_x0 = system.x_0[jnp.newaxis].repeat(train_size, axis=0)
-    # print("x0 shape", new_x0.shape)
-   
-
-    # Integrate all the trajectories in parallel, starting from the start state,
-    # and applying the randomly chosen controls, which are different for each trajectory
-    _, train_xs = integrate_in_parallel(system.dynamics,
-                                        system.x_0[jnp.newaxis].repeat(train_size, axis=0),
-                                        train_us, stepsize, hp.intervals*hp.controls_per_interval, None, order)
     
-    print("xs shape", train_xs.shape)
-    print("us shape", train_us.shape)
 
-    xs_and_us = jnp.concatenate([train_xs, train_us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
+    # Generate |total dataset size| control trajectories
+    total_size = train_size + validation_size + test_size
+    all_us = random.uniform(subkey, (total_size, hp.intervals*hp.controls_per_interval + 1),
+                            minval=u_lower, maxval=u_upper)
+    if system._type == SystemType.VANDERPOL: # to avoid VANDERPOL dynamics explosion
+      all_us = all_us * 0.1
 
-    print("together", xs_and_us.shape)
+    # Integrate all the trajectories in parallel, starting from the same start state,
+    # and applying the randomly chosen controls, which are different for each trajectory
+    _, all_xs = integrate_in_parallel(system.dynamics,
+                                      system.x_0[jnp.newaxis].repeat(total_size, axis=0),
+                                      all_us, stepsize, hp.intervals*hp.controls_per_interval, None, order)
+    
+    # Stack the states and controls together
+    xs_and_us = jnp.concatenate([all_xs, all_us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
+
+    if cfg.verbose:
+      print("Generating training control trajectories between bounds:")
+      print("  u lower", u_lower)
+      print("  u upper", u_upper)
+      print("of shapes:")
+      print("  xs shape", all_xs.shape)
+      print("  us shape", all_us.shape)
+      print("  together", xs_and_us.shape)
 
     return xs_and_us
 
-  train_data = get_many_xu_trajectories()
-  print("generated training trajectories!", train_data.shape)
+  # Generate a dataset from a control trajectory by making small
+  # perturbations to the controls. Make half of the dataset
+  # be uniformly random anyway, to avoid getting stuck in bad states.
+  def generate_dataset_around(us, key, num=minibatch_size, spread=1):
+    u_lower = system.bounds[-1, 0]
+    u_upper = system.bounds[-1, 1]
+    if system._type == SystemType.CANCER: # CANCER usually has an infinite upper bound
+      u_upper = 2.
 
-  def get_minibatch(i=0):
-    i = i % int(len(train_data) / (mb_size + 1))
-    return train_data[mb_size*i:mb_size*(i+1)]
+    key, sub1, sub2, sub3 = random.split(key, 4)
 
-  # us is a single control trajectory
-  # def get_minibatch_around(us, key=random.PRNGKey(43)):
-  #   u_lower = system.bounds[-1, 0]
-  #   u_upper = system.bounds[-1, 1]
-  #   # NOTE: This will break with multidimensional controls
-  #   noise = random.normal(key=key, shape=(mb_size, len(us))).squeeze()
-  #   us = jnp.clip(us[jnp.newaxis].repeat(mb_size, axis=0).squeeze() + noise, a_min=u_lower, a_max=u_upper)
-  #   _, train_xxs = integrate_in_parallel(system.dynamics,
-  #                                        system.x_0[jnp.newaxis].repeat(mb_size, axis=0),
-  #                                        us, stepsize, hp.intervals, None, order)
-  #   xs_and_us = jnp.concatenate([train_xxs, us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
-  #   return xs_and_us
+    # Generate new control trajectories by adding
+    # Gaussian noise to the one given
+    # NOTE: This might break with multidimensional controls
+    # TODO: Extend to case with vector controls.
+    noise = random.normal(key=sub1, shape=(num//2, len(us))) * spread
+    new_us = jnp.clip(us + noise, a_min=u_lower, a_max=u_upper)
+    # Also generate a number of uniform random control trajectories
+    uniform_us = random.uniform(key=sub2, shape=(num//2, len(us)),
+                                minval=u_lower, maxval=u_upper)
+    final_us = jnp.concatenate([new_us, uniform_us], axis=0)
 
-  def net_fn(x_and_u: jnp.array) -> jnp.array: # going to be a 1D array for now
-    # print("x and u shape", x_and_u.shape)
+    # Shuffle the control trajectories (important only if we
+    # are going to sample from this dataset in contiguous chunks)
+    if num > 1:
+      final_us = random.permutation(sub3, final_us)
+
+    # Generate the corresponding state trajectories
+    _, train_xs = integrate_in_parallel(system.dynamics,
+                                        system.x_0[jnp.newaxis].repeat(num, axis=0),
+                                        final_us, stepsize, hp.intervals*hp.controls_per_interval, None, order)
+    
+    xs_and_us = jnp.concatenate([train_xs, final_us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
+    assert not jnp.isnan(xs_and_us).all()
+
+    if cfg.verbose:
+      print("Generating dataset from given control trajectory:")
+      print("xs shape", train_xs.shape)
+      print("us shape", final_us.shape)
+      print("together", xs_and_us.shape)
+
+    return xs_and_us
+
+  # Various ways to get a minibatch from a dataset
+  def get_minibatch(dataset, i=0, approach="numpy", key=None):
+    if approach == "numpy": # fast and random, but not jax
+      random_indices = np.random.choice(len(dataset), minibatch_size, replace=False)
+      return dataset[random_indices]
+    elif approach == "deterministic": # really fast, but no randomness
+      i = i % int(len(dataset) / (minibatch_size + 1))
+      return dataset[minibatch_size*i:minibatch_size*(i+1)]
+    elif approach == "jax" and key is not None: # pure jax, but very slow
+      random_indices = random.choice(key, len(dataset), shape=(minibatch_size,), replace=False)
+      return dataset[random_indices]
+    else:
+      print("Unknown approach. Please choose among \{numpy, deterministic, jax\}")
+      raise ValueError
+
+  # Find the optimal trajectory according the learned model
+  def get_optimal_trajectory(params):
+    opt_u = plan_with_model(params)
+    _, opt_x = integrate(system.dynamics, system.x_0, opt_u,
+                         stepsize, hp.intervals*hp.controls_per_interval, None, order)
+    xs_and_us = jnp.concatenate([opt_x, opt_u[:,jnp.newaxis]], axis=1)
+    assert not jnp.isnan(xs_and_us).all()
+    return xs_and_us
+
+  # The neural net for the neural ode: a small and simple MLP
+  def net_fn(x_and_u: jnp.array) -> jnp.array:
     mlp = hk.Sequential([
         hk.Linear(40), nn.relu,
         hk.Linear(40), nn.relu,
         hk.Linear(len(system.x_0)),
     ])
-    out = mlp(x_and_u)
-    # print("out shape", out.shape)
-    return mlp(x_and_u) # will be automatically broadcast
+    return mlp(x_and_u) # will automatically broadcast over minibatches
 
-  # Initialize the network
+  # Need to initialize things here because the later functions
+  # use the nonlocal "net" object
+
+  # Generate an initial dataset and divide it up
+  key, subkey = random.split(key)
+  all_data = generate_uniform_dataset(subkey)
+  train_data = all_data[:train_size]
+  validation_data = all_data[train_size:train_size+validation_size]
+  test_data = all_data[train_size+validation_size:]
+  if cfg.verbose:
+    print("Generated training trajectories of shape", train_data.shape)
+    print("Generated validation trajectories of shape", validation_data.shape)
+    print("Generated test trajectories of shape", test_data.shape)
+
+  # Initialize the parameters and optimizer state
   net = hk.without_apply_rng(hk.transform(net_fn))
-  mb = get_minibatch()
-  print("minibatch", mb.shape)
-  params = net.init(random.PRNGKey(42), mb[-1])
+  mb = get_minibatch(train_data)
+  key, subkey = random.split(key)
+  params = net.init(subkey, mb[-1])
   opt = optax.adam(learning_rate)
   opt_state = opt.init(params)
-  print("initialized")
+  if cfg.verbose:
+    print("minibatches are of shape", mb.shape)
+    print("initialized network weights")
 
+  # Gradient descent on the loss function in scope
   @jit
   def update(
       params: hk.Params,
       opt_state: OptState,
       minibatch: Batch,
   ) -> Tuple[hk.Params, OptState]:
-    # print("params", params)
-    """Learning rule (adam)."""
     grads = grad(loss)(params, minibatch)
     updates, opt_state = opt.update(grads, opt_state)
     new_params = optax.apply_updates(params, updates)
     return new_params, opt_state
 
   # NOTE: assumed 1D control
-  def loss(params: hk.Params, minibatch: Batch) -> jnp.ndarray:
-    def apply_net(x, u):
-      return net.apply(params, jnp.append(x, u))
+  # TODO: extend to vector control
+  @jit
+  def loss(cur_params: hk.Params, minibatch: Batch) -> jnp.ndarray:
+    apply_net = lambda x, u : net.apply(cur_params, jnp.append(x, u))
 
-    # print("x0 shape", system.x_0[jnp.newaxis].repeat(mb_size, axis=0).shape)
-    # print("batch shape", batch.shape)
+    # Extract controls and true state trajectory
     controls = minibatch[:, :, -1]
-    # print("true states", true_states.shape)
-    # print("controls", controls.shape)
-
-
-    # print("controls shape", controls.shape)
-    _, predicted_states = integrate_in_parallel(apply_net,
-                                                system.x_0[jnp.newaxis].repeat(mb_size, axis=0),
-                                                controls, stepsize, hp.intervals*hp.controls_per_interval, None, order)
-    # print("got predicted", predicted_states.shape)
-    # print("predicted values", predicted_states[0])
-    
     true_states = minibatch[:, :, :-1]
-    # print("true states", true_states.shape)
-    # print("true states values", true_states[0])
 
-    # Deal with simulator explosion
-    # TODO: there must be a better way, no?
-    true_states = jnp.nan_to_num(true_states).squeeze()
-    predicted_states = jnp.nan_to_num(predicted_states).squeeze()
+    # Use neural net to predict state trajectory
+    _, predicted_states = integrate_in_parallel(apply_net,
+                                                system.x_0[jnp.newaxis].repeat(len(minibatch), axis=0),
+                                                controls, stepsize, hp.intervals*hp.controls_per_interval, None, order)
 
-    # nan_to_num was necessary for van der pol (even then it didn't really train)
-    loss = jnp.nan_to_num(jnp.mean(jnp.nan_to_num((predicted_states - true_states)*(predicted_states - true_states))))
+    
+    # nan_to_num was necessary for VANDERPOL
+    # (though even with this modification it still didn't train)
+    # TODO: I wonder if there is a way to avoid the ugly nan_to_num
+    true_states = jnp.nan_to_num(true_states)
+    predicted_states = jnp.nan_to_num(predicted_states)
+    loss = jnp.nan_to_num(jnp.mean(jnp.nan_to_num((predicted_states - true_states)*(predicted_states - true_states)))) # MSE
     return loss
 
+  # Load parameters saved in pickle format
   def load_params(my_pickle):
     p = None
     try:
@@ -193,178 +240,201 @@ def make_neural_ode(
       raise SystemExit
     return p
 
-  def train_network(num_steps: int = num_training_steps, params = params, opt_state = opt_state):
-    if learning_approach == "simple":
+  # Perform "num_steps" steps of minibatch gradient descent on the network
+  # starting with params "params". Stores losses in the "losses" dict.
+  def train_network(key, num_steps, params, opt_state, losses, save_every=1000):
+
+    if not losses:
+      losses = {'train_loss':[], 
+                'validation_loss':[], 
+                'loss_on_opt':[], 
+                'control_costs':[],
+                'constraint_violations':[]}
+
+    def calculate_losses(step):
+      # Calculate losses
+      cur_loss = loss(params, get_minibatch(train_data, step))
+      losses['train_loss'].append(cur_loss)
+      losses['validation_loss'].append(loss(params, get_minibatch(validation_data, step)))
+      losses['loss_on_opt'].append(loss(params, x_and_u_opt[jnp.newaxis]))
+
+      # Get the optimal controls, and cost of applying them
+      u = plan_with_model(params)
+      _, xs = integrate(system.dynamics, system.x_0, u, stepsize, # true dynamics
+                        hp.intervals*hp.controls_per_interval, None, order)
+      xs_and_us, unused_unravel = ravel_pytree((xs, u))
+      losses['control_costs'].append(optimizer.objective(xs_and_us))
+
+      # Calculate the final constraint violation
+      losses['constraint_violations'].append(jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+
+      return cur_loss
+
+    # Get the optimal u (according to the model which uses this NODE for dynamics)
+    # and the corresponding state trajectory that occurs when they are applied
+    # following the true environment dynamics
+    x_and_u_opt = get_optimal_trajectory(params)
+
+    # In this approach, training minibatches are drawn from the dataset created
+    # earlier, which chose control trajectories uniformly at random
+    def uniform_sampling_train(params, opt_state, check_frequency=1000):
+      print("sampling from uniform controls")
       old_loss = -1
       for step in trange(num_steps):
-        if step % 1000 == 0:
-          cur_loss = loss(params, get_minibatch(step))
+        if step % check_frequency == 0:
+          cur_loss = calculate_losses(step) # side effect: this fills loss lists too
           print(step, cur_loss)
           if jnp.allclose(cur_loss, old_loss):
             break
           old_loss = cur_loss
-        params, opt_state = update(params, opt_state, get_minibatch(step))
-    else:
-      # elif learning_approach == "informed": # use informed learning approach
-      #   key = random.PRNGKey(0)
-      #   # Start around 0
-      #   mb = get_minibatch_around(jnp.zeros(hp.intervals+1))
-      #   old_loss = -1
-      #   best_loss = float('inf')
-      #   for step in trange(num_training_steps):
-      #     # TODO: what is best strategy for selecting
-      #     # controls to take randoms perturbations of?
-      #     if step % 100 == 0:
-      #       if optimizer.require_adj:
-      #         x, u, adj = optimizer.solve()
-      #       else:
-      #         x, u = optimizer.solve()
-      #       x_and_u, _ = ravel_pytree((x, u))
-      #       inner_loss = optimizer.objective(x_and_u) # am I allowed to access this?
-      #       if inner_loss < best_loss:
-      #         best_loss = inner_loss
-      #         # Generate trajectories around this path
-      #         key, subkey = random.split(key)
-      #         mb = get_minibatch_around(u, subkey)
+        params, opt_state = update(params, opt_state, get_minibatch(train_data,))
+      return params, opt_state
 
-      #     if step % 100 == 0:
-      #       cur_loss = loss(params, get_minibatch(step))
-      #       print(step, cur_loss)
-      #       if jnp.allclose(cur_loss, old_loss):
-      #         break
-      #     old_loss = cur_loss
-      #   params, opt_state = update(params, opt_state, get_minibatch(step))
-      # else:
-      #   print("Unknown learning approach")
-      #   raise KeyError
-      raise NotImplementedError
-    
-    return params, opt_state
+    # In this approach, training minibatches are drawn from a dataset repeatedly
+    # created around the currently-optimal control sequence ("optimal" as according to
+    # when we use the NODE as dynamics model).
+    # "spread_factor" describes how tightly you want to sample around those controls
+    # (bigger spread factor === tighter sampling)
+    def planning_sampling_train(params, opt_state, key, spread_factor=4, check_frequency=1000):
+      print("sampling around planned controls")
+      # Start around average
+      u_lower = system.bounds[-1, 0]
+      u_upper = system.bounds[-1, 1]
+      if system._type == SystemType.CANCER:
+        u_upper = 2.
+      u_spread = u_upper - u_lower
 
-  def apply_net(x, u):
-    return net.apply(params, jnp.append(x, u))
-  
-  # Given a set of controls and corresponding true states, plots them,
-  # and also plots the states as calculated by the NODE using those controls.
-  # If get_optimal_trajectory, uses the optimal controls and corresponding
-  # states, instead of those passed as arguments
-  def plot_trajectory(get_optimal_trajectory: bool = False,
-                      test_state: jnp.ndarray = train_data[-1, :, :-1],
-                      test_controls: jnp.ndarray = train_data[-1, :, -1],
-                      save_title: str = None):
+      # Initial controls are uniform at random
+      mb = train_data
+      old_loss = -1
+      for step in trange(num_steps):
+        if step % check_frequency == 0:
+          cur_loss = calculate_losses(step) # side effect: this fills loss lists too
+          print(step, cur_loss)
+          if jnp.allclose(cur_loss, old_loss):
+            break
+          old_loss = cur_loss
 
-    print("test state", test_state.shape)
-    print("test control", test_controls.shape)
-    if get_optimal_trajectory:
-      # Also get the optimal behaviour
+          # Generate a new dataset around the current "optimal" controls
+          u = plan_with_model(params)
+          mb = generate_dataset_around(u, key=key, num=check_frequency*minibatch_size, spread=u_spread/spread_factor)
+          # TODO: how big to make this dataset?
+
+        params, opt_state = update(params, opt_state, get_minibatch(dataset=mb, i=step))
+
+      return params, opt_state
+
+    # Perform the training steps
+    if sampling_approach == SamplingApproach.UNIFORM:
+      params, opt_state = uniform_sampling_train(params, opt_state)
+    elif sampling_approach == SamplingApproach.PLANNING:
+      key, subkey = random.split(key)
+      params, opt_state = planning_sampling_train(params, opt_state, subkey)
+
+    if cfg.verbose:
+      print("trained for {} minibatches of size {}".format(num_steps, minibatch_size))
+
+    return params, opt_state, losses # losses is a dict of lists which we appended to all during training
+
+  # Plot the given control and state trajectory. Also plot the state
+  # trajectory which occurs when using the neural net for dynamics.
+  # If "optimal", do the same things as above but using the true
+  # optimal controls and corresponding true state trajectory.
+  # "extra_u" is just a way to plot an extra control trajectory.
+  def plot_trajectory(optimal: bool = False,
+                      x: jnp.ndarray = train_data[-1, :, :-1],
+                      u: jnp.ndarray = train_data[-1, :, -1],
+                      extra_u: Optional[jnp.ndarray] = None,
+                      plot_title: str = None):
+
+    apply_net = lambda x, u : net.apply(params, jnp.append(x, u)) # use nonlocal net and params
+
+    if cfg.verbose:
+      print("states to plot", x.shape)
+      print("controls to plot", u.shape)
+
+    # Get optimal controls, if we so desire
+    if optimal:
       if optimizer.require_adj:
           x, u, adj = optimizer.solve()
-          _, predicted_states = integrate(apply_net, system.x_0, u,
-                                          stepsize, hp.intervals*hp.controls_per_interval, None, order)
-
-          system.plot_solution(x, u, adj, other_x=predicted_states, other_u=None, save_title=save_title)
       else:
           x, u = optimizer.solve()
-          _, predicted_states = integrate(apply_net, system.x_0, u,
-                                          stepsize, hp.intervals*hp.controls_per_interval, None, order)
 
-          system.plot_solution(x, u, other_x=predicted_states, other_u=None, save_title=save_title)
-    else:
-      print("test controls", test_controls.shape)
-      
-      _, predicted_states = integrate(apply_net, system.x_0, test_controls, stepsize,
-                                      hp.intervals*hp.controls_per_interval, None, order)
-
-      print("test state", test_state.shape)
-      print("new state", predicted_states.shape)
-      system.plot_solution(test_state, test_controls,
-                           other_x=predicted_states, other_u=None, save_title=save_title)
-  # First, get the optimal controls and resulting trajectory using the true system model.
-  # Then, replace the model dynamics with the trained neural network,
-  # and use that to find "optimal" controls.
-  # Finally, get the resulting true state trajectory coming from those suboptimal controls.
-  def plan_with_model():
-    # Now do planning with the learned model
-    if optimizer.require_adj:
-      true_x, true_u, true_adj = optimizer.solve()
-    else:
-      true_x, true_u = optimizer.solve()
-
-    # Replace the system dynamics with the learned dynamics
-    # Note that x is the "dreamt" trajectory, calculated using the NODE dynamics.
-    system.dynamics = jit(apply_net)
-    new_optimizer = get_optimizer(hp, cfg, system)
-    if new_optimizer.require_adj:
-      x, u, adj = new_optimizer.solve()
-    else:
-      x, u = new_optimizer.solve()
-
-    # Now get the true trajectory followed when we apply these controls
-    _, x = integrate(apply_net, system.x_0, u,
-                     stepsize, hp.intervals*hp.controls_per_interval, None, order)
+    # Get states when using those controls
+    _, predicted_states = integrate(apply_net, system.x_0, u,
+                                    stepsize, hp.intervals*hp.controls_per_interval, None, order)
 
     # Plot
-    if new_optimizer.require_adj:
-      system.plot_solution(true_x, true_u, true_adj, other_x=x, other_u=u)
+    if optimizer.require_adj:
+        system.plot_solution(x, u, adj, other_x=predicted_states, other_u=extra_u, plot_title=plot_title)
     else:
-      system.plot_solution(true_x, true_u, other_x=x, other_u=u)
+      system.plot_solution(x, u, other_x=predicted_states, other_u=extra_u, plot_title=plot_title)
 
-  # def train_to_different_levels(training_lengths):
-  #   for length in training_lengths:
+  # First, get the optimal controls and resulting trajectory using the true system model.
+  # Then, replace the model dynamics with the trained neural network,
+  # and use that to find the "optimal" controls according to the NODE model.
+  # Finally get the resulting true state trajectory coming from those suboptimal controls.
+  def plan_with_model(cur_params=params):
+    apply_net = lambda x, u : net.apply(cur_params, jnp.append(x, u)) # use nonlocal net and params
 
-  # If use_params, then load the params from the file.
-  # Otherwise, do training according to the chosen strategy.
-  #
-  # Strategies currently include:
-  # - uniform random
-  #     random exploration
-  # - adaptive random (not yet implemented)
-  #     every X steps, choose a new set of sample controls
-  #     by sampling around the current best-performing controls
+    # Replace system dynamics, but remember it to restore later
+    old_dynamics = system.dynamics
+    system.dynamics = apply_net
+    new_optimizer = get_optimizer(hp, cfg, system)
 
+    # Plan with NODE model
+    if new_optimizer.require_adj:
+      _, u, adj = new_optimizer.solve() # _ is "dreamt" and we don't care about it
+    else:
+      _, u = new_optimizer.solve()
 
+    # Restore system dynamics
+    system.dynamics = old_dynamics
 
-  # Finally, actually train the network and return the parameters
-  if use_params:
-    params = load_params(use_params)
-    print("loaded params")
-    print(params.keys())
+    return u.squeeze() # this is necessary for later broadcasting
+
+  def run_experiments(key, params, opt_state,
+                      num_times=11, increment=2000,
+                      load_params=False, load_date=None,
+                      save_weights=False, save_plots=False):
+    if load_params and not load_date:
+      print("Need date to load from")
+      raise ValueError
+
+    if save_weights or save_plots:
+      date_string = date.today().strftime("%Y-%m-%d")
+
+    all_losses = {}
+    for n in [(i+1)*increment for i in range(0, num_times)]:
+      if load_params:
+        source = "source/params/{}_{}_{}_{}.p".format(
+          hp.system.name, load_date, sampling_approach, n)
+        params = load_params(params_source)
+      else:
+        key, subkey = random.split(key)
+        params, opt_state, all_losses = train_network(subkey, num_steps=increment, params=params,
+                                                    opt_state=opt_state, losses=all_losses)
+      if save_weights:
+        pickle.dump(params, open("source/params/{}_{}_{}_{}.p".format(
+          hp.system.name, date_string, sampling_approach, n), "wb"))
+      if save_plots:
+        us = plan_with_model(params)
+        plot_trajectory(optimal=True, extra_u=us,
+                        plot_title="source/plots/{}_{}_{}_{}_opt".format(
+                          hp.system.name, date_string, sampling_approach, n))
+
+    return all_losses
   
-  else:
-    print("starting the multi-training")
-    date_string = date.today().strftime("%Y-%m-%d")
-    increment = 2000
-    # small_range = [i*500 for i in range(1, 11)]
-    # the_lengths = small_range + [i*10_000 for i in [1,2,3]]
-    for n in [i*increment for i in range(1, 11)]:
-      # Create some networks
-      # params, opt_state = train_network(num_steps=increment, params=params, opt_state=opt_state)
-      # pickle.dump(params, open("source/params/{}_{}_{}.p".format(hp.system.name, date_string, n), "wb"))
+  # The "make neural ode" function returns this function
+  return params, opt_state, subkey, run_experiments
 
-  #     # OR
 
-  #     # Use the networks for testing with a tighter grid (set in config.py)
-      source_params = "source/params/{}_{}_{}.p".format(hp.system.name, date_string, n)
-      params = load_params(source_params)
-      plot_trajectory(get_optimal_trajectory=True, save_title="source/plots/{}_{}_opt".format(hp.system.name, n))
-
-  # params, opt_state = train_network(num_steps=num_training_steps, params=params, opt_state=opt_state)
-  # plot_trajectory(get_optimal_trajectory=False)
-  # plan_with_model()
-
-  return params
-
-def run_net(hp: HParams, cfg: Config, use_params: Optional[str] = None,
-            num_training_steps: int = 1000,
-            save: bool = False, learning_approach="simple",
+# Call this to run the the NODE
+def run_net(hp: HParams, cfg: Config, params_source: Optional[str] = None,
+            save: bool = False, sampling_approach=SamplingApproach.UNIFORM,
             save_plot_title: Optional[str] = None):
 
-  print("running net!")
-  params = make_neural_ode(hp, cfg, num_training_steps=num_training_steps, use_params=use_params,
-                           learning_approach=learning_approach, save_title=save_plot_title)
+  params, opt_state, subkey, run_experiments = make_neural_ode(hp, cfg, params_source=params_source,
+                                                    sampling_approach=sampling_approach, plot_title=save_plot_title)
 
-  if save:
-    date_string = date.today().strftime("%Y-%m-%d")
-    pickle.dump(params, open("source/params/{}_{}_{}.p".format(hp.system.name, date_string, num_training_steps), "wb"))
-
-  # favorite_color = pickle.load(open("save.p", "rb"))
+  return run_experiments(subkey, params, opt_state, num_times=3, increment=1000)
