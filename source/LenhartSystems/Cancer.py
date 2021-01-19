@@ -73,57 +73,54 @@ class Cancer(IndirectFHCS):
 
     def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
                       adj: Optional[jnp.ndarray] = None, 
-                      other_x: Optional[jnp.ndarray] = None,
-                      other_u: Optional[jnp.ndarray] = None,
+                      other_x: Optional[jnp.ndarray] = None, other_x_label: Optional[str] = None,
+                      other_u: Optional[jnp.ndarray] = None, other_u_label: Optional[str] = None,
                       save_title: Optional[str] = None) -> None:
         print("size of x", x.shape)
         print("size of u", u.shape)
         if other_x is not None:
-            print("size of xx", other_x.shape)
+            print("size of other x", other_x.shape)
         if other_u is not None:
-            print("size of uu", other_u.shape)
-        print("plotting solution")
+            print("size of other u", other_u.shape)
+
         sns.set(style='darkgrid')
-        plt.figure(figsize=(8, 9))
-
-        if adj is None:
-            adj = u.copy()
-            flag = False
+        if adj is not None:
+            plot_height = 9
+            num_subplots = 3
         else:
-            flag = True
+            plot_height = 7
+            num_subplots = 2
 
-        plan_with_node = False
-        if other_u is not None and other_x is not None:
-            plan_with_node = True
-
-        adj = [adj]
+        plt.figure(figsize=(8, plot_height))
 
         ts_x = jnp.linspace(0, self.T, x.shape[0])
         ts_u = jnp.linspace(0, self.T, u.shape[0])
-        ts_adj = jnp.linspace(0, self.T, adj[0].shape[0])
+        if adj is not None:
+            ts_adj = jnp.linspace(0, self.T, adj.shape[0])
+        if other_x is not None:
+            ts_other_x = jnp.linspace(0, self.T, other_x.shape[0])
+        if other_u is not None:
+            ts_other_u = jnp.linspace(0, self.T, other_u.shape[0])
 
-        ax = plt.subplot(3, 1, 1)
-        plt.plot(ts_x, x, "o-", label="True trajectory")
-        if plan_with_node:
-            plt.plot(ts_u, other_x, '.-', color="green", label="NODE-Simulated trajectory")
-        elif other_x is not None:
-            plt.plot(ts_u, other_x, '.-', color="green", label="NODE-Simulated trajectory")
+        ax = plt.subplot(num_subplots, 1, 1)
+        plt.plot(ts_x, x, ".-", label="True trajectory")
+        if other_x is not None:
+            plt.plot(ts_other_x, other_x, '.-', color="green", label=other_x_label)
         ax.legend()
         plt.title("State of dynamic system")
         plt.ylabel("state (x)")
 
-        ax = plt.subplot(3, 1, 2)
-        plt.plot(ts_u, u, '-o', label="Planning with true dynamics")
+        ax = plt.subplot(num_subplots, 1, 2)
+        plt.plot(ts_u, u, '.-', label="Planning with true dynamics")
         if other_u is not None:
-            plt.plot(ts_u, other_u, '-o', label="Planning with NODE-Simulated dynamics")
+            plt.plot(ts_other_u, other_u, '.-', label=other_u_label)
         ax.legend()
         plt.title("Control of dynamic system")
         plt.ylabel("control (u)")
 
-        if flag:
-            plt.subplot(3, 1, 3)
-            for adj_i in adj:
-                plt.plot(ts_adj, adj_i)
+        if adj is not None:
+            plt.subplot(num_subplots, 1, 3)
+            plt.plot(ts_adj, adj)
             plt.title("Adjoint of dynamic system")
             plt.ylabel("adjoint (lambda)")
 
