@@ -28,13 +28,13 @@ class TrajectoryOptimizer(object):
   require_adj: bool = False
 
   def __post_init__(self):
-    if self.cfg.verbose:
-      print(f"x_guess.shape = {self.x_guess.shape}")
-      print(f"u_guess.shape = {self.u_guess.shape}")
-      print(f"guess.shape = {self.guess.shape}")
-      print(f"x_bounds.shape = {self.x_bounds.shape}")
-      print(f"u_bounds.shape = {self.u_bounds.shape}")
-      print(f"bounds.shape = {self.bounds.shape}")
+    # if self.cfg.verbose:
+    #   print(f"x_guess.shape = {self.x_guess.shape}")
+    #   print(f"u_guess.shape = {self.u_guess.shape}")
+    #   print(f"guess.shape = {self.guess.shape}")
+    #   print(f"x_bounds.shape = {self.x_bounds.shape}")
+    #   print(f"u_bounds.shape = {self.u_bounds.shape}")
+    #   print(f"bounds.shape = {self.bounds.shape}")
 
     if self.hp.system == SystemType.INVASIVEPLANT:
       raise NotImplementedError("Discrete systems are not compatible with Trajectory optimizers")
@@ -368,9 +368,12 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [ 9. ,  9.1]
     #                             [10. , 10.1]
     def reorganize_controls(us):# This still works, even for higher-order control shape
-      return jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
-                         us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]]).squeeze()
-
+      new_controls = jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
+                         us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]])
+      # Needed for single shooting
+      if len(new_controls.shape) == 3 and new_controls.shape[2] == 1:
+        new_controls = new_controls.squeeze(axis=2)
+      return new_controls
 
     def objective(variables: jnp.ndarray) -> float:
       # This code runs faster, but only does a linear interpolation for cost.
@@ -408,7 +411,10 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
       xs, us = unravel(variables)
+      print("old us shape", us.shape)
       us = reorganize_controls(us)
+      print("xs shape", xs.shape)
+      print("us shape", us.shape)
       px, _ = integrate_in_parallel(system.dynamics, xs[:-1], us, step_size, hp.controls_per_interval, None, hp.order)
       return jnp.ravel(px - xs[1:])
 
