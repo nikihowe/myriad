@@ -15,7 +15,6 @@ def integrate(
   ts: Optional[jnp.ndarray], # allow for optional time-dependent dynamics
   integration_order: Optional[IntegrationOrder], # allows user to choose interpolation for controls
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
-  # TODO: implement use of times
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
   @jit
   def rk4_step(x, u1, u2, u3, ts=None):
@@ -35,6 +34,8 @@ def integrate(
   def euler_step(x, u, ts=None):
     return x + h*dynamics_t(x, u)
 
+  # TODO: check that this works with time-dependent dynamics
+  # (I have a suspicion it is broken atm)
   def fn(carried_state, idx):
     if not integration_order:
       integration_order == IntegrationOrder.CONSTANT
@@ -60,7 +61,7 @@ def integrate(
     return one_step_forward, one_step_forward # (carry, y)
 
   x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
-  return x_T, jnp.concatenate((x_0[None], all_next_states))
+  return x_T, jnp.concatenate((x_0[jnp.newaxis], all_next_states))
 
 # Used for the augmented state cost calculation
 integrate_in_parallel = vmap(integrate, in_axes=(None, 0, 0, None, None, 0, None))#, static_argnums=(0, 5, 6)
