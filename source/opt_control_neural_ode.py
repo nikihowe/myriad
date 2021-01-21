@@ -22,7 +22,7 @@ Batch = Any
 OptState = Any
 
 from source.config import HParams, Config
-from source.config import SystemType, OptimizerType, IntegrationOrder, SamplingApproach
+from source.config import SystemType, OptimizerType, SamplingApproach
 from source.optimizers import TrajectoryOptimizer, get_optimizer
 from source.systems import FiniteHorizonControlSystem, get_system
 from source.utils import integrate, integrate_in_parallel
@@ -38,20 +38,21 @@ def make_neural_ode(
   hp: HParams,
   cfg: Config,
   learning_rate: jnp.float32 = 0.001,
-  train_size: jnp.int32 = 100_000,
-  validation_size: jnp.int32 = 20_000,
-  test_size: jnp.int32 = 20_000,
-  minibatch_size: jnp.int32 = 128,
-  order: IntegrationOrder = IntegrationOrder.CONSTANT, # only constant works
+  train_size: jnp.int32 = 5_000,
+  validation_size: jnp.int32 = 1_000,
+  test_size: jnp.int32 = 1_000,
+  minibatch_size: jnp.int32 = 32,
   sampling_approach: SamplingApproach = SamplingApproach.UNIFORM,
   params_source: Optional[str] = None,
   plot_title: Optional[str] = None,
-  key: jnp.ndarray = random.PRNGKey(42)
+  key: jnp.ndarray = random.PRNGKey(42),
+  save_every: jnp.int32 = 500
   ):
 
   system = get_system(hp)
   optimizer = get_optimizer(hp, cfg, system)
-  stepsize = system.T / (hp.intervals*hp.controls_per_interval) # Segment length
+  num_steps = hp.intervals*hp.controls_per_interval
+  stepsize = system.T / num_steps # Segment length
 
   # NOTE: this might only work with scalar controls.
   # TODO: check and if necessary, extend to case with vector controls.
@@ -64,7 +65,6 @@ def make_neural_ode(
     u_upper = system.bounds[-1, 1]
     if system._type == SystemType.CANCER: # CANCER usually has an infinite upper bound
       u_upper = 2.
-    
 
     # Generate |total dataset size| control trajectories
     total_size = train_size + validation_size + test_size
@@ -77,7 +77,7 @@ def make_neural_ode(
     # and applying the randomly chosen controls, which are different for each trajectory
     _, all_xs = integrate_in_parallel(system.dynamics,
                                       system.x_0[jnp.newaxis].repeat(total_size, axis=0),
-                                      all_us, stepsize, hp.intervals*hp.controls_per_interval, None, order)
+                                      all_us, stepsize, hp.intervals*hp.controls_per_interval, None, hp.order)
     
     # Stack the states and controls together
     xs_and_us = jnp.concatenate([all_xs, all_us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
@@ -96,7 +96,7 @@ def make_neural_ode(
   # Generate a dataset from a control trajectory by making small
   # perturbations to the controls. Make half of the dataset
   # be uniformly random anyway, to avoid getting stuck in bad states.
-  def generate_dataset_around(us, key, num=minibatch_size, spread=1):
+  def generate_dataset_around(us, key, num, spread=1):
     u_lower = system.bounds[-1, 0]
     u_upper = system.bounds[-1, 1]
     if system._type == SystemType.CANCER: # CANCER usually has an infinite upper bound
@@ -123,7 +123,7 @@ def make_neural_ode(
     # Generate the corresponding state trajectories
     _, train_xs = integrate_in_parallel(system.dynamics,
                                         system.x_0[jnp.newaxis].repeat(num, axis=0),
-                                        final_us, stepsize, hp.intervals*hp.controls_per_interval, None, order)
+                                        final_us, stepsize, hp.intervals*hp.controls_per_interval, None, hp.order)
     
     xs_and_us = jnp.concatenate([train_xs, final_us[jnp.newaxis].transpose((1, 2, 0))], axis=2)
     assert not jnp.isnan(xs_and_us).all()
@@ -137,25 +137,36 @@ def make_neural_ode(
     return xs_and_us
 
   # Various ways to get a minibatch from a dataset
-  def get_minibatch(dataset, i=0, approach="numpy", key=None):
-    if approach == "numpy": # fast and random, but not jax
-      random_indices = np.random.choice(len(dataset), minibatch_size, replace=False)
-      return dataset[random_indices]
-    elif approach == "deterministic": # really fast, but no randomness
-      i = i % int(len(dataset) / (minibatch_size + 1))
-      return dataset[minibatch_size*i:minibatch_size*(i+1)]
-    elif approach == "jax" and key is not None: # pure jax, but very slow
-      random_indices = random.choice(key, len(dataset), shape=(minibatch_size,), replace=False)
-      return dataset[random_indices]
-    else:
-      print("Unknown approach. Please choose among \{numpy, deterministic, jax\}")
-      raise ValueError
+  # def get_minibatch(dataset, i=0, approach="full_batch", key=None):
+  #   if approach == "numpy": # fast and random, but not jax
+  #     random_indices = np.random.choice(len(dataset), minibatch_size, replace=False)
+  #     return dataset[random_indices]
+  #   elif approach == "full_batch":
+  #     return dataset
+  #   elif approach == "deterministic": # really fast, but no randomness
+  #     i = i % int(len(dataset) / (minibatch_size + 1))
+  #     return dataset[minibatch_size*i:minibatch_size*(i+1)]
+  #   elif approach == "jax" and key is not None: # pure jax, but very slow
+  #     random_indices = random.choice(key, len(dataset), shape=(minibatch_size,), replace=False)
+  #     return dataset[random_indices]
+  #   else:
+  #     print("Unknown approach. Please choose among \{numpy, deterministic, jax\}")
+  #     raise ValueError
+
+  # TODO: make it use jax instead (can it still be fast then?)
+  def yield_minibatches(dataset):
+    tmp_train_data = np.random.permutation(train_data)
+    num_minibatches = train_size // minibatch_size + (1 if train_size % minibatch_size > 0 else 0)
+
+    for i in range(num_minibatches):
+      n = np.minimum((i+1) * minibatch_size, train_size) - i*minibatch_size
+      yield tmp_train_data[i*minibatch_size : i*minibatch_size + n]
 
   # Find the optimal trajectory according the learned model
   def get_optimal_trajectory(params):
     opt_u = plan_with_model(params)
     _, opt_x = integrate(system.dynamics, system.x_0, opt_u,
-                         stepsize, hp.intervals*hp.controls_per_interval, None, order)
+                         stepsize, hp.intervals*hp.controls_per_interval, None, hp.order)
     xs_and_us = jnp.concatenate([opt_x, opt_u[:,jnp.newaxis]], axis=1)
     assert not jnp.isnan(xs_and_us).all()
     return xs_and_us
@@ -185,7 +196,7 @@ def make_neural_ode(
 
   # Initialize the parameters and optimizer state
   net = hk.without_apply_rng(hk.transform(net_fn))
-  mb = get_minibatch(train_data)
+  mb = next(yield_minibatches(train_data))
   key, subkey = random.split(key)
   params = net.init(subkey, mb[-1])
   opt = optax.adam(learning_rate)
@@ -219,15 +230,15 @@ def make_neural_ode(
     # Use neural net to predict state trajectory
     _, predicted_states = integrate_in_parallel(apply_net,
                                                 system.x_0[jnp.newaxis].repeat(len(minibatch), axis=0),
-                                                controls, stepsize, hp.intervals*hp.controls_per_interval, None, order)
+                                                controls, stepsize, hp.intervals*hp.controls_per_interval, None, hp.order)
 
     
     # nan_to_num was necessary for VANDERPOL
     # (though even with this modification it still didn't train)
     # TODO: I wonder if there is a way to avoid the ugly nan_to_num
-    true_states = jnp.nan_to_num(true_states)
-    predicted_states = jnp.nan_to_num(predicted_states)
-    loss = jnp.nan_to_num(jnp.mean(jnp.nan_to_num((predicted_states - true_states)*(predicted_states - true_states)))) # MSE
+    # true_states = jnp.nan_to_num(true_states)
+    # predicted_states = jnp.nan_to_num(predicted_states)
+    loss = jnp.mean((predicted_states - true_states)*(predicted_states - true_states)) # MSE
     return loss
 
   # Load parameters saved in pickle format
@@ -240,54 +251,66 @@ def make_neural_ode(
       raise SystemExit
     return p
 
-  # Perform "num_steps" steps of minibatch gradient descent on the network
+  # Perform "num_minibatches" steps of minibatch gradient descent on the network
   # starting with params "params". Stores losses in the "losses" dict.
-  def train_network(key, num_steps, params, opt_state, losses, save_every=1000):
+  def train_network(key, num_epochs, params, opt_state, losses={}, save_every=save_every, start_epoch=0):
 
     if not losses:
-      losses = {'train_loss':[], 
+      losses = {'ts':[],
+                'train_loss':[], 
                 'validation_loss':[], 
                 'loss_on_opt':[], 
                 'control_costs':[],
-                'constraint_violations':[]}
-
-    def calculate_losses(step):
-      # Calculate losses
-      cur_loss = loss(params, get_minibatch(train_data, step))
-      losses['train_loss'].append(cur_loss)
-      losses['validation_loss'].append(loss(params, get_minibatch(validation_data, step)))
-      losses['loss_on_opt'].append(loss(params, x_and_u_opt[jnp.newaxis]))
-
-      # Get the optimal controls, and cost of applying them
-      u = plan_with_model(params)
-      _, xs = integrate(system.dynamics, system.x_0, u, stepsize, # true dynamics
-                        hp.intervals*hp.controls_per_interval, None, order)
-      xs_and_us, unused_unravel = ravel_pytree((xs, u))
-      losses['control_costs'].append(optimizer.objective(xs_and_us))
-
-      # Calculate the final constraint violation
-      losses['constraint_violations'].append(jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-
-      return cur_loss
+                'constraint_violation':[]}
 
     # Get the optimal u (according to the model which uses this NODE for dynamics)
     # and the corresponding state trajectory that occurs when they are applied
     # following the true environment dynamics
     x_and_u_opt = get_optimal_trajectory(params)
 
+    def calculate_losses(params, step):
+      # Record how many training points we've used
+      losses['ts'].append(start_epoch + step * train_size)
+
+      # Calculate losses
+      cur_loss = loss(params, next(yield_minibatches(train_data)))
+      losses['train_loss'].append(cur_loss)
+      losses['validation_loss'].append(loss(params, next(yield_minibatches(validation_data))))
+      losses['loss_on_opt'].append(loss(params, x_and_u_opt[jnp.newaxis]))
+
+      # Get the optimal controls, and cost of applying them
+      u = plan_with_model(params)
+      _, xs = integrate(system.dynamics, system.x_0, u, stepsize, # true dynamics
+                        num_steps, None, hp.order)
+
+      # We only want the states at boundaries of shooting intervals
+      xs_interval_start = xs[::hp.controls_per_interval]
+      xs_and_us, unused_unravel = ravel_pytree((xs_interval_start, u))
+      losses['control_costs'].append(optimizer.objective(xs_and_us))
+
+      # Calculate the final constraint violation, if present
+      if system.x_T is not None:
+        cv = system.x_T - xs[-1]
+        print("constraint violation", cv)
+        losses['constraint_violation'].append(jnp.linalg.norm(cv))
+
+      return cur_loss
+
     # In this approach, training minibatches are drawn from the dataset created
     # earlier, which chose control trajectories uniformly at random
-    def uniform_sampling_train(params, opt_state, check_frequency=1000):
+    def uniform_sampling_train(params, opt_state):
       print("sampling from uniform controls")
       old_loss = -1
-      for step in trange(num_steps):
-        if step % check_frequency == 0:
-          cur_loss = calculate_losses(step) # side effect: this fills loss lists too
+      for step in trange(num_epochs):
+        if step % save_every == 0:
+          cur_loss = calculate_losses(params, step) # side effect: this fills loss lists too
           print(step, cur_loss)
           if jnp.allclose(cur_loss, old_loss):
             break
           old_loss = cur_loss
-        params, opt_state = update(params, opt_state, get_minibatch(train_data,))
+        # Descend on entire dataset, in minibatches
+        for mb in yield_minibatches(train_data):
+          params, opt_state = update(params, opt_state, mb)
       return params, opt_state
 
     # In this approach, training minibatches are drawn from a dataset repeatedly
@@ -295,7 +318,7 @@ def make_neural_ode(
     # when we use the NODE as dynamics model).
     # "spread_factor" describes how tightly you want to sample around those controls
     # (bigger spread factor === tighter sampling)
-    def planning_sampling_train(params, opt_state, key, spread_factor=4, check_frequency=1000):
+    def planning_sampling_train(params, opt_state, key, spread_factor=4):
       print("sampling around planned controls")
       # Start around average
       u_lower = system.bounds[-1, 0]
@@ -307,9 +330,9 @@ def make_neural_ode(
       # Initial controls are uniform at random
       mb = train_data
       old_loss = -1
-      for step in trange(num_steps):
-        if step % check_frequency == 0:
-          cur_loss = calculate_losses(step) # side effect: this fills loss lists too
+      for step in trange(num_epochs):
+        if step % save_every == 0:
+          cur_loss = calculate_losses(params, step) # side effect: this fills loss lists too
           print(step, cur_loss)
           if jnp.allclose(cur_loss, old_loss):
             break
@@ -317,11 +340,11 @@ def make_neural_ode(
 
           # Generate a new dataset around the current "optimal" controls
           u = plan_with_model(params)
-          mb = generate_dataset_around(u, key=key, num=check_frequency*minibatch_size, spread=u_spread/spread_factor)
-          # TODO: how big to make this dataset?
+          new_dataset = generate_dataset_around(u, key=key, num=train_size, spread=u_spread/spread_factor)
 
-        params, opt_state = update(params, opt_state, get_minibatch(dataset=mb, i=step))
-
+        # Descend on entire dataset, in minibatches
+        for mb in yield_minibatches(new_dataset):
+          params, opt_state = update(params, opt_state, mb)
       return params, opt_state
 
     # Perform the training steps
@@ -332,7 +355,7 @@ def make_neural_ode(
       params, opt_state = planning_sampling_train(params, opt_state, subkey)
 
     if cfg.verbose:
-      print("trained for {} minibatches of size {}".format(num_steps, minibatch_size))
+      print("Trained for {} epochs on dataset of size {}".format(num_epochs, train_size))
 
     return params, opt_state, losses # losses is a dict of lists which we appended to all during training
 
@@ -362,7 +385,7 @@ def make_neural_ode(
 
     # Get states when using those controls
     _, predicted_states = integrate(apply_net, system.x_0, u,
-                                    stepsize, hp.intervals*hp.controls_per_interval, None, order)
+                                    stepsize, hp.intervals*hp.controls_per_interval, None, hp.order)
 
     # Plot
     if optimizer.require_adj:
@@ -394,7 +417,7 @@ def make_neural_ode(
     return u.squeeze() # this is necessary for later broadcasting
 
   def run_experiments(key, params, opt_state,
-                      num_times=11, increment=2000,
+                      num_experiments=11, increment=2000,
                       load_params=False, load_date=None,
                       save_weights=False, save_plots=False):
     if load_params and not load_date:
@@ -405,15 +428,17 @@ def make_neural_ode(
       date_string = date.today().strftime("%Y-%m-%d")
 
     all_losses = {}
-    for n in [(i+1)*increment for i in range(0, num_times)]:
+    start_epoch = 0
+    for n in [(i+1)*increment for i in range(0, num_experiments)]:
       if load_params:
         source = "source/params/{}_{}_{}_{}.p".format(
           hp.system.name, load_date, sampling_approach, n)
         params = load_params(params_source)
       else:
         key, subkey = random.split(key)
-        params, opt_state, all_losses = train_network(subkey, num_steps=increment, params=params,
-                                                    opt_state=opt_state, losses=all_losses)
+        params, opt_state, all_losses = train_network(subkey, num_epochs=increment, params=params,
+                                                      opt_state=opt_state, losses=all_losses, start_epoch=start_epoch)
+        start_epoch += increment*train_size
       if save_weights:
         pickle.dump(params, open("source/params/{}_{}_{}_{}.p".format(
           hp.system.name, date_string, sampling_approach, n), "wb"))
@@ -424,17 +449,17 @@ def make_neural_ode(
                           hp.system.name, date_string, sampling_approach, n))
 
     return all_losses
-  
-  # The "make neural ode" function returns this function
-  return params, opt_state, subkey, run_experiments
 
+  # The "make neural ode" function returns this tuple
+  return params, opt_state, train_network, run_experiments
 
 # Call this to run the the NODE
-def run_net(hp: HParams, cfg: Config, params_source: Optional[str] = None,
+def run_net(key, hp: HParams, cfg: Config, params_source: Optional[str] = None,
             save: bool = False, sampling_approach=SamplingApproach.UNIFORM,
-            save_plot_title: Optional[str] = None):
+            save_plot_title: Optional[str] = None, train_size=5_000):
 
-  params, opt_state, subkey, run_experiments = make_neural_ode(hp, cfg, params_source=params_source,
-                                                    sampling_approach=sampling_approach, plot_title=save_plot_title)
+  params, opt_state, train_network, run_experiments = make_neural_ode(hp, cfg, params_source=params_source,
+                                                                      sampling_approach=sampling_approach, plot_title=save_plot_title)
 
-  return run_experiments(subkey, params, opt_state, num_times=3, increment=1000)
+  losses = run_experiments(key, params, opt_state, num_experiments=3, increment=10)
+  return losses
