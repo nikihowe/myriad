@@ -39,8 +39,12 @@ class TrajectoryOptimizer(object):
     if self.hp.system == SystemType.INVASIVEPLANT:
       raise NotImplementedError("Discrete systems are not compatible with Trajectory optimizers")
 
-  def solve(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
+  def solve(self, extra_options=None) -> Tuple[jnp.ndarray, jnp.ndarray]:
     _t1 = time.time()
+    options = {"maxiter": self.hp.ipopt_max_iter}
+    # Merge the two dictionaries, keeping the entry from 'extra_options' in the case of a key collision
+    if extra_options is not None:
+      options = {**options, **extra_options}
     opt_inputs = {
       'fun': jit(self.objective) if self.cfg.jit else self.objective,
       'x0': self.guess,
@@ -52,9 +56,7 @@ class TrajectoryOptimizer(object):
       }),
       'bounds': self.bounds,
       'jac': jit(grad(self.objective)) if self.cfg.jit else grad(self.objective),
-      'options': {
-        "maxiter": self.hp.ipopt_max_iter
-      }
+      'options': options
     }
     if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
       solution = extra_gradient(**opt_inputs)
@@ -376,7 +378,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       return new_controls
 
     def objective(variables: jnp.ndarray) -> float:
-      # This code runs faster, but only does a linear interpolation for cost.
+      # The commented code runs faster, but only does a linear interpolation for cost.
       # Better to have the interpolation match the integration scheme,
       # and just use Euler / Heun if we need shooting to be faster
 
@@ -411,11 +413,8 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
       xs, us = unravel(variables)
-      print("old us shape", us.shape)
-      us = reorganize_controls(us)
-      print("xs shape", xs.shape)
-      print("us shape", us.shape)
-      px, _ = integrate_in_parallel(system.dynamics, xs[:-1], us, step_size, hp.controls_per_interval, None, hp.order)
+      px, _ = integrate_in_parallel(system.dynamics, xs[:-1], reorganize_controls(us), step_size,
+                                    hp.controls_per_interval, None, hp.order)
       return jnp.ravel(px - xs[1:])
 
     ############################

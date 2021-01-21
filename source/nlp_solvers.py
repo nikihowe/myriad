@@ -17,9 +17,10 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
   del jac
 
   constraint_fun = constraints['fun']
-  max_iter = 10*options['maxiter'] if 'maxiter' in options else 30_000
+  max_iter = options['maxiter'] if 'maxiter' in options else 30_000
   eta_x = options['eta_x'] if 'eta_x' in options else 1e-6 # primals
   eta_v = options['eta_v'] if 'eta_v' in options else 1e-6 # duals
+  atol = options['atol'] if 'atol' in options else 1e-6 # convergence tolerance
 
   # will deal with bounds later
   @jit

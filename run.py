@@ -1,6 +1,7 @@
 import random
 
 import jax
+import jax.numpy as jnp
 import numpy as np
 import simple_parsing
 import gin
@@ -13,6 +14,7 @@ from source.config import Config, HParams
 from source.config import SamplingApproach, OptimizerType
 from source.optimizers import get_optimizer
 from source.systems import get_system
+from source.utils import integrate
 
 from source.opt_control_neural_ode import run_net
 
@@ -61,91 +63,58 @@ def main(unused_argv):
                                       bindings=gin_bindings,
                                       skip_unknown=False)
   system = get_system(hp)
+  optimizer = get_optimizer(hp, cfg, system)
 
-  # --------------------------------------------
+  # -----------------------------------------------------------------------
+  ######################
+  # Place scripts here #
+  ######################
 
-  # Run trajectory optimization
-  # optimizer = get_optimizer(hp, cfg, system)
-  # if optimizer.require_adj:
-  #     x, u, adj = optimizer.solve()
+  from hyperopt import hp as h
+  from hyperopt import fmin, tpe, pyll, STATUS_OK
+  import pprint
+  pp = pprint.PrettyPrinter(indent=4, width=100)
 
-  #     if cfg.plot_results:
-  #       system.plot_solution(x, u, adj)
-  # else:
-  #     x, u = optimizer.solve()
+  # Parameter search for extragradient
+  # define an objective function
+  def f(space):
+    extra_options = {
+      'maxiter': space['maxiter'],
+      'eta_x': 10**space['eta_x_exp'],
+      'eta_v': 10**space['eta_v_exp'],
+      'atol': 10**space['atol_exp']
+    }
 
-  #     if cfg.plot_results:
-  #         system.plot_solution(x, u)
+    if optimizer.require_adj:
+      x, u, adj = optimizer.solve(extra_options)
+    else:
+      x, u = optimizer.solve(extra_options)
 
-  # raise SystemExit
+    print("xs", x.shape)
+    print("us", u.shape)
 
-  # --------------------------------------------
+    xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
+    obj = optimizer.objective(xs_and_us)
+    vio = jnp.linalg.norm(optimizer.constraints(xs_and_us))
+    total_cost = obj + 1000*vio
+    # print("total_cost", total_cost)
+    return {'loss': total_cost, 'status': STATUS_OK}
 
-  # Run neural network
-  # name = "source/params/{}_{}_{}.p".format(hp.system.name, n, date_string)
+  # define a search space
+  space = {
+      'maxiter': h.choice('maxiter', [i*100 for i in range(1, 21)]),
+      'eta_x_exp': h.uniform('eta_x_exp', -7, -3),
+      'eta_v_exp': h.uniform('eta_v_exp', -7, -3),
+      'atol_exp': h.uniform('atol_exp', -10, -2)
+    }
 
-  losses_simple = run_net(hp, cfg, sampling_approach=SamplingApproach.UNIFORM)
-  losses_informed = run_net(hp, cfg, sampling_approach=SamplingApproach.PLANNING)
+  # pp.pprint(pyll.stochastic.sample(space))
 
-  ts = [(i+1)*1000 for i in range(0, len(losses_simple['train_loss']))]
+  # minimize the objective over the space
+  best = fmin(f, space, algo=tpe.suggest, max_evals=3)
 
-  plt.figure(figsize=(10, 9))
-
-  ax = plt.subplot(2, 2, 1)
-  plt.plot(ts, losses_simple['train_loss'], ".-", label="train")
-  plt.plot(ts, losses_simple['validation_loss'], ".-", label="validation")
-  plt.title("\"simple\" approach's loss over time")
-  plt.yscale('log')
-  ax.set_ylim([0,1000])
-  ax.legend()
-  
-  ax = plt.subplot(2, 2, 2)
-  plt.plot(ts, losses_informed['train_loss'], ".-", label="train")
-  plt.plot(ts, losses_informed['validation_loss'], ".-", label="validation")
-  plt.title("\"informed\" approach's loss over time")
-  plt.yscale('log')
-  ax.set_ylim([0,1000])
-  ax.legend()
-
-  # ax = plt.subplot(2, 2, 3)
-  # plt.plot(losses_simple['loss_on_opt'], "o-", label="simple")
-  # plt.plot(losses_informed['loss_on_opt'], "o-", label="informed")
-  # plt.title("loss over time on true optimal trajectory")
-  # plt.yscale('log')
-  # ax.legend()
-
-  ax = plt.subplot(2, 2, 3)
-  plt.plot(ts, losses_simple['control_costs'], ".-", label="simple")
-  plt.plot(ts, losses_informed['control_costs'], ".-", label="informed")
-  plt.title("cost of applying \"optimal\" controls")
-  # plt.yscale('log')
-  ax.legend()
-
-  ax = plt.subplot(2, 2, 4)
-  plt.plot(ts, losses_simple['constraint_violations'], ".-", label="simple")
-  plt.plot(ts, losses_informed['constraint_violations'], ".-", label="informed")
-  plt.title("constraint violation when applying those controls")
-  # plt.yscale('log')
-  ax.legend()
-
-  plt.show()
-
-  # date_string = date.today().strftime("%Y-%m-%d")
-
-  # # Train for different amounts of time
-  # for n in [i*10_000 for i in range(1, 11)]:
-  #   print("num_training_steps", n)
-  #   run_net(hp, cfg, num_training_steps=n,
-  #           save_plot_title="{}_{}_{}".format(hp.system.name, date_string, n))
-
-  # Test the quality of the different trainings
-  # from datetime import date
-  # for n in [i*10_000 for i in range(1, 11)]:
-  #   date_string = date.today().strftime("%Y-%m-%d")
-  #   name = "source/params/{}_{}_{}.p".format(hp.system.name, n, date_string)
-  #   run_net(hp, cfg, use_params=name,
-  #           save_plot_title="{}_{}".format(hp.system.name, n))
-  #   break
+  print(best)
+  # -----------------------------------------------------------------------
 
 if __name__=='__main__':
   app.run(main)

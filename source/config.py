@@ -46,20 +46,20 @@ class SamplingApproach(Enum):
 class HParams:
   seed: int = 2020
   system: SystemType = SystemType.CANCER
-  optimizer: OptimizerType = OptimizerType.COLLOCATION
-  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
+  optimizer: OptimizerType = OptimizerType.SHOOTING
+  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
   order: IntegrationOrder = IntegrationOrder.LINEAR
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
-  ipopt_max_iter: int = 1000
+  ipopt_max_iter: int = 500
   # Trajectory Optimizer
   intervals: int = 20 # collocation and shooting 
   # TODO: make it include the single shooting case of 1 interval. Right now that breaks
-  controls_per_interval: int = 4 # multiple shooting
+  controls_per_interval: int = 3 # multiple shooting
 
   #Indirect method optimizer
-  steps: int = 1000
+  steps: int = 100
 
   def __post_init__(self):
     if self.optimizer == OptimizerType.COLLOCATION:
