@@ -155,4 +155,7 @@ out.prof
 
 # Saved parameters
 source/params/*.p
+
+# Saved plots
 source/plots/*.png
+source/plots/*.pdf
