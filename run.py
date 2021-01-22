@@ -70,50 +70,26 @@ def main(unused_argv):
   # Place scripts here #
   ######################
 
-  from hyperopt import hp as h
-  from hyperopt import fmin, tpe, pyll, STATUS_OK
-  import pprint
-  pp = pprint.PrettyPrinter(indent=4, width=100)
+  # put this in run.py
+  optimizer = get_optimizer(hp, cfg, system)
 
-  # Parameter search for extragradient
-  # define an objective function
-  def f(space):
-    extra_options = {
-      'maxiter': space['maxiter'],
-      'eta_x': 10**space['eta_x_exp'],
-      'eta_v': 10**space['eta_v_exp'],
-      'atol': 10**space['atol_exp']
-    }
 
-    if optimizer.require_adj:
-      x, u, adj = optimizer.solve(extra_options)
-    else:
-      x, u = optimizer.solve(extra_options)
+  x, u = optimizer.solve()
 
-    print("xs", x.shape)
-    print("us", u.shape)
+  num_steps = hp.intervals*hp.controls_per_interval
+  stepsize = system.T / num_steps
+  _, opt_x = integrate(system.dynamics, system.x_0, u,
+                       stepsize, num_steps, None, hp.order)
 
-    xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
-    obj = optimizer.objective(xs_and_us)
-    vio = jnp.linalg.norm(optimizer.constraints(xs_and_us))
-    total_cost = obj + 1000*vio
-    # print("total_cost", total_cost)
-    return {'loss': total_cost, 'status': STATUS_OK}
+  if cfg.plot_results:
+    system.plot_solution(x, u, other_x=opt_x)
 
-  # define a search space
-  space = {
-      'maxiter': h.choice('maxiter', [i*100 for i in range(1, 21)]),
-      'eta_x_exp': h.uniform('eta_x_exp', -7, -3),
-      'eta_v_exp': h.uniform('eta_v_exp', -7, -3),
-      'atol_exp': h.uniform('atol_exp', -10, -2)
-    }
+  xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((opt_x[::hp.controls_per_interval], u))
+  if hp.optimizer != OptimizerType.FBSM:
+    print("control cost", optimizer.objective(xs_and_us))
+    print('constraint_violation', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+  raise SystemExit
 
-  # pp.pprint(pyll.stochastic.sample(space))
-
-  # minimize the objective over the space
-  best = fmin(f, space, algo=tpe.suggest, max_evals=3)
-
-  print(best)
   # -----------------------------------------------------------------------
 
 if __name__=='__main__':

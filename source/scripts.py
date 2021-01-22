@@ -154,3 +154,46 @@ params, opt_state, losses = train_network(key, num_epochs=5001, params=params, o
 return losses
 
 # ---------------------------
+# hyperparameter tuning for extragradient
+
+  from hyperopt import hp as h
+  from hyperopt import fmin, tpe, pyll, STATUS_OK, STATUS_FAIL
+  import pprint
+  pp = pprint.PrettyPrinter(indent=4, width=100)
+
+  # Parameter search for extragradient
+  # define an objective function
+  def f(space):
+    extra_options = {
+      'maxiter': space['maxiter'],
+      'eta_x': 10**space['eta_x_exp'],
+      'eta_v': 10**space['eta_v_exp'],
+      'atol': 10**space['atol_exp'],
+    }
+
+    x, u = optimizer.solve(extra_options)
+
+    print("xs", x.shape)
+    print("us", u.shape)
+
+    xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
+    obj = optimizer.objective(xs_and_us)
+    vio = jnp.linalg.norm(optimizer.constraints(xs_and_us))
+    total_cost = obj + 1000*vio
+    # print("total_cost", total_cost)
+    return {'loss': total_cost, 'status': STATUS_OK}
+
+  # define a search space
+  space = {
+      'maxiter': h.choice('maxiter', [i*1000 for i in range(1, 11)]),
+      'eta_x_exp': h.uniform('eta_x_exp', -10, -4),
+      'eta_v_exp': h.uniform('eta_v_exp', -6, -4),
+      'atol_exp': h.uniform('atol_exp', -8, -4)
+    }
+
+  # pp.pprint(pyll.stochastic.sample(space))
+
+  # minimize the objective over the space
+  best = fmin(f, space, algo=tpe.suggest, max_evals=5)
+
+  print(best)

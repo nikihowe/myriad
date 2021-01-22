@@ -71,7 +71,11 @@ class TrajectoryOptimizer(object):
       x, x_mid, u, u_mid = self.unravel(solution.x)
     else:
       x, u = self.unravel(solution.x)
-    return x, u
+
+    if 'ret_success' in options:
+      return x, u, solution.success
+    else:
+      return x, u
 
 
 @dataclass

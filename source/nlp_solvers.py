@@ -42,8 +42,13 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
     x_old = x + 20 # just so we don't terminate immediately
     for i in range(max_iter):
       if i % 1000 == 0:
-        print("x", x)
-      if i % 100 and jnp.allclose(x_old, x, rtol=0., atol=1e-10): # tune tolerance according to need
+        print(i)
+      if i % 1000 == 0 and (jnp.isnan(x).any() or jnp.isnan(lmbda).any()): # this is a failure case
+        x = jnp.nan_to_num(x)
+        lmbda = jnp.nan_to_num(lmbda)
+        print("nans")
+        break
+      if i % 1000 == 0 and jnp.allclose(x_old, x, rtol=0., atol=atol): # tune tolerance according to need
         success = True
         break
       x_old = x

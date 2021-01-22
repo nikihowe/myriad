@@ -45,16 +45,16 @@ class SamplingApproach(Enum):
 @dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.CANCER
+  system: SystemType = SystemType.CARTPOLE
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
+  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   order: IntegrationOrder = IntegrationOrder.LINEAR
   # system: SystemType = SystemType.FISHHARVEST
   # optimizer: OptimizerType = OptimizerType.FBSM
   # Solver
   ipopt_max_iter: int = 500
   # Trajectory Optimizer
-  intervals: int = 20 # collocation and shooting 
+  intervals: int = 20 # collocation and shooting
   # TODO: make it include the single shooting case of 1 interval. Right now that breaks
   controls_per_interval: int = 3 # multiple shooting
 
