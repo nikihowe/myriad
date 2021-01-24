@@ -1,51 +1,51 @@
 # put this in run.py in order to get the four-plot ones (need to also call run_experiment in opt_control_neural_ode)
 
-key1, key2 = jax.random.split(jax.random.PRNGKey(42))
-losses_simple = run_net(key1, hp, cfg, sampling_approach=SamplingApproach.UNIFORM)
-losses_informed = run_net(key2, hp, cfg, sampling_approach=SamplingApproach.PLANNING)
+  # Can choose which sampling approach to use, for different effects
+  # (could even put together multiple sampling approaches in each plot)
+  sa = SamplingApproach.UNIFORM
+  key1, key2 = jax.random.split(jax.random.PRNGKey(42))
+  losses = run_net(key1, hp, cfg, sampling_approach=sa)
 
-ts = losses_simple['ts']
+  ts = losses['ts']
 
-plt.figure(figsize=(10, 9))
+  plt.figure(figsize=(10, 9))
+  plt.tight_layout()
 
-ax = plt.subplot(2, 2, 1)
-plt.plot(ts, losses_simple['train_loss'], ".-", label="train")
-plt.plot(ts, losses_simple['validation_loss'], ".-", label="validation")
-plt.title("\"simple\" approach's loss over time")
-plt.yscale('log')
-ax.set_ylim([1e-10, 1e3])
-ax.legend()
+  ax = plt.subplot(3, 2, 1)
+  plt.plot(ts, losses['train_loss'], ".-", label="train")
+  plt.plot(ts, losses['validation_loss'], ".-", label="validation")
+  plt.title("imitation loss over time")
+  plt.yscale('log')
+  ax.set_ylim([1e-10, 1e3])
+  ax.legend()
 
-ax = plt.subplot(2, 2, 2)
-plt.plot(ts, losses_informed['train_loss'], ".-", label="train")
-plt.plot(ts, losses_informed['validation_loss'], ".-", label="validation")
-plt.title("\"informed\" approach's loss over time")
-plt.yscale('log')
-ax.set_ylim([1e-10, 1e3])
-ax.legend()
+  ax = plt.subplot(3, 2, 2)
+  plt.plot(ts, losses['loss_on_opt'], "o-", label=sa.name)
+  plt.title("loss over time on true optimal trajectory")
+  plt.yscale('log')
+  ax.legend()
 
-# ax = plt.subplot(2, 2, 3)
-# plt.plot(losses_simple['loss_on_opt'], "o-", label="simple")
-# plt.plot(losses_informed['loss_on_opt'], "o-", label="informed")
-# plt.title("loss over time on true optimal trajectory")
-# plt.yscale('log')
-# ax.legend()
+  ax = plt.subplot(3, 2, 3)
+  plt.plot(ts, losses['control_costs'], ".-", label=sa.name)
+  plt.title("cost of applying \"optimal\" controls")
+  ax.legend()
 
-ax = plt.subplot(2, 2, 3)
-plt.plot(ts, losses_simple['control_costs'], ".-", label="simple")
-plt.plot(ts, losses_informed['control_costs'], ".-", label="informed")
-plt.title("cost of applying \"optimal\" controls")
-# plt.yscale('log')
-ax.legend()
+  ax = plt.subplot(3, 2, 4)
+  plt.plot(ts, losses['constraint_violation'], ".-", label=sa.name)
+  plt.title("final constraint violation when applying those controls")
+  ax.legend()
 
-ax = plt.subplot(2, 2, 4)
-plt.plot(ts, losses_simple['constraint_violation'], ".-", label="simple")
-plt.plot(ts, losses_informed['constraint_violation'], ".-", label="informed")
-plt.title("final constraint violation when applying those controls")
-# plt.yscale('log')
-ax.legend()
+  ax = plt.subplot(3, 2, 5)
+  plt.plot(ts, losses['divergence_from_optimal_us'], ".-", label=sa.name)
+  plt.title("divergence from optimal control trajectory")
+  ax.legend()
 
-plt.show()
+  ax = plt.subplot(3, 2, 6)
+  plt.plot(ts, losses['divergence_from_optimal_xs'], ".-", label=sa.name)
+  plt.title("divergence from optimal state trajectory")
+  ax.legend()
+
+  plt.show()
 
 # -------------------------------------------
 # Script to compare training for different amounts of time
