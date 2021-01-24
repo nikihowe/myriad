@@ -159,3 +159,7 @@ source/params/*.p
 # Saved plots
 source/plots/*.png
 source/plots/*.pdf
+
+# Tensorboard stuff
+runs/
+all_scalars.json
