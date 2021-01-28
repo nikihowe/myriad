@@ -157,8 +157,7 @@ out.prof
 source/params/*.p
 
 # Saved plots
-source/plots/*.png
-source/plots/*.pdf
+source/plots/*
 
 # Tensorboard stuff
 runs/

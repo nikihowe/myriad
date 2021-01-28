@@ -41,8 +41,8 @@ class Cancer(IndirectFHCS):
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
             bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
-                [jnp.NINF, jnp.inf],      # followed by bounds over controls (u_0, u_1,...)
-                [0, jnp.inf],
+                [1e-3, 1.],      # followed by bounds over controls (u_0, u_1,...)
+                [0., jnp.inf]
             ]),
             terminal_cost=False,
             discrete=False,
@@ -55,7 +55,9 @@ class Cancer(IndirectFHCS):
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
-        d_x = self.r * x_t * jnp.log(1 / x_t) - u_t * self.delta * x_t
+        # d_x = self.r * x_t * jnp.log(1 / x_t**2) - u_t * self.delta * x_t
+        d_x = self.r * x_t * jnp.log(1 / x_t) - u_t * self.delta * x_t # this is the correct one
+
 
         return d_x
 
