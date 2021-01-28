@@ -1,10 +1,9 @@
 # put this in run.py in order to get the four-plot ones (need to also call run_experiment in opt_control_neural_ode)
 
-  # Can choose which sampling approach to use, for different effects
+   # Can choose which sampling approach to use, for different effects
   # (could even put together multiple sampling approaches in each plot)
-  sa = SamplingApproach.UNIFORM
   key1, key2 = jax.random.split(jax.random.PRNGKey(42))
-  losses = run_net(key1, hp, cfg, sampling_approach=sa)
+  losses = run_net(key1, hp, cfg)
 
   ts = losses['ts']
 
@@ -20,28 +19,29 @@
   ax.legend()
 
   ax = plt.subplot(3, 2, 2)
-  plt.plot(ts, losses['loss_on_opt'], "o-", label=sa.name)
+  plt.plot(ts, losses['loss_on_opt'], "o-", label=hp.sampling_approach)
   plt.title("loss over time on true optimal trajectory")
   plt.yscale('log')
   ax.legend()
 
   ax = plt.subplot(3, 2, 3)
-  plt.plot(ts, losses['control_costs'], ".-", label=sa.name)
+  plt.plot(ts, losses['control_costs'], ".-", label=hp.sampling_approach)
   plt.title("cost of applying \"optimal\" controls")
   ax.legend()
 
-  ax = plt.subplot(3, 2, 4)
-  plt.plot(ts, losses['constraint_violation'], ".-", label=sa.name)
-  plt.title("final constraint violation when applying those controls")
-  ax.legend()
+  if system.x_T is not None:
+    ax = plt.subplot(3, 2, 4)
+    plt.plot(ts, losses['constraint_violation'], ".-", label=hp.sampling_approach)
+    plt.title("final constraint violation when applying those controls")
+    ax.legend()
 
   ax = plt.subplot(3, 2, 5)
-  plt.plot(ts, losses['divergence_from_optimal_us'], ".-", label=sa.name)
+  plt.plot(ts, losses['divergence_from_optimal_us'], ".-", label=hp.sampling_approach)
   plt.title("divergence from optimal control trajectory")
   ax.legend()
 
   ax = plt.subplot(3, 2, 6)
-  plt.plot(ts, losses['divergence_from_optimal_xs'], ".-", label=sa.name)
+  plt.plot(ts, losses['divergence_from_optimal_xs'], ".-", label=hp.sampling_approach)
   plt.title("divergence from optimal state trajectory")
   ax.legend()
 
@@ -70,30 +70,38 @@ for n in [i*10_000 for i in range(1, 11)]:
 
 # --------------------------------------
 # Script for running the standard trajectory optimization
-
-# put this in run.py
-optimizer = get_optimizer(hp, cfg, system)
-if optimizer.require_adj:
-  x, u, adj = optimizer.solve()
-else:
-  x, u = optimizer.solve()
-
-num_steps = hp.intervals*hp.controls_per_interval
-stepsize = system.T / num_steps
-_, opt_x = integrate(system.dynamics, system.x_0, u,
-                     stepsize, num_steps, None, hp.order)
-
-if cfg.plot_results:
+#   put this in run.py
+  optimizer = get_optimizer(hp, cfg, system)
   if optimizer.require_adj:
-    system.plot_solution(x, u, adj, opt_x)
+    x, u, adj = optimizer.solve()
   else:
-    system.plot_solution(x, u, other_x=opt_x)
+    x, u = optimizer.solve()
 
-xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
-if hp.optimizer != OptimizerType.FBSM:
-  print("control cost", optimizer.objective(xs_and_us))
-  print('constraint_violations', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-raise SystemExit
+  num_steps = hp.intervals*hp.controls_per_interval
+  stepsize = system.T / num_steps
+  _, opt_x = integrate(system.dynamics, system.x_0, u,
+                      stepsize, num_steps, None, hp.order)
+
+  if cfg.plot_results:
+    if optimizer.require_adj:
+      plot(system,
+           data={'x': x, 'u': u, 'adj': adj, 'other_x': opt_x},
+           labels={'x': ' (from solver)',
+                   'u': 'Controls from solver',
+                   'adj': 'Adjoint from solver',
+                   'other_x': ' (from integrating controls from solver)'})
+    else:
+      plot(system,
+           data={'x': x, 'u': u, 'other_x': opt_x},
+           labels={'x': ' (from solver)',
+                   'u': 'Controls from solver',
+                   'other_x': ' (from integrating controls from solver)'})
+
+  xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
+  if hp.optimizer != OptimizerType.FBSM:
+    print("control cost", optimizer.objective(xs_and_us))
+    print('constraint_violations', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+  raise SystemExit
 
 # --------------------------------------------
 # Script for running the dataset ablation test
@@ -154,7 +162,7 @@ params, opt_state, losses = train_network(key, num_epochs=5001, params=params, o
 return losses
 
 # ---------------------------
-# hyperparameter tuning for extragradient
+# hyperopt tuning for extragradient
 
   from hyperopt import hp as h
   from hyperopt import fmin, tpe, pyll, STATUS_OK, STATUS_FAIL
@@ -197,3 +205,44 @@ return losses
   best = fmin(f, space, algo=tpe.suggest, max_evals=5)
 
   print(best)
+
+  # ---------------------------------------------------------
+  # Hand-tuning for extragradient
+  # put this in run.py
+  extra_options = {}
+  extra_options['maxiter'] = 50_000
+  extra_options['eta_x'] = 1 # primals
+  extra_options['eta_v'] = .1 # duals
+  extra_options['atol'] = 1e-8 # convergence tolerance
+
+  if hp.nlpsolver == NLPSolverType.EXTRAGRADIENT and hp.optimizer != OptimizerType.FBSM:
+    print("running with extra options:", extra_options)
+    x, u = optimizer.solve(extra_options)
+  elif hp.optimizer == OptimizerType.FBSM:
+    x, u, adj = optimizer.solve()
+  else:
+    x, u = optimizer.solve()
+
+  num_steps = hp.intervals*hp.controls_per_interval
+  stepsize = system.T / num_steps
+  _, actual_x = integrate(system.dynamics, system.x_0, u,
+                          stepsize, num_steps, None, hp.order)
+
+  # print("found us", u)
+  # print("giving xs", actual_x)
+
+  if cfg.plot_results:
+    if hp.optimizer == OptimizerType.FBSM:
+      system.plot_solution(x, u, adj)
+    else:
+      system.plot_solution(x, u, other_x=actual_x)
+
+  print("final position", actual_x[-1])
+
+  xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((actual_x[::hp.controls_per_interval], u))
+  if hp.optimizer != OptimizerType.FBSM:
+    print("control cost", optimizer.objective(xs_and_us))
+    if system.x_T is not None:
+      constraint_violation = jnp.linalg.norm((actual_x[-1] - system.x_T)*(actual_x[-1] - system.x_T))
+      print('constraint_violation', constraint_violation)
+  raise SystemExit
