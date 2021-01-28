@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -37,8 +37,9 @@ class FiniteHorizonControlSystem(object):
   def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Optional[jnp.array], T: Optional[jnp.array] = None) -> float:
     return 0
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
-                    other_x: Optional[jnp.ndarray], save_title: Optional[str] = None) -> None:
+  def plot_solution(self, data: Dict[str, jnp.ndarray],
+                    labels: Dict[str, str], title: Optional[str] = None,
+                    save_as: Optional[str] = None) -> None:
     raise NotImplementedError
 
 
@@ -252,14 +253,15 @@ class VanDerPol(FiniteHorizonControlSystem):
     ts_u = jnp.linspace(0, self.T, u.shape[0])
 
     plt.subplot(1, 2, 1)
-    plt.plot(x['x0'], x['x1'], label="True trajectory")
+    plt.plot(x['x0'], x['x1'], label="Trajectory from solver")
     if other_x is not None:
-      plt.plot(other_x['x0'], other_x['x1'], color="green", label="Learned trajectory")
-      plt.legend()
+      plt.plot(other_x['x0'], other_x['x1'], color="green", label="Integrated trajectory")
+    plt.legend()
     
     plt.subplot(1, 2, 2)
-    plt.step(ts_u, u, where="post")
+    plt.step(ts_u, u, where="post", label="Controls")
     plt.xlabel('time (s)')
+    plt.legend()
 
     plt.tight_layout()
     plt.show()
@@ -313,7 +315,7 @@ class SEIR(FiniteHorizonControlSystem):
   def cost(self, y_t: jnp.ndarray, u_t: jnp.float64, t: float = None) -> jnp.float64:
     return self.A * y_t[2] + u_t ** 2
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, other_x: Optional[jnp.ndarray] = None) -> None:
     sns.set()
     plt.figure(figsize=(12, 2.5))
     ts_x = jnp.linspace(0, self.T, x.shape[0])
@@ -328,6 +330,8 @@ class SEIR(FiniteHorizonControlSystem):
       plt.subplot(1, 5, idx+2)
       plt.title(title)
       plt.plot(ts_x, x[:, idx])
+      if other_x is not None:
+        plt.plot(ts_u, other_x[:, idx])
 
     plt.tight_layout()
     plt.show()
@@ -383,9 +387,12 @@ class Tumour(FiniteHorizonControlSystem):
     p, q, y = x_T
     return p
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
+                    other_x: Optional[jnp.ndarray] = None) -> None:
     colnames = ['p', 'q', 'y']
     x = pd.DataFrame(x, columns=colnames)
+    if other_x is not None:
+      other_x = pd.DataFrame(other_x, columns=colnames)
 
     sns.set(style='darkgrid')
     plt.figure(figsize=(10, 3))
@@ -397,6 +404,8 @@ class Tumour(FiniteHorizonControlSystem):
       plt.title(title)
       plt.plot(ts_x, x[title])
       plt.xlabel('time (days)')
+      if other_x is not None:
+        plt.plot(ts_u, other_x[title])
 
     plt.subplot(1, 4, 4)
     plt.title('u')
