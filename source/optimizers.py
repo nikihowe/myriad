@@ -8,6 +8,7 @@ from jax.ops import index_update
 import jax.numpy as jnp
 import numpy as np
 from ipopt import minimize_ipopt
+from scipy.optimize import minimize
 
 from source.config import Config, HParams, OptimizerType, SystemType, NLPSolverType, IntegrationOrder
 from source.systems import FiniteHorizonControlSystem, IndirectFHCS
@@ -41,14 +42,15 @@ class TrajectoryOptimizer(object):
 
   def solve(self, extra_options=None) -> Tuple[jnp.ndarray, jnp.ndarray]:
     _t1 = time.time()
-    options = {"maxiter": self.hp.ipopt_max_iter}
+    options = {"maxiter": self.hp.max_iter}
     # Merge the two dictionaries, keeping the entry from 'extra_options' in the case of a key collision
-    if extra_options is not None:
+    if extra_options is not None and self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
       options = {**options, **extra_options}
+      print("loaded extra options")
     opt_inputs = {
       'fun': jit(self.objective) if self.cfg.jit else self.objective,
       'x0': self.guess,
-      'method': 'SLSQP',
+      # 'method': 'SLSQP',
       'constraints': ({
         'type': 'eq',
         'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
@@ -60,8 +62,17 @@ class TrajectoryOptimizer(object):
     }
     if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
       solution = extra_gradient(**opt_inputs)
-    else:
+    elif self.hp.nlpsolver == NLPSolverType.SLSQP:
+      opt_inputs['method'] = 'SLSQP'
+      solution = minimize(**opt_inputs)
+    elif self.hp.nlpsolver == NLPSolverType.TRUST:
+      opt_inputs['method'] = 'trust-constr'
+      solution = minimize(**opt_inputs)
+    elif self.hp.nlpsolver == NLPSolverType.IPOPT:
       solution = minimize_ipopt(**opt_inputs)
+    else:
+      print("Unknown NLP solver. Please choose among", list(NLPSolverType.__members__.keys()))
+      raise ValueError
     _t2 = time.time()
     if self.cfg.verbose:
       print('Solver exited with success:', solution.success)
@@ -382,6 +393,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       return new_controls
 
     def objective(variables: jnp.ndarray) -> float:
+      # print("dynamics are", system.dynamics)
       # The commented code runs faster, but only does a linear interpolation for cost.
       # Better to have the interpolation match the integration scheme,
       # and just use Euler / Heun if we need shooting to be faster
