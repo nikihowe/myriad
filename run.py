@@ -11,10 +11,11 @@ from absl import app, flags
 import matplotlib.pyplot as plt
 
 from source.config import Config, HParams
-from source.config import SamplingApproach, OptimizerType
+from source.config import SystemType, SamplingApproach, OptimizerType, NLPSolverType
 from source.optimizers import get_optimizer
 from source.systems import get_system
 from source.utils import integrate
+from source.plotting import plot
 
 from source.opt_control_neural_ode import run_net
 
@@ -65,30 +66,64 @@ def main(unused_argv):
   system = get_system(hp)
   optimizer = get_optimizer(hp, cfg, system)
 
+  ########################################################################################################3
+
   # -----------------------------------------------------------------------
   ######################
   # Place scripts here #
   ######################
-
+   
   # put this in run.py
-  optimizer = get_optimizer(hp, cfg, system)
+  # optimizer = get_optimizer(hp, cfg, system)
+  # if optimizer.require_adj:
+  #   x, u, adj = optimizer.solve()
+  # else:
+  #   x, u = optimizer.solve()
+  #
+  # num_steps = hp.intervals*hp.controls_per_interval
+  # stepsize = system.T / num_steps
+  # _, opt_x = integrate(system.dynamics, system.x_0, u,
+  #                     stepsize, num_steps, None, hp.order)
+  #
+  # if cfg.plot_results:
+  #   if optimizer.require_adj:
+  #     plot(system,
+  #          data={'x': x, 'u': u, 'adj': adj, 'other_x': opt_x},
+  #          labels={'x': ' (from solver)',
+  #                  'u': 'Controls from solver',
+  #                  'adj': 'Adjoint from solver',
+  #                  'other_x': ' (from integrating controls from solver)'})
+  #   else:
+  #     plot(system,
+  #          data={'x': x, 'u': u, 'other_x': opt_x},
+  #          labels={'x': ' (from solver)',
+  #                  'u': 'Controls from solver',
+  #                  'other_x': ' (from integrating controls from solver)'})
+  #
+  # xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
+  # if hp.optimizer != OptimizerType.FBSM:
+  #   print("control cost", optimizer.objective(xs_and_us))
+  #   print('constraint_violations', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+  # raise SystemExit
 
-
-  x, u = optimizer.solve()
-
-  num_steps = hp.intervals*hp.controls_per_interval
-  stepsize = system.T / num_steps
-  _, opt_x = integrate(system.dynamics, system.x_0, u,
-                       stepsize, num_steps, None, hp.order)
-
-  if cfg.plot_results:
-    system.plot_solution(x, u, other_x=opt_x)
-
-  xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((opt_x[::hp.controls_per_interval], u))
-  if hp.optimizer != OptimizerType.FBSM:
-    print("control cost", optimizer.objective(xs_and_us))
-    print('constraint_violation', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-  raise SystemExit
+  # Can choose which sampling approach to use, for different effects
+  # (could even put together multiple sampling approaches in each plot)
+  sas = [SamplingApproach.FIXED, SamplingApproach.PLANNING]
+  sas = [SamplingApproach.FIXED]
+  nlp = [NLPSolverType.IPOPT, NLPSolverType.TRUST]
+  exp = [SystemType.CANCER, SystemType.SIMPLECASE, SystemType.MOLDFUNGICIDE]
+  exp = [SystemType.SIMPLECASE, SystemType.MOLDFUNGICIDE]
+  for e in exp:
+    for s in sas:
+      for n in nlp:
+        hp.system = e
+        hp.sampling_approach = s
+        hp.nlpsolver = n
+        key = jax.random.PRNGKey(42)
+        losses = run_net(key, hp, cfg,
+                         train_size=1_000,
+                         increment=1,
+                         num_experiments=6)
 
   # -----------------------------------------------------------------------
 
