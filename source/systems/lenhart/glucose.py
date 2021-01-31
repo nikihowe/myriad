@@ -1,11 +1,12 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.config import SystemType
+from source.systems import IndirectFHCS
 
 
 @gin.configurable

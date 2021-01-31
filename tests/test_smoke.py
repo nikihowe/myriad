@@ -1,5 +1,4 @@
 import random
-from source.systems import get_system
 import unittest
 
 import jax
@@ -7,6 +6,7 @@ import numpy as np
 
 from source.config import Config, SystemType, HParams, OptimizerType, NLPSolverType, IntegrationOrder
 from source.optimizers import get_optimizer
+from source.systems import get_system
 
 
 # Test that experiments run without raising exceptions

@@ -9,11 +9,10 @@
 ├── source
     ├── gin-configs     # Contains gin configuration files
         └── ...
-    ├── LenhartSystems  # Dynamical systems presented in Lenhart book
+    ├── systems         # Dynamical systems
         └── ...
     ├── config.py       # Configuration and data types
     ├── optimizers.py   # Trajectory optimization algorithms
-    ├── systems.py      # Dynamical systems
     └── utils.py        # Helper methods
 ├── tests
     └── ...             # Automated tests
