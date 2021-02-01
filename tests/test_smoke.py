@@ -23,9 +23,9 @@ class SmokeTest(unittest.TestCase):
           _system = get_system(hp)
           optimizer = get_optimizer(hp, cfg, _system)
           print("calling optimizer", optimizer)
-          x, u = optimizer.solve()
-          print("solution", x.shape)
-          _system.plot_solution(x, u)
+          results = optimizer.solve()
+          print("solution", results[0].shape)
+          _system.plot_solution(*results)
 # TODO: why does it not work to also iterate through nlpsolvers?
 
 if __name__=='__main__':
