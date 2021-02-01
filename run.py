@@ -10,7 +10,7 @@ from absl import flags
 
 from source.config import Config, HParams
 from source.optimizers import get_optimizer
-from source.systems import get_system
+
 
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
 parser = simple_parsing.ArgumentParser()
@@ -56,7 +56,7 @@ def main(unused_argv):
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
                                       skip_unknown=False)
-  system = get_system(hp)
+  system = hp.system()
 
   # Run experiment
   optimizer = get_optimizer(hp, cfg, system)

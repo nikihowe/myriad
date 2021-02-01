@@ -1,4 +1,4 @@
-from source.config import HParams, SystemType
+from enum import Enum
 from typing import Union
 
 from .base import FiniteHorizonControlSystem
@@ -23,42 +23,25 @@ from .lenhart.predator_prey import PredatorPrey
 from .lenhart.invasive_plant import InvasivePlant
 
 
-def get_system(hp: HParams) -> Union[FiniteHorizonControlSystem, IndirectFHCS]:
-  if hp.system == SystemType.CARTPOLE:
-    return CartPole()
-  elif hp.system == SystemType.VANDERPOL:
-    return VanDerPol()
-  elif hp.system == SystemType.SEIR:
-    return SEIR()
-  elif hp.system == SystemType.TUMOUR:
-    return Tumour()
-  elif hp.system == SystemType.SIMPLECASE:
-    return SimpleCase()
-  elif hp.system == SystemType.MOLDFUNGICIDE:
-    return MoldFungicide()
-  elif hp.system == SystemType.BACTERIA:
-    return Bacteria()
-  elif hp.system == SystemType.SIMPLECASEWITHBOUNDS:
-    return SimpleCaseWithBounds()
-  elif hp.system == SystemType.CANCER:
-    return Cancer()
-  elif hp.system == SystemType.FISHHARVEST:
-    return FishHarvest()
-  elif hp.system == SystemType.EPIDEMICSEIRN:
-    return EpidemicSEIRN()
-  elif hp.system == SystemType.HIVTREATMENT:
-    return HIVTreatment()
-  elif hp.system == SystemType.BEARPOPULATIONS:
-    return BearPopulations()
-  elif hp.system == SystemType.GLUCOSE:
-    return Glucose()
-  elif hp.system == SystemType.TIMBERHARVEST:
-    return TimberHarvest()
-  elif hp.system == SystemType.BIOREACTOR:
-    return Bioreactor()
-  elif hp.system == SystemType.PREDATORPREY:
-    return PredatorPrey()
-  elif hp.system == SystemType.INVASIVEPLANT:
-    return InvasivePlant()
-  else:
-    raise KeyError
+class SystemType(Enum):
+  CARTPOLE = CartPole
+  VANDERPOL = VanDerPol
+  SEIR = SEIR
+  TUMOUR = Tumour
+  SIMPLECASE = SimpleCase
+  MOLDFUNGICIDE = MoldFungicide
+  BACTERIA = Bacteria
+  SIMPLECASEWITHBOUNDS = SimpleCaseWithBounds
+  CANCER = Cancer
+  FISHHARVEST = FishHarvest
+  EPIDEMICSEIRN = EpidemicSEIRN
+  HIVTREATMENT = HIVTreatment
+  BEARPOPULATIONS = BearPopulations
+  GLUCOSE = Glucose
+  TIMBERHARVEST = TimberHarvest
+  BIOREACTOR = Bioreactor
+  PREDATORPREY = PredatorPrey
+  INVASIVEPLANT = InvasivePlant
+
+  def __call__(self, *args, **kwargs) -> Union[FiniteHorizonControlSystem,IndirectFHCS]:
+      return self.value(*args, **kwargs)

@@ -5,7 +5,6 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from source.config import SystemType
 from source.systems import IndirectFHCS
 
 
@@ -33,7 +32,6 @@ class Bacteria(IndirectFHCS):
         :param x_0: Initial bacteria population concentration
         """
         super().__init__(
-            _type=SystemType.BACTERIA,
             x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=1,                    # Duration of experiment

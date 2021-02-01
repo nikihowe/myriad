@@ -4,7 +4,6 @@ import pandas as pd
 import seaborn as sns
 
 from .base import FiniteHorizonControlSystem
-from source.config import SystemType
 
 
 class Tumour(FiniteHorizonControlSystem):
@@ -27,7 +26,6 @@ class Tumour(FiniteHorizonControlSystem):
     y_0 = 0 # Initial cumulative dosage
     assert p_0 >= q_0 # condition for well-posed problem
     super().__init__(
-      _type = SystemType.TUMOUR,
       x_0 = jnp.array([p_0, q_0, y_0]),
       x_T = None,
       T = t_F,

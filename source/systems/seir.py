@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from .base import FiniteHorizonControlSystem
-from source.config import SystemType
 
 
 class SEIR(FiniteHorizonControlSystem):
@@ -26,7 +25,6 @@ class SEIR(FiniteHorizonControlSystem):
     self.M = 1000
 
     super().__init__(
-      _type = SystemType.SEIR,
       x_0 = jnp.array([self.S_0, self.E_0, self.I_0, self.N_0]),
       x_T = None,
       T = 20,

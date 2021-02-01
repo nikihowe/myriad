@@ -4,7 +4,6 @@ import pandas as pd
 import seaborn as sns
 
 from .base import FiniteHorizonControlSystem
-from source.config import SystemType
 
 
 class CartPole(FiniteHorizonControlSystem):
@@ -19,7 +18,6 @@ class CartPole(FiniteHorizonControlSystem):
     self.d = 1.0   # m distance traveled during swing-up
 
     super().__init__(
-      _type = SystemType.CARTPOLE,
       x_0 = jnp.array([0., 0., 0., 0.]),  # Starting state (Eq. 6.9)
       x_T = jnp.array([self.d, jnp.pi, 0., 0.]),  # Ending state (Eq. 6.9)
       T = 2.0,  # s duration of swing-up,

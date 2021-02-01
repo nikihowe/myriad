@@ -4,13 +4,11 @@ import pandas as pd
 import seaborn as sns
 
 from .base import FiniteHorizonControlSystem
-from source.config import SystemType
 
 
 class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
     super().__init__(
-      _type = SystemType.VANDERPOL,
       x_0 = jnp.array([0., 1.]),
       x_T = jnp.zeros(2),
       T = 10.0,

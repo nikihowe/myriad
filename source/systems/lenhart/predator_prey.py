@@ -5,7 +5,6 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from source.config import SystemType
 from source.systems import IndirectFHCS
 
 
@@ -50,7 +49,6 @@ class PredatorPrey(IndirectFHCS):
         :param T: Horizon
         """
         super().__init__(
-            _type=SystemType.PREDATORPREY,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],

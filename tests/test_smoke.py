@@ -6,7 +6,6 @@ import numpy as np
 
 from source.config import Config, SystemType, HParams, OptimizerType, NLPSolverType, IntegrationOrder
 from source.optimizers import get_optimizer
-from source.systems import get_system
 
 
 # Test that experiments run without raising exceptions
@@ -20,7 +19,7 @@ class SmokeTest(unittest.TestCase):
           cfg = Config(verbose=True, plot_results=True)
           random.seed(hp.seed)
           np.random.seed(hp.seed)
-          _system = get_system(hp)
+          _system = hp.system()
           optimizer = get_optimizer(hp, cfg, _system)
           print("calling optimizer", optimizer)
           results = optimizer.solve()

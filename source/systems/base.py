@@ -4,12 +4,9 @@ from typing import Optional, Union
 
 import jax.numpy as jnp
 
-from source.config import SystemType
-
 
 @dataclass
 class FiniteHorizonControlSystem(object):
-  _type: SystemType
   x_0: jnp.ndarray  # state at time 0
   x_T: Optional[jnp.ndarray]  # state at time T
   T: float  # duration of trajectory

@@ -5,7 +5,6 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from source.config import SystemType
 from source.systems import IndirectFHCS
 
 
@@ -37,7 +36,6 @@ class FishHarvest(IndirectFHCS):
         :param T: Horizon
         """
         super().__init__(
-            _type=SystemType.FISHHARVEST,
             x_0=jnp.array([x_0]),    # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
