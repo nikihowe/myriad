@@ -10,7 +10,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class MoldFungicide(IndirectFHCS):
-    def __init__(self, r, M, A, x_0, T):
+    def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
 

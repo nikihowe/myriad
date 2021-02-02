@@ -10,7 +10,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class Cancer(IndirectFHCS):
-    def __init__(self, r, a, delta, x_0, T):
+    def __init__(self, r=0.3, a=3, delta=0.45, x_0=0.975, T=20):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 10, Lab 5)
         The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
