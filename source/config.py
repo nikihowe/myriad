@@ -8,7 +8,7 @@ class SystemType(Enum):
   SEIR = "SEIR"
   TUMOUR = "TUMOUR"
   SIMPLECASE = "SIMPLECASE"
-  MOLDFUNGICIDE = "MOLDFUNGICIDE"
+  MOULDFUNGICIDE = "MOULDFUNGICIDE"
   BACTERIA = "BACTERIA"
   SIMPLECASEWITHBOUNDS = "SIMPLECASEWITHBOUNDS"
   CANCER = "CANCER"
@@ -30,11 +30,11 @@ class OptimizerType(Enum):
 
 
 class NLPSolverType(Enum):
-  SLSQP = "SLSQP"
-  TRUST = "TRUST"
-  IPOPT = "IPOPT"
+  SLSQP = "SLSQP"  # Scipy's SLSQP
+  TRUST = "TRUST"  # Scipy's trust-constr
+  IPOPT = "IPOPT"  # ipopt
   # INEXACTNEWTON="INEXACTNEWTON"
-  EXTRAGRADIENT = "EXTRAGRADIENT"
+  EXTRAGRADIENT = "EXTRAGRADIENT"  # an extragradient-based solver
 
 
 class IntegrationOrder(Enum):
@@ -43,31 +43,20 @@ class IntegrationOrder(Enum):
   QUADRATIC = "QUADRATIC"
 
 
-class SamplingApproach(Enum):
-  FIXED = "FIXED"
-  FIXED_OPTIMAL = 'FIXED_OPTIMAL'
-  PLANNING = "PLANNING"
-  ENDTOEND = "ENDTOEND"
-
-
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.CARTPOLE
+  system: SystemType = SystemType.TUMOUR
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   order: IntegrationOrder = IntegrationOrder.LINEAR
-  sampling_approach: SamplingApproach = SamplingApproach.PLANNING
-  # Solver
-  max_iter: int = 1000
-  # Trajectory Optimizer
-  intervals: int = 20  # collocation and shooting
-  controls_per_interval: int = 3  # multiple shooting
+  max_iter: int = 1000            # maxiter for NLP solver
+  intervals: int = 50             # used by COLLOCATION and SHOOTING
+  controls_per_interval: int = 3  # used by SHOOTING
+  fbsm_intervals: int = 1000      # used by FBSM
 
-  # Indirect method optimizer
-  steps: int = 100
-
+  # Collocation requires exactly one control per interval
   def __post_init__(self):
     if self.optimizer == OptimizerType.COLLOCATION:
       self.controls_per_interval = 1

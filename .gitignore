@@ -154,7 +154,7 @@ paper/*.synctex.gz
 out.prof
 
 # Saved parameters
-source/params/*.p
+source/params/*
 
 # Saved plots
 source/plots/*

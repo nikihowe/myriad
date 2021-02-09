@@ -50,7 +50,6 @@ class TrajectoryOptimizer(object):
     opt_inputs = {
       'fun': jit(self.objective) if self.cfg.jit else self.objective,
       'x0': self.guess,
-      # 'method': 'SLSQP',
       'constraints': ({
         'type': 'eq',
         'fun': jit(self.constraints) if self.cfg.jit else self.constraints,
@@ -83,10 +82,7 @@ class TrajectoryOptimizer(object):
     else:
       x, u = self.unravel(solution.x)
 
-    if 'ret_success' in options:
-      return x, u, solution.success
-    else:
-      return x, u
+    return x, u
 
 
 @dataclass
@@ -122,7 +118,7 @@ def get_optimizer(hp: HParams, cfg: Config, system: Union[FiniteHorizonControlSy
       optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
     elif hp.order == IntegrationOrder.LINEAR:
       optimizer = TrapezoidalCollocationOptimizer(hp, cfg, system)
-    else: # Quadtratic
+    else:  # Quadratic
       optimizer = HermiteSimpsonCollocationOptimizer(hp, cfg, system)
   elif hp.optimizer == OptimizerType.SHOOTING:
     optimizer = MultipleShootingOptimizer(hp, cfg, system)
@@ -149,13 +145,6 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
     if system.x_T is not None:
       # We need to handle the cases where a terminal bound is specified only for some state variables, not all
       row_guesses = []
-      # TODO: make sure that nh correctly understood that the special case which has been commented
-      #       out below is properly handled by the expansion of the loop
-      # if system.x_T[0] is not None:
-      #   x_guess = jnp.linspace(system.x_0[0], system.x_T[0], num=num_intervals + 1).reshape(-1, 1)
-      # else: # the first state component has no final constraints
-      #   _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals)
-      #   x_guess = x_guess[:, 0].reshape(-1, 1)
       for i in range(0, len(system.x_T)):
         if system.x_T[i] is not None:
           row_guess = jnp.linspace(system.x_0[i], system.x_T[i], num=num_intervals+1).reshape(-1, 1)
@@ -164,7 +153,7 @@ class TrapezoidalCollocationOptimizer(TrajectoryOptimizer):
           row_guess = row_guess[:, i].reshape(-1, 1)
         row_guesses.append(row_guess)
       x_guess = jnp.hstack(row_guesses)
-    else: # no final state requirement
+    else:  # no final state requirement
       _, x_guess = integrate(system.dynamics, system.x_0, u_guess, h, num_intervals, None, hp.order)
     guess, unravel_decision_variables = ravel_pytree((x_guess, u_guess))
     self.x_guess, self.u_guess = x_guess, u_guess
@@ -269,7 +258,7 @@ class HermiteSimpsonCollocationOptimizer(TrajectoryOptimizer):
       if system.x_T is not None:
         starting_states = jnp.concatenate((system.x_0[jnp.newaxis], xs))
         desired_next_states = jnp.concatenate((xs, system.x_T[jnp.newaxis]))
-      else: # last "decision state" is actually final state in this case
+      else:  # last "decision state" is actually final state in this case
         starting_states = jnp.concatenate((system.x_0[jnp.newaxis], xs[:-1]))
         desired_next_states = xs
 
@@ -313,11 +302,9 @@ class HermiteSimpsonCollocationOptimizer(TrajectoryOptimizer):
       unraveled_vars = get_start_and_next_states_and_controls(variables)
       return jnp.ravel(vmap(hs_interpolation)(*unraveled_vars))
 
-    def constraints(variables): # vstack or hstack?
+    def constraints(variables):
       equality_defects = hs_equality_constraints(variables)
       interpolation_defects = hs_interpolation_constraints(variables)
-      print('equalities', equality_defects.shape)
-      print('interpolations', interpolation_defects.shape)
       return jnp.hstack((equality_defects, interpolation_defects))
 
     super().__init__(OptimizerType.COLLOCATION, hp, cfg, objective, constraints, bounds, guess, unravel_decision_variables)
@@ -344,7 +331,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     # States
     if system.x_T is not None:
-      row_guesses = [] # TODO: check if this behaves the same as the earlier code
+      row_guesses = []
       # For the state variables which have a required end state, interpolate between start and end;
       # otherwise, use rk4 with initial controls as a first guess at intermediate and end state values
       for i in range(0, len(system.x_T)):
@@ -358,15 +345,13 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     else:
       _, x_guess = integrate(system.dynamics, system.x_0, controls_guess[::midpoints_const*hp.controls_per_interval], interval_size, hp.intervals, None, hp.order)
     guess, unravel = ravel_pytree((x_guess, controls_guess))
-    assert len(x_guess) == hp.intervals + 1 # we have one state decision var for each node, including start and end
+    assert len(x_guess) == hp.intervals + 1  # we have one state decision var for each node, including start and end
     self.x_guess, self.u_guess = x_guess, controls_guess
-
 
     # Augment the dynamics so we can integrate cost the same way we do state
     def augmented_dynamics(x_and_c: jnp.ndarray, u: float) -> jnp.ndarray:
       x, c = x_and_c[:-1], x_and_c[-1]
       return jnp.append(system.dynamics(x, u), system.cost(x, u))
-
 
     # Go from having controls like (num_controls + 1, control_shape) (left)
     #                      to like (hp.intervals, num_controls_per_interval + 1, control_shape) (right)
@@ -384,7 +369,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [ 8. ,  8.1]
     #                             [ 9. ,  9.1]
     #                             [10. , 10.1]
-    def reorganize_controls(us):# This still works, even for higher-order control shape
+    def reorganize_controls(us):  # This still works, even for higher-order control shape
       new_controls = jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
                          us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]])
       # Needed for single shooting
@@ -425,7 +410,6 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
         costs += system.terminal_cost_fn(last_augmented_state[:-1], us[-1])
 
       return costs
-
     
     def constraints(variables: jnp.ndarray) -> jnp.ndarray:
       xs, us = unravel(variables)
@@ -467,7 +451,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
   def __init__(self, hp: HParams, cfg: Config, system: IndirectFHCS):
     self.system = system
-    self.N = hp.steps
+    self.N = hp.fbsm_intervals
     self.h = system.T / self.N
     if system.discrete:
       self.N = int(system.T)
