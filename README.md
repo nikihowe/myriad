@@ -76,3 +76,14 @@ python -m unittest discover -s tests
 
 ## References
 [Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
+
+## Citing this repo
+
+```
+@misc{optimal-control,
+  author = {Howe, Nikolaus and Rajkumar, Nitarshan and Dufort-Labbe, Simon},
+  title = {{what is the name (myriad?)}},
+  note = {Available at: https://github.com/nikihowe/put_place_here},
+  year = {2021}
+}
+```
