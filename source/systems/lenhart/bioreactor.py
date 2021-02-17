@@ -1,16 +1,15 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
 class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optimization
-  def __init__(self, K, G, D, M, x_0, T):
+  def __init__(self, K=2., G=1., D=1., M=1., x_0=(.5, .1), T=2.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 19, Lab 12)
     Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
@@ -40,7 +39,6 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.BIOREACTOR,
       x_0=jnp.array([
         x_0[0],
       ]),                    # Starting state

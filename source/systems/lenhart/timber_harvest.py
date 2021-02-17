@@ -1,16 +1,15 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
 class TimberHarvest(IndirectFHCS):
-  def __init__(self, r, k, x_0, T):
+  def __init__(self, r=0., k=1., x_0=100., T=5.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 18, Lab 11)
     Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
@@ -40,7 +39,6 @@ class TimberHarvest(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.TIMBERHARVEST,
       x_0=jnp.array([
         x_0,
       ]),                     # Starting state

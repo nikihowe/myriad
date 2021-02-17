@@ -1,11 +1,11 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional, Dict
 import gin
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -28,7 +28,6 @@ class SimpleCase(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.SIMPLECASE,
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
       T=T,                    # Duration of experiment

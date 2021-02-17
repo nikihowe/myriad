@@ -1,16 +1,16 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from source.systems import IndirectFHCS
+
 
 @gin.configurable
 class Cancer(IndirectFHCS):
-    def __init__(self, r, a, delta, x_0, T):
+    def __init__(self, r=0.3, a=3., delta=0.45, x_0=0.975, T=20):
         """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 10, Lab 5)
         The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
@@ -36,7 +36,6 @@ class Cancer(IndirectFHCS):
         :param T: Horizon
         """
         super().__init__(
-            _type=SystemType.CANCER,
             x_0=jnp.array([x_0]),   # Starting state
             x_T=None,               # Terminal state, if any
             T=T,                    # Duration of experiment
@@ -55,9 +54,7 @@ class Cancer(IndirectFHCS):
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
-        d_x = self.r * x_t * jnp.log(1 / x_t) - u_t * self.delta * x_t # this is the correct one
-
-
+        d_x = self.r * x_t * jnp.log(1 / x_t) - u_t * self.delta * x_t
         return d_x
 
     def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:

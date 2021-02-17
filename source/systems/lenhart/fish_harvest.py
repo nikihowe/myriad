@@ -1,5 +1,3 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -7,10 +5,12 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from source.systems import IndirectFHCS
+
 
 @gin.configurable
 class FishHarvest(IndirectFHCS):
-  def __init__(self, A, k, m, M, x_0, T):
+  def __init__(self, A=5., k=10., m=.2, M=1., x_0=.4, T=10.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 11, Lab 6)
     The model was was adapted from Wayne M. Getz. Optimal control and principles in population management.
@@ -36,7 +36,6 @@ class FishHarvest(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.FISHHARVEST,
       x_0=jnp.array([x_0]),  # Starting state
       x_T=None,         # Terminal state, if any
       T=T,          # Duration of experiment

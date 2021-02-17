@@ -1,11 +1,11 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -42,7 +42,6 @@ class HIVTreatment(IndirectFHCS):
         :param T: Horizon
         """
         super().__init__(
-            _type=SystemType.HIVTREATMENT,
             x_0=jnp.array([
                 x_0[0],
                 x_0[1],

@@ -1,5 +1,3 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -7,10 +5,13 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from source.systems import IndirectFHCS
+
 
 @gin.configurable
 class BearPopulations(IndirectFHCS):
-  def __init__(self, r, K, m_p, m_f, c_p, c_f, x_0, T):
+  def __init__(self, r=.1, K=.75, m_p=.5, m_f=.5, c_p=10_000,
+               c_f=10, x_0=(.4, .2, 0.), T=25):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 15, Lab 9)
     Additional reference can be found in R. A. Salinas, S. Lenhart, and L. J. Gross. Control of a metapopulation
@@ -42,7 +43,6 @@ class BearPopulations(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.BEARPOPULATIONS,
       x_0=jnp.array([
         x_0[0],
         x_0[1],

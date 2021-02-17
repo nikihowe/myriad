@@ -1,5 +1,3 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -7,10 +5,12 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from source.systems import IndirectFHCS
+
 
 @gin.configurable
 class Bacteria(IndirectFHCS):
-  def __init__(self, r, A, B, C, x_0):
+  def __init__(self, r=1., A=1., B=12., C=1., x_0=1.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 7, Lab 3)
 
@@ -32,7 +32,6 @@ class Bacteria(IndirectFHCS):
     :param x_0: Initial bacteria population concentration
     """
     super().__init__(
-      _type=SystemType.BACTERIA,
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
       T=1,                    # Duration of experiment

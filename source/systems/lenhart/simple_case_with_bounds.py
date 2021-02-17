@@ -1,5 +1,3 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
@@ -7,10 +5,12 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from source.systems import IndirectFHCS
+
 
 @gin.configurable
 class SimpleCaseWithBounds(IndirectFHCS):
-  def __init__(self, A, C, M_1, M_2, x_0, T):
+  def __init__(self, A=1., C=4., M_1=-1., M_2=2., x_0=1., T=1.):
     """
         Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 9, Lab 4)
         A simple introductory environment example of the form:
@@ -29,7 +29,6 @@ class SimpleCaseWithBounds(IndirectFHCS):
         :param T: Horizon
         """
     super().__init__(
-      _type=SystemType.SIMPLECASEWITHBOUNDS,
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
       T=T,                    # Duration of experiment

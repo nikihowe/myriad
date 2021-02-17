@@ -1,16 +1,17 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
 class PredatorPrey(IndirectFHCS):
-  def __init__(self, d_1, d_2, A, B, guess_a, guess_b, M, x_0, T):
+  def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
+               guess_a=-.52, guess_b=.5, M=1.,
+               x_0=(10., 1., 0.), T=10.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 22, Lab 13)
     The states evolution is base on a standard Lotka-Volterra model.
@@ -49,7 +50,6 @@ class PredatorPrey(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      _type=SystemType.PREDATORPREY,
       x_0=jnp.array([
         x_0[0],
         x_0[1],

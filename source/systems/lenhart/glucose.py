@@ -1,16 +1,15 @@
-from ..systems import IndirectFHCS
-from ..config import SystemType
 from typing import Union, Optional
 import gin
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
 class Glucose(IndirectFHCS):
-  def __init__(self, a, b, c, A, l, x_0, T):
+  def __init__(self, a=1., b=1., c=1., A=2., l=.5, x_0=(.75, 0.), T=.2):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 16, Lab 10)
     Model is presented in more details in Martin Eisen. Mathematical Methods and Models in the Biological Sciences.
@@ -43,7 +42,6 @@ class Glucose(IndirectFHCS):
     :param T: Horizon (Should be kept under 0.45)
     """
     super().__init__(
-      _type=SystemType.GLUCOSE,
       x_0=jnp.array([
         x_0[0],
         x_0[1],

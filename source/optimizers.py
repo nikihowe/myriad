@@ -251,8 +251,8 @@ class HermiteSimpsonCollocationOptimizer(TrajectoryOptimizer):
     self.x_bounds, self.u_bounds = x_bounds, u_bounds
 
     # Convenience function
-    def get_start_and_next_states_and_controls(variables: jnp.ndarray) -> Tuple[jnp.array, jnp.ndarray, jnp.ndarray,
-                                                                                jnp.array, jnp.ndarray, jnp.ndarray]:
+    def get_start_and_next_states_and_controls(variables: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray,
+                                                                                jnp.ndarray, jnp.ndarray, jnp.ndarray]:
       xs, mid_xs, us, mid_us = unravel_decision_variables(variables)
 
       if system.x_T is not None:

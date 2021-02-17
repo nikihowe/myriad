@@ -1,17 +1,17 @@
-import source.LenhartSystems.SimpleCase
-import source.LenhartSystems.MouldFungicide
-import source.LenhartSystems.Bacteria
-import source.LenhartSystems.SimpleCaseWithBounds
-import source.LenhartSystems.Cancer
-import source.LenhartSystems.FishHarvest
-import source.LenhartSystems.EpidemicSEIRN
-import source.LenhartSystems.HIVTreatment
-import source.LenhartSystems.BearPopulations
-import source.LenhartSystems.Glucose
-import source.LenhartSystems.TimberHarvest
-import source.LenhartSystems.Bioreactor
-import source.LenhartSystems.PredatorPrey
-import source.LenhartSystems.InvasivePlant
+import source.systems.SimpleCase
+import source.systems.MoldFungicide
+import source.systems.Bacteria
+import source.systems.SimpleCaseWithBounds
+import source.systems.Cancer
+import source.systems.FishHarvest
+import source.systems.EpidemicSEIRN
+import source.systems.HIVTreatment
+import source.systems.BearPopulations
+import source.systems.Glucose
+import source.systems.TimberHarvest
+import source.systems.Bioreactor
+import source.systems.PredatorPrey
+import source.systems.InvasivePlant
 
 # SimpleCase parameters default values
 SimpleCase.A = 1.0
@@ -20,12 +20,12 @@ SimpleCase.C = 4.0
 SimpleCase.x_0 = 1.0
 SimpleCase.T = 1
 
-# MouldFungicide parameters default values
-MouldFungicide.r = 0.3
-MouldFungicide.M = 10
-MouldFungicide.A = 1.0
-MouldFungicide.x_0 = 1.0
-MouldFungicide.T = 5
+# MoldFungicide parameters default values
+MoldFungicide.r = 0.3
+MoldFungicide.M = 10
+MoldFungicide.A = 1.0
+MoldFungicide.x_0 = 1.0
+MoldFungicide.T = 5
 
 # Bacteria parameters default values
 Bacteria.r = 1
