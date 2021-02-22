@@ -36,11 +36,11 @@ class FishHarvest(IndirectFHCS):
     :param T: Horizon
     """
     super().__init__(
-      x_0=jnp.array([x_0]),  # Starting state
-      x_T=None,         # Terminal state, if any
-      T=T,          # Duration of experiment
-      bounds=jnp.array([     # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],    # followed by bounds over controls (u_0,u_1,...)
+      x_0=jnp.array([x_0]),   # Starting state
+      x_T=None,               # Terminal state, if any
+      T=T,                    # Duration of experiment
+      bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
+        [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
         [0, M],
       ]),
       terminal_cost=False,

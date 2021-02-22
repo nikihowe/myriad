@@ -28,7 +28,7 @@ class IntegrationOrder(Enum):
 @dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.TUMOUR
+  system: SystemType = SystemType.MOLDFUNGICIDE
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   order: IntegrationOrder = IntegrationOrder.LINEAR

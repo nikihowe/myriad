@@ -10,6 +10,7 @@ from absl import flags
 
 from source.config import Config, HParams
 from source.optimizers import get_optimizer
+from source.plotting import plot_result
 
 
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
@@ -62,8 +63,8 @@ def main(unused_argv):
   optimizer = get_optimizer(hp, cfg, system)
   results = optimizer.solve()
   if cfg.plot_results:
-    system.plot_solution(*results)
+    plot_result(results, hp)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
   app.run(main)

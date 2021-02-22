@@ -20,10 +20,10 @@ state_descriptions = {
   SystemType.GLUCOSE: [[0, 1], ["Blood glucose", "Net hormonal concentration"]],
   SystemType.HIVTREATMENT: [[0], ["Healthy cells", "Infected cells", "Viral charge"]],
   SystemType.INVASIVEPLANT: [[0, 1, 2, 3, 4], ["Focus 1", "Focus 2", "Focus 3", "Focus 4", "Focus 5"]],
-  SystemType.MOULDFUNGICIDE: [[0], ["Mould population"]],
+  SystemType.MOLDFUNGICIDE: [[0], ["Mould population"]],
   SystemType.PREDATORPREY: [[0, 1], ["Predator population", "Prey population"]],
-  # SystemType.SIMPLECASE
-  # SystemType.SIMPLECASEWITHBOUNDS
+  SystemType.SIMPLECASE: [[0], ["State"]],
+  SystemType.SIMPLECASEWITHBOUNDS: [[0], ["State"]],
   SystemType.TIMBERHARVEST: [[0], ["Cumulative timber harvested"]]
 }
 
@@ -41,27 +41,42 @@ control_descriptions = {
   SystemType.FISHHARVEST: [[0], ["Harvest rate"]],
   SystemType.GLUCOSE: [[0], ["Insulin level"]],
   SystemType.HIVTREATMENT: [[0], ["Drug intensity"]],
-  SystemType.MOULDFUNGICIDE: [[0], ["Fungicide level"]],
+  SystemType.MOLDFUNGICIDE: [[0], ["Fungicide level"]],
   SystemType.PREDATORPREY: [[0], ["Pesticide level"]],
-  # SystemType.SIMPLECASE
-  # SystemType.SIMPLECASEWITHBOUNDS
+  SystemType.SIMPLECASE: [[0], ["Control"]],
+  SystemType.SIMPLECASEWITHBOUNDS: [[0], ["Control"]],
   SystemType.TIMBERHARVEST: [[0], ["Reinvestment level"]]
 }
 
 
-def plot(system,
+def plot_result(result, hp, save_as=None):
+  adj = len(result) == 3
+  data = {}
+  if adj:
+    x_guess, u_guess, adj_guess = result
+    data['adj'] = adj_guess
+  else:
+    x_guess, u_guess = result
+  data['x'] = x_guess
+  data['u'] = u_guess
+  plot(hp, hp.system(), data, save_as=save_as)
+
+
+def plot(hp, system,
          data: Dict[str, jnp.ndarray],
          labels: Optional[Dict[str, str]] = None,
          title: Optional[str] = None,
          save_as: Optional[str] = None) -> None:
 
+  print("trying to plot")
+
   sns.set(style='darkgrid')
 
   # Separate plotting for the discrete-time system
-  if system._type == SystemType.INVASIVEPLANT:
+  if hp.system == SystemType.INVASIVEPLANT:
     system.plot_solution(data['x'], data['u'], data['adj'])
     return
-  elif system._type == SystemType.SEIR:
+  elif hp.system == SystemType.SEIR:
     system.plot_solution(data['x'], data['u'])
     return
 
@@ -78,15 +93,17 @@ def plot(system,
   ts_x = jnp.linspace(0, system.T, data['x'].shape[0])
   ts_u = jnp.linspace(0, system.T, data['u'].shape[0])
 
+  print("made it here 1")
+
   # Every system except SIMPLECASE and SIMPLECASEWITHBOUNDS
   # Plot exactly those state columns which we want plotted
   plt.subplot(num_subplots, 1, 1)
-  if system._type in state_descriptions:
+  if hp.system in state_descriptions:
     for idx, x_i in enumerate(data['x'].T):
-      if idx in state_descriptions[system._type][0]:
-        plt.plot(ts_x, x_i, label=state_descriptions[system._type][1][idx])
+      if idx in state_descriptions[hp.system][0]:
+        plt.plot(ts_x, x_i, label=state_descriptions[hp.system][1][idx])
         if 'other_x' in data:
-          plt.plot(ts_u, data['other_x'][:, idx], label=state_descriptions[system._type][1][idx])
+          plt.plot(ts_u, data['other_x'][:, idx], label=state_descriptions[hp.system][1][idx])
   else:
     plt.plot(ts_x, data['x'], label=labels['x'])
     if 'other_x' in data:
@@ -96,12 +113,12 @@ def plot(system,
 
   # Same thing as above, but for the controls
   plt.subplot(num_subplots, 1, 2)
-  if system._type in control_descriptions:
+  if hp.system in control_descriptions:
     for idx, u_i in enumerate(data['u'].T):
-      if idx in control_descriptions[system._type][0]:
-        plt.plot(ts_u, u_i, label=control_descriptions[system._type][1][idx])
+      if idx in control_descriptions[hp.system][0]:
+        plt.plot(ts_u, u_i, label=control_descriptions[hp.system][1][idx])
         if 'other_u' in data:
-          plt.plot(ts_u, data['other_u'][:, idx], label=control_descriptions[system._type][1][idx])
+          plt.plot(ts_u, data['other_u'][:, idx], label=control_descriptions[hp.system][1][idx])
   else:
     plt.plot(ts_u, data['u'], label=labels['u'])
     if 'other_u' in data:
@@ -112,7 +129,10 @@ def plot(system,
   if 'adj' in data:
     ts_adj = jnp.linspace(0, system.T, data['adj'].shape[0])
     plt.subplot(num_subplots, 1, 3)
-    plt.plot(ts_adj, data['adj'], label=labels['adj'])
+    if labels is not None and 'adj' in labels:
+      plt.plot(ts_adj, data['adj'], label=labels['adj'])
+    else:
+      plt.plot(ts_adj, data['adj'], label='Adjoint')
     plt.ylabel("adjoint (lambda)")
     plt.legend()
 

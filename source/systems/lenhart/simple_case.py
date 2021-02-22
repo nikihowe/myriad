@@ -10,7 +10,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class SimpleCase(IndirectFHCS):
-  def __init__(self, A, B, C, x_0, T):
+  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
     """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 5, Lab 1)
     A simple introductory environment example of the form:
