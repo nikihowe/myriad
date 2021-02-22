@@ -153,16 +153,9 @@ paper/*.synctex.gz
 # Profiling
 out.prof
 
-# Saved parameters
-source/params/*
-
-# Saved plots
-source/plots/*
-
 # Tensorboard stuff
 runs/
 all_scalars.json
 
 # Random
 paper/Archive.zip
-source/performance.txt
