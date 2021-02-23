@@ -49,5 +49,5 @@ class IndirectFHCS(FiniteHorizonControlSystem, ABC):
                              t: Optional[jnp.ndarray]) -> jnp.ndarray:
     raise NotImplementedError
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
-    raise NotImplementedError
+  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray, adj: Optional[jnp.ndarray] = None) -> None:
+  #   raise NotImplementedError

@@ -55,25 +55,25 @@ class Tumour(FiniteHorizonControlSystem):
     p, q, y = x_T
     return p
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
-    colnames = ['p', 'q', 'y']
-    x = pd.DataFrame(x, columns=colnames)
-
-    sns.set(style='darkgrid')
-    plt.figure(figsize=(10, 3))
-    ts_x = jnp.linspace(0, self.T, x.shape[0])
-    ts_u = jnp.linspace(0, self.T, u.shape[0])
-
-    for idx, title in enumerate(colnames):
-      plt.subplot(1, 4, idx+1)
-      plt.title(title)
-      plt.plot(ts_x, x[title])
-      plt.xlabel('time (days)')
-
-    plt.subplot(1, 4, 4)
-    plt.title('u')
-    plt.step(ts_u, u, where="post")
-    plt.xlabel('time (days)')
-
-    plt.tight_layout()
-    plt.show()
+  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  #   colnames = ['p', 'q', 'y']
+  #   x = pd.DataFrame(x, columns=colnames)
+  #
+  #   sns.set(style='darkgrid')
+  #   plt.figure(figsize=(10, 3))
+  #   ts_x = jnp.linspace(0, self.T, x.shape[0])
+  #   ts_u = jnp.linspace(0, self.T, u.shape[0])
+  #
+  #   for idx, title in enumerate(colnames):
+  #     plt.subplot(1, 4, idx+1)
+  #     plt.title(title)
+  #     plt.plot(ts_x, x[title])
+  #     plt.xlabel('time (days)')
+  #
+  #   plt.subplot(1, 4, 4)
+  #   plt.title('u')
+  #   plt.step(ts_u, u, where="post")
+  #   plt.xlabel('time (days)')
+  #
+  #   plt.tight_layout()
+  #   plt.show()

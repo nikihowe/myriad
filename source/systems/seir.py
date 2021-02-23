@@ -52,21 +52,21 @@ class SEIR(FiniteHorizonControlSystem):
   def cost(self, y_t: jnp.ndarray, u_t: float, t: float = None) -> float:
     return self.A * y_t[2] + u_t ** 2
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
-    sns.set()
-    plt.figure(figsize=(12, 2.5))
-    ts_x = jnp.linspace(0, self.T, x.shape[0])
-    ts_u = jnp.linspace(0, self.T, u.shape[0])
-
-    plt.subplot(151)
-    plt.title('applied control')
-    plt.plot(ts_u, u)
-    plt.ylim(-0.1, 1.01)
-
-    for idx, title in enumerate(['S', 'E', 'I', 'N']):
-      plt.subplot(1, 5, idx+2)
-      plt.title(title)
-      plt.plot(ts_x, x[:, idx])
-
-    plt.tight_layout()
-    plt.show()
+  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  #   sns.set()
+  #   plt.figure(figsize=(12, 2.5))
+  #   ts_x = jnp.linspace(0, self.T, x.shape[0])
+  #   ts_u = jnp.linspace(0, self.T, u.shape[0])
+  #
+  #   plt.subplot(151)
+  #   plt.title('applied control')
+  #   plt.plot(ts_u, u)
+  #   plt.ylim(-0.1, 1.01)
+  #
+  #   for idx, title in enumerate(['S', 'E', 'I', 'N']):
+  #     plt.subplot(1, 5, idx+2)
+  #     plt.title(title)
+  #     plt.plot(ts_x, x[:, idx])
+  #
+  #   plt.tight_layout()
+  #   plt.show()

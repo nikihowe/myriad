@@ -48,34 +48,34 @@ class CartPole(FiniteHorizonControlSystem):
     # Eq. 6.3
     return u_t ** 2
   
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
-    x = pd.DataFrame(x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
-
-    # Plot optimal trajectory (Figure 10)
-    sns.set(style='darkgrid')
-    plt.figure(figsize=(9, 6))
-    ts_x = jnp.linspace(0, self.T, x.shape[0])
-    ts_u = jnp.linspace(0, self.T, u.shape[0])
-
-    plt.subplot(3, 1, 1)
-    plt.ylabel('position (m)')
-    plt.xlim(0, 2.01)
-    plt.ylim(0, 1.5)
-    plt.plot(ts_x, x['q1'], '-bo', clip_on=False, zorder=10)
-
-    plt.subplot(3, 1, 2)
-    plt.ylabel('angle (rad)')
-    plt.plot(ts_x, x['q2'], '-bo', clip_on=False, zorder=10)
-    plt.xlim(0, 2.01)
-    plt.ylim(-2, 4)
-
-    plt.subplot(3, 1, 3)
-    plt.ylabel('force (N)')
-    # plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
-    plt.step(ts_u, u, where="post", clip_on=False)
-    plt.xlim(0, 2.01)
-    plt.ylim(-20, 11)
-
-    plt.xlabel('time (s)')
-    plt.tight_layout()
-    plt.show()
+  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  #   x = pd.DataFrame(x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
+  #
+  #   # Plot optimal trajectory (Figure 10)
+  #   sns.set(style='darkgrid')
+  #   plt.figure(figsize=(9, 6))
+  #   ts_x = jnp.linspace(0, self.T, x.shape[0])
+  #   ts_u = jnp.linspace(0, self.T, u.shape[0])
+  #
+  #   plt.subplot(3, 1, 1)
+  #   plt.ylabel('position (m)')
+  #   plt.xlim(0, 2.01)
+  #   plt.ylim(0, 1.5)
+  #   plt.plot(ts_x, x['q1'], '-bo', clip_on=False, zorder=10)
+  #
+  #   plt.subplot(3, 1, 2)
+  #   plt.ylabel('angle (rad)')
+  #   plt.plot(ts_x, x['q2'], '-bo', clip_on=False, zorder=10)
+  #   plt.xlim(0, 2.01)
+  #   plt.ylim(-2, 4)
+  #
+  #   plt.subplot(3, 1, 3)
+  #   plt.ylabel('force (N)')
+  #   # plt.plot(ts_u, u, '-bo', clip_on=False, zorder=10)
+  #   plt.step(ts_u, u, where="post", clip_on=False)
+  #   plt.xlim(0, 2.01)
+  #   plt.ylim(-20, 11)
+  #
+  #   plt.xlabel('time (s)')
+  #   plt.tight_layout()
+  #   plt.show()

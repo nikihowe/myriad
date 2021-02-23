@@ -68,17 +68,15 @@ def plot(hp, system,
          title: Optional[str] = None,
          save_as: Optional[str] = None) -> None:
 
-  print("trying to plot")
-
   sns.set(style='darkgrid')
 
   # Separate plotting for the discrete-time system
   if hp.system == SystemType.INVASIVEPLANT:
     system.plot_solution(data['x'], data['u'], data['adj'])
     return
-  elif hp.system == SystemType.SEIR:
-    system.plot_solution(data['x'], data['u'])
-    return
+  # elif hp.system == SystemType.SEIR:
+  #   system.plot_solution(data['x'], data['u'])
+  #   return
 
   if 'adj' not in data:
     height = 7
@@ -92,8 +90,6 @@ def plot(hp, system,
 
   ts_x = jnp.linspace(0, system.T, data['x'].shape[0])
   ts_u = jnp.linspace(0, system.T, data['u'].shape[0])
-
-  print("made it here 1")
 
   # Every system except SIMPLECASE and SIMPLECASEWITHBOUNDS
   # Plot exactly those state columns which we want plotted
