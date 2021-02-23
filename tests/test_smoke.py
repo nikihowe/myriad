@@ -42,7 +42,7 @@ class SmokeTest(unittest.TestCase):
                                                                     SystemType.FISHHARVEST]:
           continue
 
-        # Invasive plant is a distrete system, so it only works with FBSM
+        # Invasive plant is a discrete system, so it only works with FBSM
         if hp.system == SystemType.INVASIVEPLANT:
           continue
 
