@@ -60,6 +60,7 @@ class TrajectoryOptimizer(object):
       'options': options
     }
     if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
+      del opt_inputs['jac']
       solution = extra_gradient(**opt_inputs)
     elif self.hp.nlpsolver == NLPSolverType.SLSQP:
       opt_inputs['method'] = 'SLSQP'

@@ -14,9 +14,10 @@ from source.plotting import plot_result
 
 approaches = {
   'fbsm': {'optimizer': OptimizerType.FBSM, 'fbsm_intervals': 1000},
-  'single_shooting': {'optimizer': OptimizerType.SHOOTING, 'intervals': 1, 'controls_per_interval': 60},
-  'multiple_shooting': {'optimizer': OptimizerType.SHOOTING, 'intervals': 20, 'controls_per_interval': 3},
-  'collocation': {'optimizer': OptimizerType.COLLOCATION, 'intervals': 60, 'controls_per_interval': 1}
+  'single_shooting': {'optimizer': OptimizerType.SHOOTING, 'intervals': 1, 'controls_per_interval': 90},
+  'multiple_shooting_3_controls': {'optimizer': OptimizerType.SHOOTING, 'intervals': 30, 'controls_per_interval': 3},
+  'multiple_shooting_1_control': {'optimizer': OptimizerType.SHOOTING, 'intervals': 90, 'controls_per_interval': 1},
+  'collocation': {'optimizer': OptimizerType.COLLOCATION, 'intervals': 90, 'controls_per_interval': 1}
 }
 
 
