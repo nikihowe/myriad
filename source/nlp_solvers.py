@@ -7,20 +7,30 @@ from collections import namedtuple
 from tensorboardX import SummaryWriter # for parameter tuning
 
 # NOTE: need to tune eta_x and eta_v for each system
-def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
-  del method
-  del jac
-
+def extra_gradient(fun, x0, constraints, bounds, options):
   constraint_fun = constraints['fun']
   max_iter = options['maxiter'] if 'maxiter' in options else 30_000
-  eta_x = options['eta_x'] if 'eta_x' in options else 1 # primals
-  eta_v = options['eta_v'] if 'eta_v' in options else 1e-1 # duals
+  max_iter = 30_000
+  eta_x = options['eta_x'] if 'eta_x' in options else .1  # primals
+  eta_v = options['eta_v'] if 'eta_v' in options else .1  # duals
   # atol = options['atol'] if 'atol' in options else 1e-8 # convergence tolerance
 
   @jit
   def lagrangian(x, lmbda):
     return fun(x) + lmbda @ constraint_fun(x)
 
+  # Use this for debugging
+  def scan(f, init, xs, length=None):
+    if xs is None:
+      xs = [None] * length
+    carry = init
+    ys = []
+    for x in xs:
+      carry, y = f(carry, x)
+      ys.append(y)
+    return carry, jnp.stack(ys)
+
+  @jit
   def step(x, lmbda):
     x_bar = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x, lmbda),
       a_min=bounds[:,0], a_max=bounds[:,1])
@@ -29,32 +39,48 @@ def extra_gradient(fun, x0, method, constraints, bounds, jac, options):
       a_min=bounds[:,0], a_max=bounds[:,1])
     lmbda_new = lmbda + eta_v * grad(lagrangian, argnums=1)(x_bar, lmbda_bar)
 
-    if jnp.isnan(x_new).any() or jnp.isnan(lmbda_new).any():
-      print("WE GOT NANS")
-      print("x", x)
-      print("lmbda", lmbda)
-      print("xbar", x_bar)
-      print("xnew", x_new)
-      print("lmbda_bar", lmbda_bar)
-      print("lmbda_new", lmbda_new)
-      print("grad_x at start", grad(lagrangian, argnums=0)(x, lmbda))
-      print("grad_lmbda at start", grad(lagrangian, argnums=1)(x, lmbda))
-      print("grad_x at bar", grad(lagrangian, argnums=0)(x_bar, lmbda_bar))
-      print("grad_lmbda at bar", grad(lagrangian, argnums=1)(x_bar, lmbda_bar))
-      raise SystemExit
+    # Use this for debugging, in conjunction with pure python 'scan'
+    # if jnp.isnan(x_new).any() or jnp.isnan(lmbda_new).any():
+    #   print("WE GOT NANS")
+    #   print("x", x)
+    #   print("lmbda", lmbda)
+    #   print("xbar", x_bar)
+    #   print("xnew", x_new)
+    #   print("lmbda_bar", lmbda_bar)
+    #   print("lmbda_new", lmbda_new)
+    #   print("grad_x at start", grad(lagrangian, argnums=0)(x, lmbda))
+    #   print("grad_lmbda at start", grad(lagrangian, argnums=1)(x, lmbda))
+    #   print("grad_x at bar", grad(lagrangian, argnums=0)(x_bar, lmbda_bar))
+    #   print("grad_lmbda at bar", grad(lagrangian, argnums=1)(x_bar, lmbda_bar))
+    #   raise SystemExit
 
     return x_new, lmbda_new
 
-  @jit
-  def solve(x, lmbda):
-    def f(val, i):
-      del i
-      x, lmbda = val
-      return step(x, lmbda), None
+  # harder to debug, but might be faster in some cases
+  # def solve(x, lmbda):
+  #   def f(val, i):
+  #     del i
+  #     x, lmbda = val
+  #     return step(x, lmbda), None
+  #
+  #   val, _ = lax.scan(f, (x, lmbda), None, length=max_iter)  # faster
+  #   # val, _ = scan(f, (x, lmbda), None, length=max_iter)  # for debugging
+  #   x, lmbda = val
+  #   return x, lmbda, False
 
-    val, _ = lax.scan(f, (x, lmbda), None, length=max_iter)
-    x, lmbda = val
-    return x, lmbda, False
+  # For debugging
+  def solve(x, lmbda):
+    success = False
+    x_old = x + 20  # just so we don't terminate immediately
+    for i in range(max_iter):
+      if i % 1000 == 0:
+        print("x", x)
+      if i % 100 and jnp.allclose(x_old, x, rtol=0., atol=1e-5):  # tune tolerance according to need
+        success = True
+        break
+      x_old = x
+      x, lmbda = step(x, lmbda)
+    return x, lmbda, success
 
   lmbda_init = jnp.ones_like(constraint_fun(x0))
   x, lmbda, success = solve(x0, lmbda_init)
