@@ -25,29 +25,29 @@ class SEIR(FiniteHorizonControlSystem):
     self.M = 1000
 
     super().__init__(
-      x_0 = jnp.array([self.S_0, self.E_0, self.I_0, self.N_0]),
-      x_T = None,
-      T = 20,
-      bounds = jnp.array([
+      x_0=jnp.array([self.S_0, self.E_0, self.I_0, self.N_0]),
+      x_T=None,
+      T=20,
+      bounds=jnp.array([
         [-jnp.inf, jnp.inf],
         [-jnp.inf, jnp.inf],
         [-jnp.inf, jnp.inf],
         [-jnp.inf, jnp.inf],
         [0.0, 1.0],
       ]),
-      terminal_cost = False,
+      terminal_cost=False,
     )
 
   def dynamics(self, y_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
     S, E, I, N = y_t
 
-    Ṡ = jnp.squeeze(self.b*N - self.d*S - self.c*S*I - u_t*S)
-    Ė = jnp.squeeze(self.c*S*I - (self.e+self.d)*E)
-    İ = jnp.squeeze(self.e*E - (self.g+self.a+self.d)*I)
-    Ṅ = jnp.squeeze((self.b-self.d)*N - self.a*I)
+    s_dot = jnp.squeeze(self.b*N - self.d*S - self.c*S*I - u_t*S)
+    e_dot = jnp.squeeze(self.c*S*I - (self.e+self.d)*E)
+    i_dot = jnp.squeeze(self.e*E - (self.g+self.a+self.d)*I)
+    n_dot = jnp.squeeze((self.b-self.d)*N - self.a*I)
 
-    ẏ_t = jnp.array([Ṡ, Ė, İ, Ṅ])
-    return ẏ_t
+    y_t_dot = jnp.array([s_dot, e_dot, i_dot, n_dot])
+    return y_t_dot
   
   def cost(self, y_t: jnp.ndarray, u_t: float, t: float = None) -> float:
     return self.A * y_t[2] + u_t ** 2
