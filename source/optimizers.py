@@ -431,7 +431,10 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     # Ending state
     if system.x_T is not None:
-      x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
+      # x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
+      for i in range(len(system.x_T)):
+        if system.x_T[i] is not None:
+          x_bounds[-1, i, :] = system.x_T[i]
 
     # Reshape for ipopt's minimize
     x_bounds = x_bounds.reshape((-1, 2))

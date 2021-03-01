@@ -19,7 +19,7 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
     S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
     Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
 
-    The model contains multiples state varaibles; S(t) (x_0) is the number of individuals susceptible of contracting
+    The model contains multiples state variables; S(t) (x_0) is the number of individuals susceptible of contracting
     the disease at time t, while I(t) (x_2) and R(t) (x_3) are respectively the number of infectious and recovered
     (and immune) individuals. E(t) (x_1) is the number of individuals who have been exposed to the disease and are
     now in a latent state: they may develop the disease later on and become infectious, or they may simply become
