@@ -1,10 +1,11 @@
-from ..systems import IndirectFHCS
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -15,12 +16,12 @@ class BearPopulations(IndirectFHCS):
         Additional reference can be found in R. A. Salinas, S. Lenhart, and L. J. Gross. Control of a metapopulation
         harvesting model for black bears. Natural Resource Modeling, 18:307–21, 2005.
 
-        The model try to represent the metapopulation of black bears, i.e. a population consisting of multiple local
-        population that can interact between each other. In this particular scenario, the author try to modelize the
-        bear populations density of a park (protected) area (x_0), a forest area (x_1) and a urban area (x_2). Natural
+        The model represents the metapopulation of black bears, i.e. a population consisting of multiple local
+        populations, which can interact with each other. In this particular scenario, the author models the
+        bear population density in a park (protected) area (x_0), a forest area (x_1) and a urban area (x_2). Natural
         reproduction happens only inside the park and forest area, and the goal is to limit the bear population that
-        migrate to the urban area.
-        The control is an harvesting rate (hunting) that occurs inside the forest area and, with bigger cost, in the
+        migrates to the urban area.
+        The control is a harvesting rate (hunting) that occurs inside the forest area and, with bigger cost, in the
         park area. The goal is thus to minimize:
 
         .. math::
@@ -40,14 +41,6 @@ class BearPopulations(IndirectFHCS):
         :param x_0: Initial state (x_0, x_1, x_2)
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.r = r
-        self.K = K
-        self.m_p = m_p
-        self.m_f = m_f
-        self.c_p = c_p
-        self.c_f = c_f
-
         super().__init__(
             x_0=jnp.array([
                 x_0[0],
@@ -66,6 +59,14 @@ class BearPopulations(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.r = r
+        self.K = K
+        self.m_p = m_p
+        self.m_f = m_f
+        self.c_p = c_p
+        self.c_f = c_f
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

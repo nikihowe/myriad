@@ -10,3 +10,5 @@ cython
 ipopt
 gin-config
 absl-py
+gym
+stable-baselines3

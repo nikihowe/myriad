@@ -1,10 +1,11 @@
-from ..systems import IndirectFHCS
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -15,9 +16,9 @@ class HIVTreatment(IndirectFHCS):
         Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
         infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.
 
-        The model describe the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
+        This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
         presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
-        the infectivity of the virus. The goal is to maximize the numbers of uninfected CD4⁺T cells.
+        the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
         Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
 
          .. math::
@@ -40,17 +41,6 @@ class HIVTreatment(IndirectFHCS):
         :param A: Weight parameter balancing the cost
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.s = s
-        self.m_1 = m_1
-        self.m_2 = m_2
-        self.m_3 = m_3
-        self.r = r
-        self.T_max = T_max
-        self.k = k
-        self.N = N
-        self.A = A
-
         super().__init__(
             x_0=jnp.array([
                 x_0[0],
@@ -68,6 +58,17 @@ class HIVTreatment(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.s = s
+        self.m_1 = m_1
+        self.m_2 = m_2
+        self.m_3 = m_3
+        self.r = r
+        self.T_max = T_max
+        self.k = k
+        self.N = N
+        self.A = A
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

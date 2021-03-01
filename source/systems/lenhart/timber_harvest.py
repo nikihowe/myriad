@@ -1,10 +1,11 @@
-from ..systems import IndirectFHCS
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -15,17 +16,17 @@ class TimberHarvest(IndirectFHCS):
         Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
         The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.
 
-        This environment is an example of model where the cost is linear w/r to the control. It can still be solved by
-        the FBSM algorithm since the optimal control are of the "bang-bang" type, i.e. it jumps from one boundary value
-        to the other.
+        This environment is an example of model where the cost is linear with respect to the control.
+        It can still be solved by the FBSM algorithm since the optimal control are of the "bang-bang" type,
+        i.e., it jumps from one boundary value to the other.
 
-        In this problem we are trying to optimize the tree harvesting in a timber farm, resulting in the production of
-        raw timber (x(t)). The harvest percentage over the land is low enough that we can assumed that there will always
-        be enough mature trees ready for harvest. The timbers are sold right after their production, generating a income
-        proportional to the production at every time t. The operators then have the choice of reinvesting a fraction of
-        this revenue directly into the plant (u(t)), thus stimulating future production. But, this reinvestment come at the
-        price of loosing potential interest return over the period T is the revenue had been placed. The control problem
-        is therefore:
+        In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
+        raw timber (x(t)). The harvest percentage over the land is low enough that we can assume that there will always
+        be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
+        generating a income proportional to the production at every time t. The operators then have the choice of
+        reinvesting a fraction of this revenue directly into the plant (u(t)), thus stimulating future production.
+        But, this reinvestment comes at the price of losing potential interest over the period T if the
+        revenue were saved. The control problem is therefore:
 
         .. math::
 
@@ -38,10 +39,6 @@ class TimberHarvest(IndirectFHCS):
         :param x_0: Initial raw timber production
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.r = r
-        self.k = k
-
         super().__init__(
             x_0=jnp.array([
                 x_0,
@@ -55,6 +52,10 @@ class TimberHarvest(IndirectFHCS):
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.r = r
+        self.k = k
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

@@ -1,17 +1,4 @@
-import source.LenhartSystems.SimpleCase
-import source.LenhartSystems.MoldFungicide
-import source.LenhartSystems.Bacteria
-import source.LenhartSystems.SimpleCaseWithBounds
-import source.LenhartSystems.Cancer
-import source.LenhartSystems.FishHarvest
-import source.LenhartSystems.EpidemicSEIRN
-import source.LenhartSystems.HIVTreatment
-import source.LenhartSystems.BearPopulations
-import source.LenhartSystems.Glucose
-import source.LenhartSystems.TimberHarvest
-import source.LenhartSystems.Bioreactor
-import source.LenhartSystems.PredatorPrey
-import source.LenhartSystems.InvasivePlant
+import source.systems
 
 # SimpleCase parameters default values
 SimpleCase.A = 1.0

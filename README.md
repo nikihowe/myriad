@@ -9,11 +9,11 @@
 ├── source
     ├── gin-configs     # Contains gin configuration files
         └── ...
-    ├── LenhartSystems  # Dynamical systems presented in Lenhart book
+    ├── systems         # Dynamical systems
         └── ...
     ├── config.py       # Configuration and data types
+    ├── gym.py          # Gym interface for systems
     ├── optimizers.py   # Trajectory optimization algorithms
-    ├── systems.py      # Dynamical systems
     └── utils.py        # Helper methods
 ├── tests
     └── ...             # Automated tests
@@ -37,12 +37,6 @@ python3 -m venv env
 source env/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
-```
-
-### Gin
-
-```bash
-pip install gin-config
 ```
 
 ## Running experiments

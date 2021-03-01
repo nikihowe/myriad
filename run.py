@@ -10,7 +10,7 @@ from absl import flags
 
 from source.config import Config, HParams
 from source.optimizers import get_optimizer
-from source.systems import get_system
+
 
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
 parser = simple_parsing.ArgumentParser()
@@ -41,8 +41,8 @@ def main(unused_argv):
   jax.config.update("jax_enable_x64", True)
 
   args = parser.parse_args()
-  hp = args.hparams
-  cfg = args.config
+  hp: HParams = args.hparams
+  cfg: Config = args.config
   print(hp)
   print(cfg)
 
@@ -56,20 +56,13 @@ def main(unused_argv):
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
                                       skip_unknown=False)
-  system = get_system(hp)
+  system = hp.system()
 
   # Run experiment
   optimizer = get_optimizer(hp, cfg, system)
-  if optimizer.require_adj:
-      x, u, adj = optimizer.solve()
-
-      if cfg.plot_results:
-        system.plot_solution(x, u, adj)
-  else:
-      x, u = optimizer.solve()
-
-      if cfg.plot_results:
-          system.plot_solution(x, u)
+  results = optimizer.solve()
+  if cfg.plot_results:
+    system.plot_solution(*results)
 
 
 if __name__=='__main__':

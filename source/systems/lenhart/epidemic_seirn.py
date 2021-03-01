@@ -1,10 +1,11 @@
-from ..systems import IndirectFHCS
 from typing import Union, Optional
-import gin
 
+import gin
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from source.systems import IndirectFHCS
 
 
 @gin.configurable
@@ -17,11 +18,11 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
         S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
         Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
 
-        The model contains multiples states varaible; S(t) (x_0) is the number of individuals susceptible of contracting
+        The model contains multiples state varaibles; S(t) (x_0) is the number of individuals susceptible of contracting
         the disease at time t, while I(t) (x_2) and R(t) (x_3) are respectively the number of infectious and recovered
         (and immune) individuals. E(t) (x_1) is the number of individuals who have been exposed to the disease and are
-        now in a latent state : they may or may not develop the disease later on and become infectious or simply become
-        immune. N(t) (x_4) is the total population, i.e. the sum of all other states.
+        now in a latent state: they may develop the disease later on and become infectious, or they may simply become
+        immune. N(t) (x_4) is the total population, i.e., the sum of all other states.
         The control is the vaccination rate among the susceptible individuals.
         Finally, note that all individuals are considered to be born susceptible. We want to minimize:
 
@@ -45,15 +46,6 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
         :param A: Weight parameter balancing between the reduction of the infectious population and the vaccination cost
         :param T: Horizon
         """
-        self.adj_T = None   # Final condition over the adjoint, if any
-        self.b = b
-        self.d = d
-        self.c = c
-        self.e = e
-        self.g = g
-        self.a = a
-        self.A = A
-
         super().__init__(
             x_0=jnp.array([
                 x_0[0],
@@ -73,6 +65,15 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
             terminal_cost=False,
             discrete=False,
         )
+
+        self.adj_T = None  # Final condition over the adjoint, if any
+        self.b = b
+        self.d = d
+        self.c = c
+        self.e = e
+        self.g = g
+        self.a = a
+        self.A = A
 
     def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                  v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
