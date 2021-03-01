@@ -3,19 +3,19 @@ from typing import Callable, Tuple, Optional, Union
 import jax.numpy as jnp
 from jax import jit, lax, vmap
 
-from .config import IntegrationOrder
+from source.config import IntegrationOrder
 
 
+# TODO: make this work for time-dependent dynamics
 def integrate(
-  dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray]], jnp.ndarray],  # dynamics function
-  x_0: jnp.ndarray,  # starting state
-  interval_us: jnp.ndarray,  # controls
-  h: float,  # step size
-  N: int,  # steps
-  ts: Optional[jnp.ndarray], # allow for optional time-dependent dynamics
-  integration_order: IntegrationOrder, # allows user to choose interpolation for controls
+  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray],  # dynamics function
+  x_0: jnp.ndarray,           # starting state
+  interval_us: jnp.ndarray,   # controls
+  h: float,                   # step size
+  N: int,                     # steps
+  ts: Optional[jnp.ndarray],  # allow for optional time-dependent dynamics
+  integration_order: IntegrationOrder = IntegrationOrder.CONSTANT,  # allows user to choose interpolation for controls
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
-  # TODO: implement use of times
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
   @jit
   def rk4_step(x, u1, u2, u3, ts=None):
@@ -30,12 +30,15 @@ def integrate(
     k1 = dynamics_t(x, u1)
     k2 = dynamics_t(x + h*k1, u2)
     return x + (h/2) * (k1 + k2)
-  
+
   @jit
   def euler_step(x, u, ts=None):
     return x + h*dynamics_t(x, u)
 
   def fn(carried_state, idx):
+    nonlocal integration_order
+    if not integration_order:
+      integration_order = IntegrationOrder.CONSTANT
     if integration_order == IntegrationOrder.CONSTANT:
       if ts is not None:
         one_step_forward = euler_step(carried_state, interval_us[idx], *ts[idx:idx+2])
@@ -43,7 +46,7 @@ def integrate(
         one_step_forward = euler_step(carried_state, interval_us[idx])
     elif integration_order == IntegrationOrder.LINEAR:
       if ts is not None:
-        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1] *ts[idx:idx+2])
+        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], *ts[idx:idx+2])
       else:
         one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1])
     elif integration_order == IntegrationOrder.QUADRATIC:
@@ -58,20 +61,21 @@ def integrate(
     return one_step_forward, one_step_forward # (carry, y)
 
   x_T, all_next_states = lax.scan(fn, x_0, jnp.arange(N))
-  return x_T, jnp.concatenate((x_0[None], all_next_states))
+  return x_T, jnp.concatenate((x_0[jnp.newaxis], all_next_states))
 
 
 # Used for the augmented state cost calculation
-integrate_in_parallel = vmap(integrate, in_axes=(None, 0, 0, None, None, 0, None))#, static_argnums=(0, 5, 6)
+integrate_in_parallel = vmap(integrate, in_axes=(None, 0, 0, None, None, 0, None))
+
 
 # Used for the adjoint integration
 def integrate_v2(
   dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray], Optional[jnp.ndarray], Optional[jnp.ndarray]],
                        jnp.ndarray],  # dynamics function
-  x_0: jnp.ndarray,  # starting state
-  u: jnp.ndarray,  # controls
-  h: float,  # step size  # is negative in backward mode
-  N: int,  # steps
+  x_0: jnp.ndarray,                   # starting state
+  u: jnp.ndarray,                     # controls
+  h: float,                           # step size  # is negative in backward mode
+  N: int,                             # steps
   v: Optional[jnp.ndarray] = None,
   t: Optional[jnp.ndarray] = None,
   discrete: bool = False,
@@ -80,11 +84,11 @@ def integrate_v2(
   @jit
   def rk4_step(x_t1, u, u_next, v, v_next, t):
     u_convex_approx = (u + u_next)/2
-    v_convex_approx = (v + v_next) / 2
+    v_convex_approx = (v + v_next)/2
 
     k1 = dynamics_t(x_t1, u, v, t)
-    k2 = dynamics_t(x_t1 + h * k1 / 2, u_convex_approx, v_convex_approx, t + h/2)
-    k3 = dynamics_t(x_t1 + h * k2 / 2, u_convex_approx, v_convex_approx, t + h/2)
+    k2 = dynamics_t(x_t1 + h * k1/2, u_convex_approx, v_convex_approx, t + h/2)
+    k3 = dynamics_t(x_t1 + h * k2/2, u_convex_approx, v_convex_approx, t + h/2)
     k4 = dynamics_t(x_t1 + h * k3, u_next, v_next, t + h)
 
     return x_t1 + (h/6)*(k1 + 2*k2 + 2*k3 + k4)

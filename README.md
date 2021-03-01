@@ -9,11 +9,11 @@
 ├── source
     ├── gin-configs     # Contains gin configuration files
         └── ...
-    ├── systems         # Dynamical systems
+    ├── LenhartSystems  # Dynamical systems presented in Lenhart book
         └── ...
     ├── config.py       # Configuration and data types
-    ├── gym.py          # Gym interface for systems
     ├── optimizers.py   # Trajectory optimization algorithms
+    ├── systems.py      # Dynamical systems
     └── utils.py        # Helper methods
 ├── tests
     └── ...             # Automated tests
@@ -37,6 +37,12 @@ python3 -m venv env
 source env/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
+```
+
+### Gin
+
+```bash
+pip install gin-config
 ```
 
 ## Running experiments
@@ -70,3 +76,14 @@ python -m unittest discover -s tests
 
 ## References
 [Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
+
+## Citing this repo
+
+```
+@misc{optimal-control,
+  author = {Howe, Nikolaus and Rajkumar, Nitarshan and Dufort-Labbe, Simon},
+  title = {{what is the name (myriad?)}},
+  note = {Available at: https://github.com/nikihowe/put_place_here},
+  year = {2021}
+}
+```

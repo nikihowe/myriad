@@ -5,48 +5,47 @@ from source.systems import SystemType
 
 
 class OptimizerType(Enum):
-  COLLOCATION="COLLOCATION"
-  SHOOTING="SHOOTING"
-  FBSM="FBSM"
+  COLLOCATION = "COLLOCATION"
+  SHOOTING = "SHOOTING"
+  FBSM = "FBSM"
 
 
 class NLPSolverType(Enum):
-  # SCIPY="SCIPY"
-  IPOPT="IPOPT"
+  SLSQP = "SLSQP"  # Scipy's SLSQP
+  TRUST = "TRUST"  # Scipy's trust-constr
+  IPOPT = "IPOPT"  # ipopt
   # INEXACTNEWTON="INEXACTNEWTON"
-  EXTRAGRADIENT="EXTRAGRADIENT"
+  EXTRAGRADIENT = "EXTRAGRADIENT"  # an extragradient-based solver
 
 
 class IntegrationOrder(Enum):
-  CONSTANT="CONSTANT"
-  LINEAR="LINEAR"
-  QUADRATIC="QUADRATIC"
+  CONSTANT = "CONSTANT"
+  LINEAR = "LINEAR"
+  QUADRATIC = "QUADRATIC"
 
 
 # Hyperparameters which change experiment results
-@dataclass(eq=True, frozen=True)
+@dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.SEIR
+  system: SystemType = SystemType.CANCER
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
-  order: IntegrationOrder = IntegrationOrder.QUADRATIC
-  # system: SystemType = SystemType.FISHHARVEST
-  # optimizer: OptimizerType = OptimizerType.FBSM
-  # Solver
-  ipopt_max_iter: int = 10_000
-  # Trajectory Optimizer
-  intervals: int = 10 # collocation and shooting 
-  # TODO: make it include the single shooting case of 1 interval. Right now that breaks
-  controls_per_interval: int = 2 # multiple shooting
+  nlpsolver: NLPSolverType = NLPSolverType.SLSQP
+  order: IntegrationOrder = IntegrationOrder.LINEAR
+  max_iter: int = 1000             # maxiter for NLP solver
+  intervals: int = 100             # used by COLLOCATION and SHOOTING
+  controls_per_interval: int = 1   # used by SHOOTING
+  fbsm_intervals: int = 1000       # used by FBSM
 
-  #Indirect method optimizer
-  steps: int = 1000
+  # Collocation requires exactly one control per interval
+  def __post_init__(self):
+    if self.optimizer == OptimizerType.COLLOCATION:
+      self.controls_per_interval = 1
 
 
 # Secondary configurations which should not change experiment results
 @dataclass(eq=True, frozen=True)
-class Config():
+class Config:
   verbose: bool = True
   jit: bool = True
   plot_results: bool = True

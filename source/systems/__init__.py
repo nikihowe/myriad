@@ -43,5 +43,5 @@ class SystemType(Enum):
   PREDATORPREY = PredatorPrey
   INVASIVEPLANT = InvasivePlant
 
-  def __call__(self, *args, **kwargs) -> Union[FiniteHorizonControlSystem,IndirectFHCS]:
+  def __call__(self, *args, **kwargs) -> Union[FiniteHorizonControlSystem, IndirectFHCS]:
       return self.value(*args, **kwargs)

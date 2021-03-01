@@ -152,3 +152,10 @@ paper/*.synctex.gz
 
 # Profiling
 out.prof
+
+# Tensorboard stuff
+runs/
+all_scalars.json
+
+# Random
+paper/Archive.zip

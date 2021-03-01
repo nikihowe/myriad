@@ -29,19 +29,19 @@ class VanDerPol(FiniteHorizonControlSystem):
   def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> float:
     return x_t.T @ x_t + u_t ** 2
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
-    x = pd.DataFrame(x, columns=['x0', 'x1'])
-
-    sns.set(style='darkgrid')
-    plt.figure(figsize=(9, 4))
-    ts_u = jnp.linspace(0, self.T, u.shape[0])
-
-    plt.subplot(1, 2, 1)
-    plt.plot(x['x0'], x['x1'])
-    
-    plt.subplot(1, 2, 2)
-    plt.step(ts_u, u, where="post")
-    plt.xlabel('time (s)')
-
-    plt.tight_layout()
-    plt.show()
+  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  #   x = pd.DataFrame(x, columns=['x0', 'x1'])
+  #
+  #   sns.set(style='darkgrid')
+  #   plt.figure(figsize=(9, 4))
+  #   ts_u = jnp.linspace(0, self.T, u.shape[0])
+  #
+  #   plt.subplot(1, 2, 1)
+  #   plt.plot(x['x0'], x['x1'])
+  #
+  #   plt.subplot(1, 2, 2)
+  #   plt.step(ts_u, u, where="post")
+  #   plt.xlabel('time (s)')
+  #
+  #   plt.tight_layout()
+  #   plt.show()
