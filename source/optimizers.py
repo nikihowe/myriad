@@ -396,15 +396,9 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       # ---
       xs, us = unravel(variables)
       t = jnp.linspace(0, system.T, num=hp.intervals+1)[1:]  # Support cost function with dependency on t
-      t = jnp.repeat(t, hp.controls_per_interval)
+      t = jnp.repeat(t[:, jnp.newaxis], hp.controls_per_interval, axis=-1)
 
       starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
-      # print(starting_xs_and_costs.shape)
-      # print(starting_xs_and_costs)
-      # print(reorganize_controls(us).shape)
-      # print(reorganize_controls(us))
-      # print(t.shape)
-      # raise SystemExit(0)
 
       # Integrate cost in parallel
       states_and_costs, _ = integrate_in_parallel(

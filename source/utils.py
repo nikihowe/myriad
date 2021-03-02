@@ -18,11 +18,11 @@ def integrate(
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
   @jit
-  def rk4_step(x, u1, u2, u3, ts=None):
-    k1 = dynamics_t(x, u1)
-    k2 = dynamics_t(x + h*k1/2, u2)
-    k3 = dynamics_t(x + h*k2/2, u2)
-    k4 = dynamics_t(x + h*k3, u3)
+  def rk4_step(x, u1, u2, u3, ts=0):
+    k1 = dynamics_t(x, u1, ts)
+    k2 = dynamics_t(x + h*k1/2, u2, ts + h/2)
+    k3 = dynamics_t(x + h*k2/2, u2, ts + h/2)
+    k4 = dynamics_t(x + h*k3, u3, ts + h)
     return x + (h/6) * (k1 + 2*k2 + 2*k3 + k4)
 
   @jit
@@ -32,8 +32,8 @@ def integrate(
     return x + (h/2) * (k1 + k2)
 
   @jit
-  def euler_step(x, u, ts=None):
-    return x + h*dynamics_t(x, u)
+  def euler_step(x, u, ts=0):
+    return x + h*dynamics_t(x, u, ts)
 
   def fn(carried_state, idx):
     nonlocal integration_order
@@ -41,17 +41,17 @@ def integrate(
       integration_order = IntegrationOrder.CONSTANT
     if integration_order == IntegrationOrder.CONSTANT:
       if ts is not None:
-        one_step_forward = euler_step(carried_state, interval_us[idx], ts)
+        one_step_forward = euler_step(carried_state, interval_us[idx], ts[idx])
       else:
         one_step_forward = euler_step(carried_state, interval_us[idx])
     elif integration_order == IntegrationOrder.LINEAR:
       if ts is not None:
-        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], ts)
+        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], ts[idx])
       else:
         one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1])
     elif integration_order == IntegrationOrder.QUADRATIC:
       if ts is not None:
-        one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2], ts)
+        one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2], ts[idx])
       else:
         one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2])
     else:
