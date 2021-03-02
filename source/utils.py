@@ -8,7 +8,7 @@ from source.config import IntegrationOrder
 
 # TODO: make this work for time-dependent dynamics
 def integrate(
-  dynamics_t: Callable[[jnp.ndarray, float], jnp.ndarray],  # dynamics function
+  dynamics_t: Callable[[jnp.ndarray, float, float], jnp.ndarray],  # dynamics function
   x_0: jnp.ndarray,           # starting state
   interval_us: jnp.ndarray,   # controls
   h: float,                   # step size
@@ -26,9 +26,9 @@ def integrate(
     return x + (h/6) * (k1 + 2*k2 + 2*k3 + k4)
 
   @jit
-  def heun_step(x, u1, u2, ts=None):
-    k1 = dynamics_t(x, u1)
-    k2 = dynamics_t(x + h*k1, u2)
+  def heun_step(x, u1, u2, ts=0):
+    k1 = dynamics_t(x, u1, ts)
+    k2 = dynamics_t(x + h*k1, u2, ts + h/2)
     return x + (h/2) * (k1 + k2)
 
   @jit
@@ -41,17 +41,17 @@ def integrate(
       integration_order = IntegrationOrder.CONSTANT
     if integration_order == IntegrationOrder.CONSTANT:
       if ts is not None:
-        one_step_forward = euler_step(carried_state, interval_us[idx], *ts[idx:idx+2])
+        one_step_forward = euler_step(carried_state, interval_us[idx], ts)
       else:
         one_step_forward = euler_step(carried_state, interval_us[idx])
     elif integration_order == IntegrationOrder.LINEAR:
       if ts is not None:
-        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], *ts[idx:idx+2])
+        one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1], ts)
       else:
         one_step_forward = heun_step(carried_state, interval_us[idx], interval_us[idx+1])
     elif integration_order == IntegrationOrder.QUADRATIC:
       if ts is not None:
-        one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2], *ts[idx:idx+2])
+        one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2], ts)
       else:
         one_step_forward = rk4_step(carried_state, interval_us[2*idx], interval_us[2*idx+1], interval_us[2*idx+2])
     else:

@@ -350,9 +350,9 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     self.x_guess, self.u_guess = x_guess, controls_guess
 
     # Augment the dynamics so we can integrate cost the same way we do state
-    def augmented_dynamics(x_and_c: jnp.ndarray, u: float) -> jnp.ndarray:
+    def augmented_dynamics(x_and_c: jnp.ndarray, u: float, t: jnp.array) -> jnp.ndarray:
       x, c = x_and_c[:-1], x_and_c[-1]
-      return jnp.append(system.dynamics(x, u), system.cost(x, u))
+      return jnp.append(system.dynamics(x, u), system.cost(x, u, t))
 
     # Go from having controls like (num_controls + 1, control_shape) (left)
     #                      to like (hp.intervals, num_controls_per_interval + 1, control_shape) (right)
@@ -395,15 +395,21 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       #   return h_u * jnp.sum(vmap(system.cost)(x, u, t))
       # ---
       xs, us = unravel(variables)
-      t = jnp.linspace(0, system.T, num=hp.intervals+1)  # Support cost function with dependency on t
+      t = jnp.linspace(0, system.T, num=hp.intervals+1)[1:]  # Support cost function with dependency on t
       t = jnp.repeat(t, hp.controls_per_interval)
 
       starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
+      # print(starting_xs_and_costs.shape)
+      # print(starting_xs_and_costs)
+      # print(reorganize_controls(us).shape)
+      # print(reorganize_controls(us))
+      # print(t.shape)
+      # raise SystemExit(0)
 
       # Integrate cost in parallel
       states_and_costs, _ = integrate_in_parallel(
         augmented_dynamics, starting_xs_and_costs, reorganize_controls(us),
-        step_size, hp.controls_per_interval, None, hp.order)
+        step_size, hp.controls_per_interval, t, hp.order)
 
       costs = jnp.sum(states_and_costs[:,-1])
       if system.terminal_cost:

@@ -67,7 +67,7 @@ class TimberHarvest(IndirectFHCS):
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return -jnp.exp(-self.r * t) * x_t[0] * (1 - u_t[0])  # Maximization problem converted to minimization
+    return -jnp.exp(-self.r * t) * x_t[0] * (1 - u_t)  # Maximization problem converted to minimization
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
               t: Optional[jnp.ndarray]) -> jnp.ndarray:
