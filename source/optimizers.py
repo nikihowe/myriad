@@ -350,7 +350,7 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     self.x_guess, self.u_guess = x_guess, controls_guess
 
     # Augment the dynamics so we can integrate cost the same way we do state
-    def augmented_dynamics(x_and_c: jnp.ndarray, u: float, t: jnp.array) -> jnp.ndarray:
+    def augmented_dynamics(x_and_c: jnp.ndarray, u: float, t: jnp.ndarray) -> jnp.ndarray:
       x, c = x_and_c[:-1], x_and_c[-1]
       return jnp.append(system.dynamics(x, u), system.cost(x, u, t))
 
@@ -431,7 +431,6 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     # Ending state
     if system.x_T is not None:
-      # x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
       for i in range(len(system.x_T)):
         if system.x_T[i] is not None:
           x_bounds[-1, i, :] = system.x_T[i]
