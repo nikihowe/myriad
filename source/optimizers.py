@@ -61,7 +61,7 @@ class TrajectoryOptimizer(object):
     }
     if self.hp.nlpsolver == NLPSolverType.EXTRAGRADIENT:
       del opt_inputs['jac']
-      solution = extra_gradient(**opt_inputs)
+      solution = extra_gradient(**opt_inputs, system_type=self.hp.system)
     elif self.hp.nlpsolver == NLPSolverType.SLSQP:
       opt_inputs['method'] = 'SLSQP'
       solution = minimize(**opt_inputs)
@@ -77,6 +77,7 @@ class TrajectoryOptimizer(object):
     if self.cfg.verbose:
       print('Solver exited with success:', solution.success)
       print(f'Completed in {_t2 - _t1} seconds.')
+      print('integrated cost:', solution.fun)
 
     if self.hp.order == IntegrationOrder.QUADRATIC and self._type == OptimizerType.COLLOCATION:
       x, x_mid, u, u_mid = self.unravel(solution.x)

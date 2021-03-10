@@ -1,9 +1,6 @@
 from typing import Union, Optional
 import gin
-
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from source.systems import IndirectFHCS
 

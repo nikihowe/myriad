@@ -6,14 +6,30 @@ config.update("jax_enable_x64", True)
 from collections import namedtuple
 from tensorboardX import SummaryWriter # for parameter tuning
 
+from source.config import SystemType
+
+pre_tuned = {
+  SystemType.BACTERIA: {'eta_x': 0.2, 'eta_v': 0.2},  # shooting with 1 interval, 20 controls
+  SystemType.CANCER: {'eta_x': 0.1, 'eta_v': 0.1},  # shooting with 1 interval, 30 controls
+  SystemType.MOLDFUNGICIDE: {'eta_x': 0.02, 'eta_v': 0.1},  # shooting with 1 interval, 20 controls
+  SystemType.GLUCOSE: {'eta_x': 0.1, 'eta_v': 0.1},  # shooting with 1 interval, 10 controls
+  # SystemType.BEARPOPULATIONS: {'eta_x': 0.001, 'eta_v': 0.001},  # shooting with 1 interval, 20 controls
+  # SystemType.HIVTREATMENT: {'eta_x': 0.01, 'eta_v': 0.01},  # shooting with 1 interval, 60 controls
+}
+
+
 # NOTE: need to tune eta_x and eta_v for each system
-def extra_gradient(fun, x0, constraints, bounds, options):
+def extra_gradient(fun, x0, constraints, bounds, options, system_type):
   constraint_fun = constraints['fun']
   max_iter = options['maxiter'] if 'maxiter' in options else 30_000
   max_iter = 30_000
   eta_x = options['eta_x'] if 'eta_x' in options else .1  # primals
   eta_v = options['eta_v'] if 'eta_v' in options else .1  # duals
   # atol = options['atol'] if 'atol' in options else 1e-8 # convergence tolerance
+
+  if system_type in pre_tuned:
+    eta_x = pre_tuned[system_type]['eta_x']
+    eta_v = pre_tuned[system_type]['eta_v']
 
   @jit
   def lagrangian(x, lmbda):
@@ -33,13 +49,13 @@ def extra_gradient(fun, x0, constraints, bounds, options):
   @jit
   def step(x, lmbda):
     x_bar = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x, lmbda),
-      a_min=bounds[:,0], a_max=bounds[:,1])
+      a_min=bounds[:, 0], a_max=bounds[:, 1])
     lmbda_bar = lmbda + eta_v * grad(lagrangian, argnums=1)(x, lmbda)
     x_new = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x_bar, lmbda_bar),
-      a_min=bounds[:,0], a_max=bounds[:,1])
+      a_min=bounds[:, 0], a_max=bounds[:, 1])
     lmbda_new = lmbda + eta_v * grad(lagrangian, argnums=1)(x_bar, lmbda_bar)
 
-    # Use this for debugging, in conjunction with pure python 'scan'
+    # Use this for debugging, in conjunction with non-jax functions
     # if jnp.isnan(x_new).any() or jnp.isnan(lmbda_new).any():
     #   print("WE GOT NANS")
     #   print("x", x)
@@ -75,6 +91,7 @@ def extra_gradient(fun, x0, constraints, bounds, options):
     for i in range(max_iter):
       if i % 1000 == 0:
         print("x", x)
+        if i: print("lmbda", lmbda)
       if i % 100 and jnp.allclose(x_old, x, rtol=0., atol=1e-5):  # tune tolerance according to need
         success = True
         break
@@ -85,4 +102,4 @@ def extra_gradient(fun, x0, constraints, bounds, options):
   lmbda_init = jnp.ones_like(constraint_fun(x0))
   x, lmbda, success = solve(x0, lmbda_init)
 
-  return namedtuple('solution', ['x', 'v', 'success'])(x, lmbda, success)
+  return namedtuple('solution', ['x', 'v', 'success', 'fun'])(x, lmbda, success, fun(x))

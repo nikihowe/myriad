@@ -14,7 +14,7 @@ def integrate(
   h: float,                   # step size
   N: int,                     # steps
   ts: Optional[jnp.ndarray],  # allow for optional time-dependent dynamics
-  integration_order: IntegrationOrder = IntegrationOrder.CONSTANT,  # allows user to choose interpolation for controls
+  integration_order: IntegrationOrder = IntegrationOrder.LINEAR,  # allows user to choose interpolation for controls
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
   @jit
