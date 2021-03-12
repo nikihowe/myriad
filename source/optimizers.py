@@ -372,11 +372,17 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [10. , 10.1]
     def reorganize_controls(us):  # This still works, even for higher-order control shape
       new_controls = jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
-                         us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]])
+                                us[::midpoints_const*hp.controls_per_interval][1:][:, jnp.newaxis]])
       # Needed for single shooting
       if len(new_controls.shape) == 3 and new_controls.shape[2] == 1:
         new_controls = new_controls.squeeze(axis=2)
       return new_controls
+
+    # Same idea as above function, but for the times
+    def reorganize_times(ts):
+      new_times = jnp.hstack([ts[:-1].reshape(hp.intervals, hp.controls_per_interval),
+                             ts[::hp.controls_per_interval][1:][:, jnp.newaxis]])
+      return new_times
 
     def objective(variables: jnp.ndarray) -> float:
       # print("dynamics are", system.dynamics)
@@ -395,14 +401,16 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       #   return h_u * jnp.sum(vmap(system.cost)(x, u, t))
       # ---
       xs, us = unravel(variables)
-      t = jnp.linspace(0, system.T, num=hp.intervals+1)[1:]  # Support cost function with dependency on t
-      t = jnp.repeat(t[:, jnp.newaxis], hp.controls_per_interval, axis=-1)
+      reshaped_controls = reorganize_controls(us)
+
+      t = jnp.linspace(0., system.T, num=num_steps + 1)
+      t = reorganize_times(t)
 
       starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
 
       # Integrate cost in parallel
       states_and_costs, _ = integrate_in_parallel(
-        augmented_dynamics, starting_xs_and_costs, reorganize_controls(us),
+        augmented_dynamics, starting_xs_and_costs, reshaped_controls,
         step_size, hp.controls_per_interval, t, hp.order)
 
       costs = jnp.sum(states_and_costs[:,-1])
