@@ -351,9 +351,9 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     self.x_guess, self.u_guess = x_guess, controls_guess
 
     # Augment the dynamics so we can integrate cost the same way we do state
-    def augmented_dynamics(x_and_c: jnp.ndarray, u: float) -> jnp.ndarray:
+    def augmented_dynamics(x_and_c: jnp.ndarray, u: float, t: jnp.ndarray) -> jnp.ndarray:
       x, c = x_and_c[:-1], x_and_c[-1]
-      return jnp.append(system.dynamics(x, u), system.cost(x, u))
+      return jnp.append(system.dynamics(x, u), system.cost(x, u, t))
 
     # Go from having controls like (num_controls + 1, control_shape) (left)
     #                      to like (hp.intervals, num_controls_per_interval + 1, control_shape) (right)
@@ -373,11 +373,17 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
     #                             [10. , 10.1]
     def reorganize_controls(us):  # This still works, even for higher-order control shape
       new_controls = jnp.hstack([us[:-1].reshape(hp.intervals, midpoints_const*hp.controls_per_interval, control_shape),
-                         us[::midpoints_const*hp.controls_per_interval][1:][:,jnp.newaxis]])
+                                us[::midpoints_const*hp.controls_per_interval][1:][:, jnp.newaxis]])
       # Needed for single shooting
       if len(new_controls.shape) == 3 and new_controls.shape[2] == 1:
         new_controls = new_controls.squeeze(axis=2)
       return new_controls
+
+    # Same idea as above function, but for the times
+    def reorganize_times(ts):
+      new_times = jnp.hstack([ts[:-1].reshape(hp.intervals, hp.controls_per_interval),
+                             ts[::hp.controls_per_interval][1:][:, jnp.newaxis]])
+      return new_times
 
     def objective(variables: jnp.ndarray) -> float:
       # print("dynamics are", system.dynamics)
@@ -396,15 +402,17 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
       #   return h_u * jnp.sum(vmap(system.cost)(x, u, t))
       # ---
       xs, us = unravel(variables)
-      t = jnp.linspace(0, system.T, num=hp.intervals+1)  # Support cost function with dependency on t
-      t = jnp.repeat(t, hp.controls_per_interval)
+      reshaped_controls = reorganize_controls(us)
+
+      t = jnp.linspace(0., system.T, num=num_steps + 1)
+      t = reorganize_times(t)
 
       starting_xs_and_costs = jnp.hstack([xs[:-1], jnp.zeros(len(xs[:-1])).reshape(-1, 1)])
 
       # Integrate cost in parallel
       states_and_costs, _ = integrate_in_parallel(
-        augmented_dynamics, starting_xs_and_costs, reorganize_controls(us),
-        step_size, hp.controls_per_interval, None, hp.order)
+        augmented_dynamics, starting_xs_and_costs, reshaped_controls,
+        step_size, hp.controls_per_interval, t, hp.order)
 
       costs = jnp.sum(states_and_costs[:,-1])
       if system.terminal_cost:
@@ -432,7 +440,9 @@ class MultipleShootingOptimizer(TrajectoryOptimizer):
 
     # Ending state
     if system.x_T is not None:
-      x_bounds[-1, :, :] = jnp.expand_dims(system.x_T, 1)
+      for i in range(len(system.x_T)):
+        if system.x_T[i] is not None:
+          x_bounds[-1, i, :] = system.x_T[i]
 
     # Reshape for ipopt's minimize
     x_bounds = x_bounds.reshape((-1, 2))

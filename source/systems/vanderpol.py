@@ -20,7 +20,7 @@ class VanDerPol(FiniteHorizonControlSystem):
       terminal_cost = False,
     )
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
     x0, x1 = x_t
     _x0 = jnp.squeeze((1. - x1**2) * x0 - x1 + u_t)
     _x1 = jnp.squeeze(x0)

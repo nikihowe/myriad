@@ -68,7 +68,7 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return -self.K*x_t[0] + u_t[0]  # Maximization problem converted to minimization
+    return -self.K*x_t[0] + u_t  # Maximization problem converted to minimization
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
               t: Optional[jnp.ndarray]) -> jnp.ndarray:

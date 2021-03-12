@@ -81,7 +81,7 @@ python -m unittest discover -s tests
 
 ```
 @misc{optimal-control,
-  author = {Howe, Nikolaus and Rajkumar, Nitarshan and Dufort-Labbe, Simon},
+  author = {Howe, Nikolaus and Rajkumar, Nitarshan and Dufort-Labbé, Simon},
   title = {{what is the name (myriad?)}},
   note = {Available at: https://github.com/nikihowe/put_place_here},
   year = {2021}

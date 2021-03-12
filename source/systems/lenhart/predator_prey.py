@@ -89,7 +89,7 @@ class PredatorPrey(IndirectFHCS):
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return self.A * 0.5 * u_t[0] ** 2
+    return self.A * 0.5 * u_t ** 2
 
   def terminal_cost_fn(self, x_T: Optional[jnp.ndarray], u_T: Optional[jnp.ndarray],
                        T: Optional[jnp.ndarray] = None) -> float:
