@@ -28,14 +28,14 @@ class IntegrationOrder(Enum):
 @dataclass(eq=True, frozen=False)
 class HParams:
   seed: int = 2020
-  system: SystemType = SystemType.CANCER
+  system: SystemType = SystemType.EPIDEMICSEIRN
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.SLSQP
   order: IntegrationOrder = IntegrationOrder.LINEAR
-  max_iter: int = 1000             # maxiter for NLP solver
-  intervals: int = 100             # used by COLLOCATION and SHOOTING
-  controls_per_interval: int = 1   # used by SHOOTING
-  fbsm_intervals: int = 1000       # used by FBSM
+  max_iter: int = 1000              # maxiter for NLP solver
+  intervals: int = 1               # used by COLLOCATION and SHOOTING
+  controls_per_interval: int = 100   # used by SHOOTING
+  fbsm_intervals: int = 1000        # used by FBSM
 
   # Collocation requires exactly one control per interval
   def __post_init__(self):
@@ -44,6 +44,7 @@ class HParams:
 
 
 # Secondary configurations which should not change experiment results
+# and should be largely used for debugging
 @dataclass(eq=True, frozen=True)
 class Config:
   verbose: bool = True

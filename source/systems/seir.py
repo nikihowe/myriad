@@ -38,7 +38,7 @@ class SEIR(FiniteHorizonControlSystem):
       terminal_cost=False,
     )
 
-  def dynamics(self, y_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
+  def dynamics(self, y_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
     S, E, I, N = y_t
 
     s_dot = jnp.squeeze(self.b*N - self.d*S - self.c*S*I - u_t*S)

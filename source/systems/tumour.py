@@ -38,7 +38,7 @@ class Tumour(FiniteHorizonControlSystem):
       terminal_cost = True,
     )
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
     p, q, y = x_t
     _p = jnp.squeeze(-self.ξ * p * jnp.log(p/q))
     _q = jnp.squeeze(q * (self.b - (self.mu + self.d * p**(2/3) + self.G * u_t)))

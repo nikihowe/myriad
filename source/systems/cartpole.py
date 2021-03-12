@@ -32,7 +32,7 @@ class CartPole(FiniteHorizonControlSystem):
     )
 
   # Cart-Pole Example: System Dynamics (Section 6.1)
-  def dynamics(self, x_t: jnp.ndarray, u_t: float) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
     q1, q2, q̇1, q̇2 = x_t
     # Eq. 6.1
     q̈1 = ((self.l * self.m2 * jnp.sin(q2) * q̇2**2 + u_t + self.m2 * self.g * jnp.cos(q2) * jnp.sin(q2))
