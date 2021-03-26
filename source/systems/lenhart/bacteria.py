@@ -10,27 +10,18 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class Bacteria(IndirectFHCS):
+  """Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 7, Lab 3)
+
+      This environment models the concentration level of a bacteria population that we try to control by providing
+      a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
+      a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
+      concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
+
+        $$\\max_u \\quad Cx(1) - \\int_0^1 u^2(t) dt$$
+        $$\\mathrm{s.t.} \\qquad  x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}$$
+        $$x(0)=x_0, \\; A,B,C \\geq 0$$
+      """
   def __init__(self, r=1., A=1., B=12., C=1., x_0=1.):
-    """
-    Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 7, Lab 3)
-
-    This environment models the concentration level of a bacteria population that we try to control by providing
-    a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
-    a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
-    concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
-
-    .. math::
-
-      \max_u \quad &Cx(1) - \int_0^1 u^2(t) dt \\
-      \mathrm{s.t.}\qquad & x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\
-      & x(0)=x_0, \; A,B,C \geq 0
-
-    :param r: Growth rate
-    :param A: Relative strength of the chemical nutrient
-    :param B: Strength of the byproduct
-    :param C: Payoff associated to the final bacteria population concentration
-    :param x_0: Initial bacteria population concentration
-    """
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -45,9 +36,13 @@ class Bacteria(IndirectFHCS):
 
     self.adj_T = jnp.array([C])  # Final condition over the adjoint, if any
     self.r = r
+    """Growth rate"""
     self.A = A
+    """Relative strength of the chemical nutrient"""
     self.B = B
+    """Strength of the byproduct"""
     self.C = C
+    """Payoff associated to the final bacteria population concentration"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
