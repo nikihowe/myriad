@@ -36,13 +36,6 @@ class SmokeTest(unittest.TestCase):
         if hp.optimizer == OptimizerType.FBSM and not issubclass(system.value, IndirectFHCS):
           continue
 
-        # TODO: make shooting work with these (probably requires small environment modification)
-        if hp.optimizer == OptimizerType.SHOOTING and hp.system in [SystemType.PREDATORPREY,
-                                                                    SystemType.BIOREACTOR,
-                                                                    SystemType.TIMBERHARVEST,
-                                                                    SystemType.FISHHARVEST]:
-          continue
-
         # Invasive plant is a discrete system, so it only works with FBSM
         if hp.system == SystemType.INVASIVEPLANT:
           continue
