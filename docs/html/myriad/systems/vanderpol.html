@@ -23,58 +23,6 @@
 <h1 class="title">Module <code>myriad.systems.vanderpol</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-
-from .base import FiniteHorizonControlSystem
-
-
-class VanDerPol(FiniteHorizonControlSystem):
-  def __init__(self):
-    super().__init__(
-      x_0 = jnp.array([0., 1.]),
-      x_T = jnp.zeros(2),
-      T = 10.0,
-      bounds = jnp.array([
-        [-jnp.inf, jnp.inf], # state 1
-        [-jnp.inf, jnp.inf], # state 2
-        [-0.75, 1.0],        # control
-      ]),
-      terminal_cost = False,
-    )
-
-  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -&gt; jnp.ndarray:
-    x0, x1 = x_t
-    _x0 = jnp.squeeze((1. - x1**2) * x0 - x1 + u_t)
-    _x1 = jnp.squeeze(x0)
-    return jnp.asarray([_x0, _x1])
-  
-  def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -&gt; float:
-    return x_t.T @ x_t + u_t ** 2
-
-  # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
-  #   x = pd.DataFrame(x, columns=[&#39;x0&#39;, &#39;x1&#39;])
-  #
-  #   sns.set(style=&#39;darkgrid&#39;)
-  #   plt.figure(figsize=(9, 4))
-  #   ts_u = jnp.linspace(0, self.T, u.shape[0])
-  #
-  #   plt.subplot(1, 2, 1)
-  #   plt.plot(x[&#39;x0&#39;], x[&#39;x1&#39;])
-  #
-  #   plt.subplot(1, 2, 2)
-  #   plt.step(ts_u, u, where=&#34;post&#34;)
-  #   plt.xlabel(&#39;time (s)&#39;)
-  #
-  #   plt.tight_layout()
-  #   plt.show()</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -99,33 +47,6 @@ class VanDerPol(FiniteHorizonControlSystem):
 & \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t) \\
 & && x(0)=x_0
 \end{align} </script></span></p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class VanDerPol(FiniteHorizonControlSystem):
-  def __init__(self):
-    super().__init__(
-      x_0 = jnp.array([0., 1.]),
-      x_T = jnp.zeros(2),
-      T = 10.0,
-      bounds = jnp.array([
-        [-jnp.inf, jnp.inf], # state 1
-        [-jnp.inf, jnp.inf], # state 2
-        [-0.75, 1.0],        # control
-      ]),
-      terminal_cost = False,
-    )
-
-  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -&gt; jnp.ndarray:
-    x0, x1 = x_t
-    _x0 = jnp.squeeze((1. - x1**2) * x0 - x1 + u_t)
-    _x1 = jnp.squeeze(x0)
-    return jnp.asarray([_x0, _x1])
-  
-  def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -&gt; float:
-    return x_t.T @ x_t + u_t ** 2</code></pre>
-</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

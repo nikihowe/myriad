@@ -23,47 +23,6 @@
 <h1 class="title">Module <code>myriad.scripts</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python"># # --------------------------------------
-# # Script for running the standard trajectory optimization
-# #   put this in run.py
-#   optimizer = get_optimizer(hp, cfg, system)
-#   if optimizer.require_adj:
-#     x, u, adj = optimizer.solve()
-#   else:
-#     x, u = optimizer.solve()
-#
-#   num_steps = hp.intervals*hp.controls_per_interval
-#   stepsize = system.T / num_steps
-#   _, opt_x = integrate(system.dynamics, system.x_0, u,
-#                       stepsize, num_steps, None, hp.order)
-#
-#   if cfg.plot_results:
-#     if optimizer.require_adj:
-#       plot(system,
-#            data={&#39;x&#39;: x, &#39;u&#39;: u, &#39;adj&#39;: adj, &#39;other_x&#39;: opt_x},
-#            labels={&#39;x&#39;: &#39; (from solver)&#39;,
-#                    &#39;u&#39;: &#39;Controls from solver&#39;,
-#                    &#39;adj&#39;: &#39;Adjoint from solver&#39;,
-#                    &#39;other_x&#39;: &#39; (from integrating controls from solver)&#39;})
-#     else:
-#       plot(system,
-#            data={&#39;x&#39;: x, &#39;u&#39;: u, &#39;other_x&#39;: opt_x},
-#            labels={&#39;x&#39;: &#39; (from solver)&#39;,
-#                    &#39;u&#39;: &#39;Controls from solver&#39;,
-#                    &#39;other_x&#39;: &#39; (from integrating controls from solver)&#39;})
-#
-#   xs_and_us, unused_unravel = jax.flatten_util.ravel_pytree((x, u))
-#   if hp.optimizer != OptimizerType.FBSM:
-#     print(&#34;control cost&#34;, optimizer.objective(xs_and_us))
-#     print(&#39;constraint_violations&#39;, jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-#   raise SystemExit
-#
-# # --------------------------------------------</code></pre>
-</details>
 </section>
 <section>
 </section>

@@ -23,153 +23,6 @@
 <h1 class="title">Module <code>myriad.systems.base</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">from abc import ABC
-from dataclasses import dataclass
-from typing import Optional, Union
-
-import jax.numpy as jnp
-
-
-@dataclass
-class FiniteHorizonControlSystem(object):
-  &#34;&#34;&#34;
-  Base class for defining control problem under a finite horizon. Model a problem of the form:
-
-  .. math::
-
-    \\begin{align}
-    &amp;\\min_u \\quad &amp;&amp;g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt \\\\
-    &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t) \\\\
-    &amp; &amp;&amp; x(0)=x_0
-    \\end{align}
-  &#34;&#34;&#34;
-  x_0: jnp.ndarray
-  &#34;&#34;&#34; State at time 0&#34;&#34;&#34;
-  x_T: Optional[jnp.ndarray]
-  &#34;&#34;&#34;State at time T&#34;&#34;&#34;
-  T: float
-  &#34;&#34;&#34;Duration of trajectory&#34;&#34;&#34;
-  bounds: jnp.ndarray
-  &#34;&#34;&#34;State and control bounds&#34;&#34;&#34;
-  terminal_cost: bool
-  &#34;&#34;&#34;Whether only the final state and control are inputs to the cost&#34;&#34;&#34;
-  discrete: bool = False
-  &#34;&#34;&#34;Whether we are working with a system with continuous cost or not&#34;&#34;&#34;
-
-  # def __post_init__(self):
-  #   self.x_0 = self.x_0.astype(jnp.float64)
-  #   if self.x_T is not None:
-  #     assert self.x_0.shape == self.x_T.shape
-  #     self.x_T = self.x_T.astype(jnp.float64)
-  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
-  #   assert self.T &gt; 0
-
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
-     of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
-     $$x&#39;(t) = f(x,u,t)$$
-
-    Args:
-        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-        u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
-    Returns:
-        dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
-     &#34;&#34;&#34;
-    raise NotImplementedError
-  
-  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
-    &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
-
-    Args:
-        x_t: (jnp.ndarray) -- State variables at time t
-        u_t: (jnp.ndarray) -- Control variables at time t
-        t: (jnp.ndarray, optional) -- Time parameter
-    Returns:
-        cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
-    &#34;&#34;&#34;
-    raise NotImplementedError
-
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
-    &#34;&#34;&#34; The cost function associated to the final state
-
-    Args:
-        x_T: (jnp.ndarray) -- Final state
-        u_T: (jnp.ndarray) -- Final control
-        T: (jnp.ndarray, float) -- The Horizon
-    Returns:
-        cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
-    &#34;&#34;&#34;
-    return 0
-
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
-    &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
-    raise NotImplementedError
-
-
-@dataclass
-class IndirectFHCS(FiniteHorizonControlSystem, ABC):
-  &#34;&#34;&#34;
-    Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-    Model a problem of the form:
-
-    .. math::
-
-      \\begin{align}
-      &amp; \\min_u \\quad &amp;&amp; g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt\\\\
-      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t)\\\\
-      &amp; &amp;&amp;x(0)=x_0
-      \\end{align}
-
-    Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin&#39;s maximum principle
-    &#34;&#34;&#34;
-  adj_T: Optional[jnp.ndarray] = None
-  &#34;&#34;&#34;Adjoint at time T&#34;&#34;&#34;
-  guess_a: Optional[float] = None
-  &#34;&#34;&#34;Initial lower guess for secant method&#34;&#34;&#34;
-  guess_b: Optional[float] = None
-  &#34;&#34;&#34;Initial upper guess for secant method&#34;&#34;&#34;
-
-  def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
-              t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34;
-    The adjoint dynamics, given by:
-    $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
-
-    \\( H \\) being the system Hamiltonian
-
-    Args:
-        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-        u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
-        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-    Returns:
-        d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
-    &#34;&#34;&#34;
-    raise NotImplementedError
-
-  def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
-                             t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34;
-    The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
-    be optimal if they don&#39;t satisfy:
-    $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
-    This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
-     \\(u\\):
-    $$u^* = h(x,t)$$
-
-    Args:
-        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-        x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
-        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-    Returns:
-        u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
-    &#34;&#34;&#34;
-    raise NotImplementedError</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -195,84 +48,6 @@ class IndirectFHCS(FiniteHorizonControlSystem, ABC):
 & \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t) \\
 & && x(0)=x_0
 \end{align} </script></span></p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class FiniteHorizonControlSystem(object):
-  &#34;&#34;&#34;
-  Base class for defining control problem under a finite horizon. Model a problem of the form:
-
-  .. math::
-
-    \\begin{align}
-    &amp;\\min_u \\quad &amp;&amp;g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt \\\\
-    &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t) \\\\
-    &amp; &amp;&amp; x(0)=x_0
-    \\end{align}
-  &#34;&#34;&#34;
-  x_0: jnp.ndarray
-  &#34;&#34;&#34; State at time 0&#34;&#34;&#34;
-  x_T: Optional[jnp.ndarray]
-  &#34;&#34;&#34;State at time T&#34;&#34;&#34;
-  T: float
-  &#34;&#34;&#34;Duration of trajectory&#34;&#34;&#34;
-  bounds: jnp.ndarray
-  &#34;&#34;&#34;State and control bounds&#34;&#34;&#34;
-  terminal_cost: bool
-  &#34;&#34;&#34;Whether only the final state and control are inputs to the cost&#34;&#34;&#34;
-  discrete: bool = False
-  &#34;&#34;&#34;Whether we are working with a system with continuous cost or not&#34;&#34;&#34;
-
-  # def __post_init__(self):
-  #   self.x_0 = self.x_0.astype(jnp.float64)
-  #   if self.x_T is not None:
-  #     assert self.x_0.shape == self.x_T.shape
-  #     self.x_T = self.x_T.astype(jnp.float64)
-  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
-  #   assert self.T &gt; 0
-
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
-     of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
-     $$x&#39;(t) = f(x,u,t)$$
-
-    Args:
-        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-        u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
-    Returns:
-        dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
-     &#34;&#34;&#34;
-    raise NotImplementedError
-  
-  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
-    &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
-
-    Args:
-        x_t: (jnp.ndarray) -- State variables at time t
-        u_t: (jnp.ndarray) -- Control variables at time t
-        t: (jnp.ndarray, optional) -- Time parameter
-    Returns:
-        cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
-    &#34;&#34;&#34;
-    raise NotImplementedError
-
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
-    &#34;&#34;&#34; The cost function associated to the final state
-
-    Args:
-        x_T: (jnp.ndarray) -- Final state
-        u_T: (jnp.ndarray) -- Final control
-        T: (jnp.ndarray, float) -- The Horizon
-    Returns:
-        cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
-    &#34;&#34;&#34;
-    return 0
-
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
-    &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
-    raise NotImplementedError</code></pre>
-</details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.IndirectFHCS" href="#myriad.systems.base.IndirectFHCS">IndirectFHCS</a></li>
@@ -329,23 +104,6 @@ of the state variables <span><span class="MathJax_Preview">x</span><script type=
 <dt><code>dx_t</code></dt>
 <dd>(jnp.ndarray) &ndash; The derivative value of the state variables, x_t, at corresponding time t</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
-  &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
-   of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
-   $$x&#39;(t) = f(x,u,t)$$
-
-  Args:
-      x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-      u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
-  Returns:
-      dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
-   &#34;&#34;&#34;
-  raise NotImplementedError</code></pre>
-</details>
 </dd>
 <dt id="myriad.systems.base.FiniteHorizonControlSystem.cost"><code class="name flex">
 <span>def <span class="ident">cost</span></span>(<span>self, x_t, u_t, t)</span>
@@ -366,22 +124,6 @@ of the state variables <span><span class="MathJax_Preview">x</span><script type=
 <dt><code>cost</code></dt>
 <dd>(float) &ndash; The instantaneous cost <span><span class="MathJax_Preview"> g(x_t,u_t,t) </span><script type="math/tex"> g(x_t,u_t,t) </script></span></dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
-  &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
-
-  Args:
-      x_t: (jnp.ndarray) -- State variables at time t
-      u_t: (jnp.ndarray) -- Control variables at time t
-      t: (jnp.ndarray, optional) -- Time parameter
-  Returns:
-      cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
-  &#34;&#34;&#34;
-  raise NotImplementedError</code></pre>
-</details>
 </dd>
 <dt id="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn"><code class="name flex">
 <span>def <span class="ident">terminal_cost_fn</span></span>(<span>self, x_T, u_T, T=None)</span>
@@ -402,36 +144,12 @@ of the state variables <span><span class="MathJax_Preview">x</span><script type=
 <dt><code>cost_T</code></dt>
 <dd>(float) &ndash; The terminal cost <span><span class="MathJax_Preview">g_T(x_T,u_T,T</span><script type="math/tex">g_T(x_T,u_T,T</script></span></dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
-  &#34;&#34;&#34; The cost function associated to the final state
-
-  Args:
-      x_T: (jnp.ndarray) -- Final state
-      u_T: (jnp.ndarray) -- Final control
-      T: (jnp.ndarray, float) -- The Horizon
-  Returns:
-      cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
-  &#34;&#34;&#34;
-  return 0</code></pre>
-</details>
 </dd>
 <dt id="myriad.systems.base.FiniteHorizonControlSystem.plot_solution"><code class="name flex">
 <span>def <span class="ident">plot_solution</span></span>(<span>self, x, u)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The plotting tool for the current system</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
-  &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
-  raise NotImplementedError</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -452,69 +170,6 @@ Model a problem of the form:</p>
 & &&x(0)=x_0
 \end{align} </script></span>
 Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class IndirectFHCS(FiniteHorizonControlSystem, ABC):
-  &#34;&#34;&#34;
-    Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-    Model a problem of the form:
-
-    .. math::
-
-      \\begin{align}
-      &amp; \\min_u \\quad &amp;&amp; g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt\\\\
-      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t)\\\\
-      &amp; &amp;&amp;x(0)=x_0
-      \\end{align}
-
-    Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin&#39;s maximum principle
-    &#34;&#34;&#34;
-  adj_T: Optional[jnp.ndarray] = None
-  &#34;&#34;&#34;Adjoint at time T&#34;&#34;&#34;
-  guess_a: Optional[float] = None
-  &#34;&#34;&#34;Initial lower guess for secant method&#34;&#34;&#34;
-  guess_b: Optional[float] = None
-  &#34;&#34;&#34;Initial upper guess for secant method&#34;&#34;&#34;
-
-  def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
-              t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34;
-    The adjoint dynamics, given by:
-    $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
-
-    \\( H \\) being the system Hamiltonian
-
-    Args:
-        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-        u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
-        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-    Returns:
-        d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
-    &#34;&#34;&#34;
-    raise NotImplementedError
-
-  def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
-                             t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-    &#34;&#34;&#34;
-    The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
-    be optimal if they don&#39;t satisfy:
-    $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
-    This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
-     \\(u\\):
-    $$u^* = h(x,t)$$
-
-    Args:
-        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-        x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
-        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-    Returns:
-        u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
-    &#34;&#34;&#34;
-    raise NotImplementedError</code></pre>
-</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
@@ -577,28 +232,6 @@ Taking into account the adjoint dynamics and the optimal characterization given 
 <dt><code>d_adj_t</code></dt>
 <dd>(jnp.ndarray) &ndash; The derivative value of the adjoint variables, <span><span class="MathJax_Preview">\lambda</span><script type="math/tex">\lambda</script></span>, at corresponding time t</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
-            t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-  &#34;&#34;&#34;
-  The adjoint dynamics, given by:
-  $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
-
-  \\( H \\) being the system Hamiltonian
-
-  Args:
-      adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-      x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-      u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
-      t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-  Returns:
-      d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
-  &#34;&#34;&#34;
-  raise NotImplementedError</code></pre>
-</details>
 </dd>
 <dt id="myriad.systems.base.IndirectFHCS.optim_characterization"><code class="name flex">
 <span>def <span class="ident">optim_characterization</span></span>(<span>self, adj_t, x_t, t)</span>
@@ -624,29 +257,6 @@ This leads to the following condition, the optimality characterization, on <span
 <dt><code>u_star</code></dt>
 <dd>(jnp.ndarray) &ndash; Control candidates at corresponding time t that meets the above condition</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
-                           t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
-  &#34;&#34;&#34;
-  The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
-  be optimal if they don&#39;t satisfy:
-  $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
-  This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
-   \\(u\\):
-  $$u^* = h(x,t)$$
-
-  Args:
-      adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
-      x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
-      t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
-  Returns:
-      u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
-  &#34;&#34;&#34;
-  raise NotImplementedError</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
