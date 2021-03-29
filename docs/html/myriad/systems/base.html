@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>myriad.systems.base API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>myriad.systems.base</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from abc import ABC
+from dataclasses import dataclass
+from typing import Optional, Union
+
+import jax.numpy as jnp
+
+
+@dataclass
+class FiniteHorizonControlSystem(object):
+  &#34;&#34;&#34;
+  Base class for defining control problem under a finite horizon. Model a problem of the form:
+
+  .. math::
+
+    \\begin{align}
+    &amp;\\min_u \\quad &amp;&amp;g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt \\\\
+    &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t) \\\\
+    &amp; &amp;&amp; x(0)=x_0
+    \\end{align}
+  &#34;&#34;&#34;
+  x_0: jnp.ndarray
+  &#34;&#34;&#34; State at time 0&#34;&#34;&#34;
+  x_T: Optional[jnp.ndarray]
+  &#34;&#34;&#34;State at time T&#34;&#34;&#34;
+  T: float
+  &#34;&#34;&#34;Duration of trajectory&#34;&#34;&#34;
+  bounds: jnp.ndarray
+  &#34;&#34;&#34;State and control bounds&#34;&#34;&#34;
+  terminal_cost: bool
+  &#34;&#34;&#34;Whether only the final state and control are inputs to the cost&#34;&#34;&#34;
+  discrete: bool = False
+  &#34;&#34;&#34;Whether we are working with a system with continuous cost or not&#34;&#34;&#34;
+
+  # def __post_init__(self):
+  #   self.x_0 = self.x_0.astype(jnp.float64)
+  #   if self.x_T is not None:
+  #     assert self.x_0.shape == self.x_T.shape
+  #     self.x_T = self.x_T.astype(jnp.float64)
+  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
+  #   assert self.T &gt; 0
+
+  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
+     of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
+     $$x&#39;(t) = f(x,u,t)$$
+
+    Args:
+        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+        u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
+    Returns:
+        dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
+     &#34;&#34;&#34;
+    raise NotImplementedError
+  
+  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
+    &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
+
+    Args:
+        x_t: (jnp.ndarray) -- State variables at time t
+        u_t: (jnp.ndarray) -- Control variables at time t
+        t: (jnp.ndarray, optional) -- Time parameter
+    Returns:
+        cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
+    &#34;&#34;&#34;
+    raise NotImplementedError
+
+  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
+    &#34;&#34;&#34; The cost function associated to the final state
+
+    Args:
+        x_T: (jnp.ndarray) -- Final state
+        u_T: (jnp.ndarray) -- Final control
+        T: (jnp.ndarray, float) -- The Horizon
+    Returns:
+        cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
+    &#34;&#34;&#34;
+    return 0
+
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
+    &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
+    raise NotImplementedError
+
+
+@dataclass
+class IndirectFHCS(FiniteHorizonControlSystem, ABC):
+  &#34;&#34;&#34;
+    Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
+    Model a problem of the form:
+
+    .. math::
+
+      \\begin{align}
+      &amp; \\min_u \\quad &amp;&amp; g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt\\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t)\\\\
+      &amp; &amp;&amp;x(0)=x_0
+      \\end{align}
+
+    Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin&#39;s maximum principle
+    &#34;&#34;&#34;
+  adj_T: Optional[jnp.ndarray] = None
+  &#34;&#34;&#34;Adjoint at time T&#34;&#34;&#34;
+  guess_a: Optional[float] = None
+  &#34;&#34;&#34;Initial lower guess for secant method&#34;&#34;&#34;
+  guess_b: Optional[float] = None
+  &#34;&#34;&#34;Initial upper guess for secant method&#34;&#34;&#34;
+
+  def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+              t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34;
+    The adjoint dynamics, given by:
+    $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
+
+    \\( H \\) being the system Hamiltonian
+
+    Args:
+        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+        u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
+        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+    Returns:
+        d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
+    &#34;&#34;&#34;
+    raise NotImplementedError
+
+  def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                             t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34;
+    The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
+    be optimal if they don&#39;t satisfy:
+    $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
+    This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
+     \\(u\\):
+    $$u^* = h(x,t)$$
+
+    Args:
+        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+        x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
+        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+    Returns:
+        u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
+    &#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem"><code class="flex name class">
+<span>class <span class="ident">FiniteHorizonControlSystem</span></span>
+<span>(</span><span>x_0, x_T, T, bounds, terminal_cost, discrete=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for defining control problem under a finite horizon. Model a problem of the form:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp;\min_u \quad &amp;&amp;g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = f(x,u,t) \\
+&amp; &amp;&amp; x(0)=x_0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+&\min_u \quad &&g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
+& \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t) \\
+& && x(0)=x_0
+\end{align} </script></span></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FiniteHorizonControlSystem(object):
+  &#34;&#34;&#34;
+  Base class for defining control problem under a finite horizon. Model a problem of the form:
+
+  .. math::
+
+    \\begin{align}
+    &amp;\\min_u \\quad &amp;&amp;g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt \\\\
+    &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t) \\\\
+    &amp; &amp;&amp; x(0)=x_0
+    \\end{align}
+  &#34;&#34;&#34;
+  x_0: jnp.ndarray
+  &#34;&#34;&#34; State at time 0&#34;&#34;&#34;
+  x_T: Optional[jnp.ndarray]
+  &#34;&#34;&#34;State at time T&#34;&#34;&#34;
+  T: float
+  &#34;&#34;&#34;Duration of trajectory&#34;&#34;&#34;
+  bounds: jnp.ndarray
+  &#34;&#34;&#34;State and control bounds&#34;&#34;&#34;
+  terminal_cost: bool
+  &#34;&#34;&#34;Whether only the final state and control are inputs to the cost&#34;&#34;&#34;
+  discrete: bool = False
+  &#34;&#34;&#34;Whether we are working with a system with continuous cost or not&#34;&#34;&#34;
+
+  # def __post_init__(self):
+  #   self.x_0 = self.x_0.astype(jnp.float64)
+  #   if self.x_T is not None:
+  #     assert self.x_0.shape == self.x_T.shape
+  #     self.x_T = self.x_T.astype(jnp.float64)
+  #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
+  #   assert self.T &gt; 0
+
+  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
+     of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
+     $$x&#39;(t) = f(x,u,t)$$
+
+    Args:
+        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+        u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
+    Returns:
+        dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
+     &#34;&#34;&#34;
+    raise NotImplementedError
+  
+  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
+    &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
+
+    Args:
+        x_t: (jnp.ndarray) -- State variables at time t
+        u_t: (jnp.ndarray) -- Control variables at time t
+        t: (jnp.ndarray, optional) -- Time parameter
+    Returns:
+        cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
+    &#34;&#34;&#34;
+    raise NotImplementedError
+
+  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
+    &#34;&#34;&#34; The cost function associated to the final state
+
+    Args:
+        x_T: (jnp.ndarray) -- Final state
+        u_T: (jnp.ndarray) -- Final control
+        T: (jnp.ndarray, float) -- The Horizon
+    Returns:
+        cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
+    &#34;&#34;&#34;
+    return 0
+
+  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
+    &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="myriad.systems.base.IndirectFHCS" href="#myriad.systems.base.IndirectFHCS">IndirectFHCS</a></li>
+<li><a title="myriad.systems.cartpole.CartPole" href="cartpole.html#myriad.systems.cartpole.CartPole">CartPole</a></li>
+<li><a title="myriad.systems.seir.SEIR" href="seir.html#myriad.systems.seir.SEIR">SEIR</a></li>
+<li><a title="myriad.systems.tumour.Tumour" href="tumour.html#myriad.systems.tumour.Tumour">Tumour</a></li>
+<li><a title="myriad.systems.vanderpol.VanDerPol" href="vanderpol.html#myriad.systems.vanderpol.VanDerPol">VanDerPol</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.x_0"><code class="name">var <span class="ident">x_0</span></code></dt>
+<dd>
+<div class="desc"><p>State at time 0</p></div>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.x_T"><code class="name">var <span class="ident">x_T</span></code></dt>
+<dd>
+<div class="desc"><p>State at time T</p></div>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<div class="desc"><p>Duration of trajectory</p></div>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.bounds"><code class="name">var <span class="ident">bounds</span></code></dt>
+<dd>
+<div class="desc"><p>State and control bounds</p></div>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost"><code class="name">var <span class="ident">terminal_cost</span></code></dt>
+<dd>
+<div class="desc"><p>Whether only the final state and control are inputs to the cost</p></div>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.discrete"><code class="name">var <span class="ident">discrete</span></code></dt>
+<dd>
+<div class="desc"><p>Whether we are working with a system with continuous cost or not</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.dynamics"><code class="name flex">
+<span>def <span class="ident">dynamics</span></span>(<span>self, x_t, u_t)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The set of equations defining the dynamics of the system. For continuous system, return the vector fields
+of the state variables <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> under the influence of the controls <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span>, i.e.:
+<span><span class="MathJax_Preview">x'(t) = f(x,u,t)</span><script type="math/tex; mode=display">x'(t) = f(x,u,t)</script></span></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; An array, representing the state variables at various time t</dd>
+<dt><strong><code>u_t</code></strong></dt>
+<dd>(float, jnp.ndarray) &ndash; An array, representing the control variables at various time t</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dx_t</code></dt>
+<dd>(jnp.ndarray) &ndash; The derivative value of the state variables, x_t, at corresponding time t</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -&gt; jnp.ndarray:
+  &#34;&#34;&#34; The set of equations defining the dynamics of the system. For continuous system, return the vector fields
+   of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
+   $$x&#39;(t) = f(x,u,t)$$
+
+  Args:
+      x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+      u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
+  Returns:
+      dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
+   &#34;&#34;&#34;
+  raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.cost"><code class="name flex">
+<span>def <span class="ident">cost</span></span>(<span>self, x_t, u_t, t)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The continuous time function that the system seeks to minimize.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; State variables at time t</dd>
+<dt><strong><code>u_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; Control variables at time t</dd>
+<dt><strong><code>t</code></strong></dt>
+<dd>(jnp.ndarray, optional) &ndash; Time parameter</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>cost</code></dt>
+<dd>(float) &ndash; The instantaneous cost <span><span class="MathJax_Preview"> g(x_t,u_t,t) </span><script type="math/tex"> g(x_t,u_t,t) </script></span></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -&gt; float:
+  &#34;&#34;&#34; The continuous time function that the system seeks to minimize.
+
+  Args:
+      x_t: (jnp.ndarray) -- State variables at time t
+      u_t: (jnp.ndarray) -- Control variables at time t
+      t: (jnp.ndarray, optional) -- Time parameter
+  Returns:
+      cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
+  &#34;&#34;&#34;
+  raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn"><code class="name flex">
+<span>def <span class="ident">terminal_cost_fn</span></span>(<span>self, x_T, u_T, T=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The cost function associated to the final state</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x_T</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; Final state</dd>
+<dt><strong><code>u_T</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; Final control</dd>
+<dt><strong><code>T</code></strong></dt>
+<dd>(jnp.ndarray, float) &ndash; The Horizon</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>cost_T</code></dt>
+<dd>(float) &ndash; The terminal cost <span><span class="MathJax_Preview">g_T(x_T,u_T,T</span><script type="math/tex">g_T(x_T,u_T,T</script></span></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -&gt; float:
+  &#34;&#34;&#34; The cost function associated to the final state
+
+  Args:
+      x_T: (jnp.ndarray) -- Final state
+      u_T: (jnp.ndarray) -- Final control
+      T: (jnp.ndarray, float) -- The Horizon
+  Returns:
+      cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
+  &#34;&#34;&#34;
+  return 0</code></pre>
+</details>
+</dd>
+<dt id="myriad.systems.base.FiniteHorizonControlSystem.plot_solution"><code class="name flex">
+<span>def <span class="ident">plot_solution</span></span>(<span>self, x, u)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The plotting tool for the current system</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -&gt; None:
+  &#34;&#34;&#34; The plotting tool for the current system&#34;&#34;&#34;
+  raise NotImplementedError</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="myriad.systems.base.IndirectFHCS"><code class="flex name class">
+<span>class <span class="ident">IndirectFHCS</span></span>
+<span>(</span><span>x_0, x_T, T, bounds, terminal_cost, discrete=False, adj_T=None, guess_a=None, guess_b=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
+Model a problem of the form:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_u \quad &amp;&amp; g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt\\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = f(x,u,t)\\
+&amp; &amp;&amp;x(0)=x_0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_u \quad && g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt\\
+& \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t)\\
+& &&x(0)=x_0
+\end{align} </script></span>
+Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IndirectFHCS(FiniteHorizonControlSystem, ABC):
+  &#34;&#34;&#34;
+    Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
+    Model a problem of the form:
+
+    .. math::
+
+      \\begin{align}
+      &amp; \\min_u \\quad &amp;&amp; g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt\\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = f(x,u,t)\\\\
+      &amp; &amp;&amp;x(0)=x_0
+      \\end{align}
+
+    Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin&#39;s maximum principle
+    &#34;&#34;&#34;
+  adj_T: Optional[jnp.ndarray] = None
+  &#34;&#34;&#34;Adjoint at time T&#34;&#34;&#34;
+  guess_a: Optional[float] = None
+  &#34;&#34;&#34;Initial lower guess for secant method&#34;&#34;&#34;
+  guess_b: Optional[float] = None
+  &#34;&#34;&#34;Initial upper guess for secant method&#34;&#34;&#34;
+
+  def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+              t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34;
+    The adjoint dynamics, given by:
+    $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
+
+    \\( H \\) being the system Hamiltonian
+
+    Args:
+        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+        u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
+        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+    Returns:
+        d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
+    &#34;&#34;&#34;
+    raise NotImplementedError
+
+  def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                             t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+    &#34;&#34;&#34;
+    The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
+    be optimal if they don&#39;t satisfy:
+    $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
+    This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
+     \\(u\\):
+    $$u^* = h(x,t)$$
+
+    Args:
+        adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+        x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
+        t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+    Returns:
+        u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
+    &#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="myriad.systems.lenhart.bacteria.Bacteria" href="lenhart/bacteria.html#myriad.systems.lenhart.bacteria.Bacteria">Bacteria</a></li>
+<li><a title="myriad.systems.lenhart.bear_populations.BearPopulations" href="lenhart/bear_populations.html#myriad.systems.lenhart.bear_populations.BearPopulations">BearPopulations</a></li>
+<li><a title="myriad.systems.lenhart.bioreactor.Bioreactor" href="lenhart/bioreactor.html#myriad.systems.lenhart.bioreactor.Bioreactor">Bioreactor</a></li>
+<li><a title="myriad.systems.lenhart.cancer.Cancer" href="lenhart/cancer.html#myriad.systems.lenhart.cancer.Cancer">Cancer</a></li>
+<li><a title="myriad.systems.lenhart.epidemic_seirn.EpidemicSEIRN" href="lenhart/epidemic_seirn.html#myriad.systems.lenhart.epidemic_seirn.EpidemicSEIRN">EpidemicSEIRN</a></li>
+<li><a title="myriad.systems.lenhart.fish_harvest.FishHarvest" href="lenhart/fish_harvest.html#myriad.systems.lenhart.fish_harvest.FishHarvest">FishHarvest</a></li>
+<li><a title="myriad.systems.lenhart.glucose.Glucose" href="lenhart/glucose.html#myriad.systems.lenhart.glucose.Glucose">Glucose</a></li>
+<li><a title="myriad.systems.lenhart.hiv_treatment.HIVTreatment" href="lenhart/hiv_treatment.html#myriad.systems.lenhart.hiv_treatment.HIVTreatment">HIVTreatment</a></li>
+<li><a title="myriad.systems.lenhart.invasive_plant.InvasivePlant" href="lenhart/invasive_plant.html#myriad.systems.lenhart.invasive_plant.InvasivePlant">InvasivePlant</a></li>
+<li><a title="myriad.systems.lenhart.mold_fungicide.MoldFungicide" href="lenhart/mold_fungicide.html#myriad.systems.lenhart.mold_fungicide.MoldFungicide">MoldFungicide</a></li>
+<li><a title="myriad.systems.lenhart.predator_prey.PredatorPrey" href="lenhart/predator_prey.html#myriad.systems.lenhart.predator_prey.PredatorPrey">PredatorPrey</a></li>
+<li><a title="myriad.systems.lenhart.simple_case.SimpleCase" href="lenhart/simple_case.html#myriad.systems.lenhart.simple_case.SimpleCase">SimpleCase</a></li>
+<li><a title="myriad.systems.lenhart.simple_case_with_bounds.SimpleCaseWithBounds" href="lenhart/simple_case_with_bounds.html#myriad.systems.lenhart.simple_case_with_bounds.SimpleCaseWithBounds">SimpleCaseWithBounds</a></li>
+<li><a title="myriad.systems.lenhart.timber_harvest.TimberHarvest" href="lenhart/timber_harvest.html#myriad.systems.lenhart.timber_harvest.TimberHarvest">TimberHarvest</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="myriad.systems.base.IndirectFHCS.adj_T"><code class="name">var <span class="ident">adj_T</span></code></dt>
+<dd>
+<div class="desc"><p>Adjoint at time T</p></div>
+</dd>
+<dt id="myriad.systems.base.IndirectFHCS.guess_a"><code class="name">var <span class="ident">guess_a</span></code></dt>
+<dd>
+<div class="desc"><p>Initial lower guess for secant method</p></div>
+</dd>
+<dt id="myriad.systems.base.IndirectFHCS.guess_b"><code class="name">var <span class="ident">guess_b</span></code></dt>
+<dd>
+<div class="desc"><p>Initial upper guess for secant method</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="myriad.systems.base.IndirectFHCS.adj_ODE"><code class="name flex">
+<span>def <span class="ident">adj_ODE</span></span>(<span>self, adj_t, x_t, u_t, t)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The adjoint dynamics, given by:
+<span><span class="MathJax_Preview">\lambda '(t) = -\frac{\partial H}{\partial x}</span><script type="math/tex; mode=display">\lambda '(t) = -\frac{\partial H}{\partial x}</script></span></p>
+<p><span><span class="MathJax_Preview"> H </span><script type="math/tex"> H </script></span> being the system Hamiltonian</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adj_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; An array, representing the adjoint variables at various time t</dd>
+<dt><strong><code>x_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; An array, representing the state variables at various time t</dd>
+<dt><strong><code>u_t</code></strong></dt>
+<dd>(jnp.ndarray, optional) &ndash; An array, representing the control variables at various time t</dd>
+<dt><strong><code>t</code></strong></dt>
+<dd>(jnp.ndarray, optional) &ndash; The time array, for time-dependent systems</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>d_adj_t</code></dt>
+<dd>(jnp.ndarray) &ndash; The derivative value of the adjoint variables, <span><span class="MathJax_Preview">\lambda</span><script type="math/tex">\lambda</script></span>, at corresponding time t</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
+            t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+  &#34;&#34;&#34;
+  The adjoint dynamics, given by:
+  $$\\lambda &#39;(t) = -\\frac{\\partial H}{\\partial x}$$
+
+  \\( H \\) being the system Hamiltonian
+
+  Args:
+      adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+      x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
+      u_t: (jnp.ndarray, optional) -- An array, representing the control variables at various time t
+      t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+  Returns:
+      d_adj_t: (jnp.ndarray) -- The derivative value of the adjoint variables, \\(\\lambda\\), at corresponding time t
+  &#34;&#34;&#34;
+  raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="myriad.systems.base.IndirectFHCS.optim_characterization"><code class="name flex">
+<span>def <span class="ident">optim_characterization</span></span>(<span>self, adj_t, x_t, t)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
+be optimal if they don't satisfy:
+<span><span class="MathJax_Preview">\frac{\partial H}{\partial u} = 0 \; \mathrm{at} \; u^*</span><script type="math/tex; mode=display">\frac{\partial H}{\partial u} = 0 \; \mathrm{at} \; u^*</script></span>
+This leads to the following condition, the optimality characterization, on <span><span class="MathJax_Preview">u^*</span><script type="math/tex">u^*</script></span> if <span><span class="MathJax_Preview">H</span><script type="math/tex">H</script></span> is quadratic in
+<span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span>:
+<span><span class="MathJax_Preview">u^* = h(x,t)</span><script type="math/tex; mode=display">u^* = h(x,t)</script></span></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adj_t</code></strong></dt>
+<dd>(jnp.ndarray) &ndash; An array, representing the adjoint variables at various time t</dd>
+<dt><strong><code>x_t</code></strong></dt>
+<dd>(jnp.ndarray, optional) &ndash; An array, representing the state variables at various time t</dd>
+<dt><strong><code>t</code></strong></dt>
+<dd>(jnp.ndarray, optional) &ndash; The time array, for time-dependent systems</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>u_star</code></dt>
+<dd>(jnp.ndarray) &ndash; Control candidates at corresponding time t that meets the above condition</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
+                           t: Optional[jnp.ndarray]) -&gt; jnp.ndarray:
+  &#34;&#34;&#34;
+  The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
+  be optimal if they don&#39;t satisfy:
+  $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
+  This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
+   \\(u\\):
+  $$u^* = h(x,t)$$
+
+  Args:
+      adj_t: (jnp.ndarray) -- An array, representing the adjoint variables at various time t
+      x_t: (jnp.ndarray, optional) -- An array, representing the state variables at various time t
+      t: (jnp.ndarray, optional) -- The time array, for time-dependent systems
+  Returns:
+      u_star: (jnp.ndarray) -- Control candidates at corresponding time t that meets the above condition
+  &#34;&#34;&#34;
+  raise NotImplementedError</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="myriad.systems.base.FiniteHorizonControlSystem" href="#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></b></code>:
+<ul class="hlist">
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.T" href="#myriad.systems.base.FiniteHorizonControlSystem.T">T</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.bounds" href="#myriad.systems.base.FiniteHorizonControlSystem.bounds">bounds</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.cost" href="#myriad.systems.base.FiniteHorizonControlSystem.cost">cost</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.discrete" href="#myriad.systems.base.FiniteHorizonControlSystem.discrete">discrete</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.dynamics" href="#myriad.systems.base.FiniteHorizonControlSystem.dynamics">dynamics</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.plot_solution" href="#myriad.systems.base.FiniteHorizonControlSystem.plot_solution">plot_solution</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost" href="#myriad.systems.base.FiniteHorizonControlSystem.terminal_cost">terminal_cost</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn" href="#myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn">terminal_cost_fn</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.x_0" href="#myriad.systems.base.FiniteHorizonControlSystem.x_0">x_0</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.x_T" href="#myriad.systems.base.FiniteHorizonControlSystem.x_T">x_T</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="myriad.systems" href="index.html">myriad.systems</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="myriad.systems.base.FiniteHorizonControlSystem" href="#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></code></h4>
+<ul class="">
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.dynamics" href="#myriad.systems.base.FiniteHorizonControlSystem.dynamics">dynamics</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.cost" href="#myriad.systems.base.FiniteHorizonControlSystem.cost">cost</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn" href="#myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn">terminal_cost_fn</a></code></li>
+<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.plot_solution" href="#myriad.systems.base.FiniteHorizonControlSystem.plot_solution">plot_solution</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="myriad.systems.base.IndirectFHCS" href="#myriad.systems.base.IndirectFHCS">IndirectFHCS</a></code></h4>
+<ul class="">
+<li><code><a title="myriad.systems.base.IndirectFHCS.adj_ODE" href="#myriad.systems.base.IndirectFHCS.adj_ODE">adj_ODE</a></code></li>
+<li><code><a title="myriad.systems.base.IndirectFHCS.optim_characterization" href="#myriad.systems.base.IndirectFHCS.optim_characterization">optim_characterization</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

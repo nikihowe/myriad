@@ -8,9 +8,9 @@ import gin
 from absl import app
 from absl import flags
 
-from source.config import Config, HParams
-from source.optimizers import get_optimizer
-from source.plotting import plot_result
+from myriad.config import Config, HParams
+from myriad.optimizers import get_optimizer
+from myriad.plotting import plot_result
 
 
 # Prepare experiment settings   # TODO: Use only 1 parsing technique?
@@ -52,7 +52,7 @@ def main(unused_argv):
   np.random.seed(hp.seed)
 
   # Load config, then build system
-  gin_files = ['./source/gin-configs/default.gin']
+  gin_files = ['./myriad/gin-configs/default.gin']
   gin_bindings = FLAGS.gin_bindings
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
