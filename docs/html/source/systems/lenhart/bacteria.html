@@ -43,12 +43,17 @@ class Bacteria(IndirectFHCS):
 
       This environment models the concentration level of a bacteria population that we try to control by providing
       a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
-      a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
-      concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
+      a chemical byproduct by the bacteria that in turn hinders growth. The state ( \\(x\\) ) is the bacteria population
+      concentration, while the control ( \\(u\\) ) is the amount of chemical nutrient added. We are trying to maximize:
 
-        $$\\max_u \\quad Cx(1) - \\int_0^1 u^2(t) dt$$
-        $$\\mathrm{s.t.} \\qquad  x&#39;(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}$$
-        $$x(0)=x_0, \\; A,B,C \\geq 0$$
+      .. math::
+
+        \\begin{align}
+        &amp; \\max_u \\quad &amp;&amp;Cx(1) - \\int_0^1 u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.} \\quad  &amp;&amp;x&#39;(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\\\
+        &amp; &amp;&amp; x(0)=x_0, \\\\
+        &amp; &amp;&amp; A,B,C \\geq 0
+        \\end{align}
       &#34;&#34;&#34;
   def __init__(self, r=1., A=1., B=12., C=1., x_0=1.):
     super().__init__(
@@ -113,13 +118,21 @@ class Bacteria(IndirectFHCS):
 <div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 7, Lab 3)</p>
 <p>This environment models the concentration level of a bacteria population that we try to control by providing
 a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
-a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
-concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:</p>
-<p><span><span class="MathJax_Preview">\max_u \quad Cx(1) - \int_0^1 u^2(t) dt</span><script type="math/tex; mode=display">\max_u \quad Cx(1) - \int_0^1 u^2(t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.} \qquad
-x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}</span><script type="math/tex; mode=display">\mathrm{s.t.} \qquad
-x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0, \; A,B,C \geq 0</span><script type="math/tex; mode=display">x(0)=x_0, \; A,B,C \geq 0</script></span></p></div>
+a chemical byproduct by the bacteria that in turn hinders growth. The state ( <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> ) is the bacteria population
+concentration, while the control ( <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> ) is the amount of chemical nutrient added. We are trying to maximize:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \max_u \quad &amp;&amp;Cx(1) - \int_0^1 u^2(t) dt \\
+&amp; \; \mathrm{s.t.} \quad
+&amp;&amp;x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\
+&amp; &amp;&amp; x(0)=x_0, \\
+&amp; &amp;&amp; A,B,C \geq 0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \max_u \quad &&Cx(1) - \int_0^1 u^2(t) dt \\
+& \; \mathrm{s.t.} \quad
+&&x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\
+& && x(0)=x_0, \\
+& && A,B,C \geq 0
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -129,12 +142,17 @@ x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}</script></span>
 
       This environment models the concentration level of a bacteria population that we try to control by providing
       a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
-      a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
-      concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
+      a chemical byproduct by the bacteria that in turn hinders growth. The state ( \\(x\\) ) is the bacteria population
+      concentration, while the control ( \\(u\\) ) is the amount of chemical nutrient added. We are trying to maximize:
 
-        $$\\max_u \\quad Cx(1) - \\int_0^1 u^2(t) dt$$
-        $$\\mathrm{s.t.} \\qquad  x&#39;(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}$$
-        $$x(0)=x_0, \\; A,B,C \\geq 0$$
+      .. math::
+
+        \\begin{align}
+        &amp; \\max_u \\quad &amp;&amp;Cx(1) - \\int_0^1 u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.} \\quad  &amp;&amp;x&#39;(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\\\
+        &amp; &amp;&amp; x(0)=x_0, \\\\
+        &amp; &amp;&amp; A,B,C \\geq 0
+        \\end{align}
       &#34;&#34;&#34;
   def __init__(self, r=1., A=1., B=12., C=1., x_0=1.):
     super().__init__(

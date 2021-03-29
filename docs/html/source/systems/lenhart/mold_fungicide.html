@@ -39,22 +39,21 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class MoldFungicide(IndirectFHCS):
-  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 6, Lab 2)
     This environment models the concentration level of a mould population that we try to control by
-    applying a fungicide. The state (x) is the population concentration, while the control (u) is
+    applying a fungicide. The state ( \\(x\\) ) is the population concentration, while the control ( \\(u\\) ) is
     the amount of fungicide added. We are trying to minimize:
+
     .. math::
-      \min_u \quad &amp;\int_0^T Ax^2(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = r(M - x(t)) - u(t)x(t) \\
-      &amp; x(0)=x_0 \;
-    :param r: Growth rate
-    :param M: Carrying capacity
-    :param A: Weight parameter, balancing between controlling the population and limiting the fungicide use
-    :param x_0: Initial mold population concentration
-    :param T: Horizon
-    &#34;&#34;&#34;
+
+      \\begin{align}
+      &amp; \\min_u \\quad &amp;&amp;\\int_0^T Ax^2(t) + u^2(t) dt \\\\
+      &amp;\\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = r(M - x(t)) - u(t)x(t) \\\\
+      &amp; &amp;&amp; x(0)=x_0 \\;
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
     super().__init__(
       x_0=jnp.array([x_0]),  # Starting state
       x_T=None,              # Terminal state, if any
@@ -69,8 +68,11 @@ class MoldFungicide(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Growth rate&#34;&#34;&#34;
     self.M = M
+    &#34;&#34;&#34;Carrying capacity&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter, balancing between controlling the population and limiting the fungicide use&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -105,47 +107,39 @@ class MoldFungicide(IndirectFHCS):
 <span>(</span><span>r=0.3, M=10, A=10, x_0=1.0, T=5)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 6, Lab 2)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 6, Lab 2)
 This environment models the concentration level of a mould population that we try to control by
-applying a fungicide. The state (x) is the population concentration, while the control (u) is
-the amount of fungicide added. We are trying to minimize:
-<span><span class="MathJax_Preview"> \min_u \quad &amp;\int_0^T Ax^2(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad &amp; x'(t) = r(M - x(t)) - u(t)x(t) \
-&amp; x(0)=x_0 \; </span><script type="math/tex; mode=display"> \min_u \quad &\int_0^T Ax^2(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad & x'(t) = r(M - x(t)) - u(t)x(t) \
-& x(0)=x_0 \; </script></span>
-:param r: Growth rate
-:param M: Carrying capacity
-:param A: Weight parameter, balancing between controlling the population and limiting the fungicide use
-:param x_0: Initial mold population concentration
-:param T: Horizon</p></div>
+applying a fungicide. The state ( <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> ) is the population concentration, while the control ( <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> ) is
+the amount of fungicide added. We are trying to minimize:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_u \quad &amp;&amp;\int_0^T Ax^2(t) + u^2(t) dt \\
+&amp;\; \mathrm{s.t.}\quad &amp;&amp; x'(t) = r(M - x(t)) - u(t)x(t) \\
+&amp; &amp;&amp; x(0)=x_0 \;
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_u \quad &&\int_0^T Ax^2(t) + u^2(t) dt \\
+&\; \mathrm{s.t.}\quad && x'(t) = r(M - x(t)) - u(t)x(t) \\
+& && x(0)=x_0 \;
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MoldFungicide(IndirectFHCS):
-  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 6, Lab 2)
     This environment models the concentration level of a mould population that we try to control by
-    applying a fungicide. The state (x) is the population concentration, while the control (u) is
+    applying a fungicide. The state ( \\(x\\) ) is the population concentration, while the control ( \\(u\\) ) is
     the amount of fungicide added. We are trying to minimize:
+
     .. math::
-      \min_u \quad &amp;\int_0^T Ax^2(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = r(M - x(t)) - u(t)x(t) \\
-      &amp; x(0)=x_0 \;
-    :param r: Growth rate
-    :param M: Carrying capacity
-    :param A: Weight parameter, balancing between controlling the population and limiting the fungicide use
-    :param x_0: Initial mold population concentration
-    :param T: Horizon
-    &#34;&#34;&#34;
+
+      \\begin{align}
+      &amp; \\min_u \\quad &amp;&amp;\\int_0^T Ax^2(t) + u^2(t) dt \\\\
+      &amp;\\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = r(M - x(t)) - u(t)x(t) \\\\
+      &amp; &amp;&amp; x(0)=x_0 \\;
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
     super().__init__(
       x_0=jnp.array([x_0]),  # Starting state
       x_T=None,              # Terminal state, if any
@@ -160,8 +154,11 @@ the amount of fungicide added. We are trying to minimize:
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Growth rate&#34;&#34;&#34;
     self.M = M
+    &#34;&#34;&#34;Carrying capacity&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter, balancing between controlling the population and limiting the fungicide use&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -187,6 +184,21 @@ the amount of fungicide added. We are trying to minimize:
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.mold_fungicide.MoldFungicide.r"><code class="name">var <span class="ident">r</span></code></dt>
+<dd>
+<div class="desc"><p>Growth rate</p></div>
+</dd>
+<dt id="source.systems.lenhart.mold_fungicide.MoldFungicide.M"><code class="name">var <span class="ident">M</span></code></dt>
+<dd>
+<div class="desc"><p>Carrying capacity</p></div>
+</dd>
+<dt id="source.systems.lenhart.mold_fungicide.MoldFungicide.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter, balancing between controlling the population and limiting the fungicide use</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

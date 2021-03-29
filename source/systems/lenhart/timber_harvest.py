@@ -9,8 +9,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class TimberHarvest(IndirectFHCS):
-  def __init__(self, r=0., k=1., x_0=100., T=5.):
-    """
+  """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 18, Lab 11)
     Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
     The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.
@@ -20,24 +19,22 @@ class TimberHarvest(IndirectFHCS):
     i.e., it jumps from one boundary value to the other.
 
     In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
-    raw timber (x(t)). The harvest percentage over the land is low enough that we can assume that there will always
+    raw timber ( \((x(t)\\) ). The harvest percentage over the land is low enough that we can assume that there will always
     be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
     generating a income proportional to the production at every time t. The operators then have the choice of
-    reinvesting a fraction of this revenue directly into the plant (u(t)), thus stimulating future production.
+    reinvesting a fraction of this revenue directly into the plant ( \\(u(t)\\) ), thus stimulating future production.
     But, this reinvestment comes at the price of losing potential interest over the period T if the
     revenue were saved. The control problem is therefore:
 
     .. math::
 
-      \max_{u} \quad &\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\
-      \mathrm{s.t.}\qquad & x'(t) = kx(t)u(t) ,\; x(0) > 0 \\
-      & 0 \leq u(t) \leq 1
-
-    :param r: Discount rate encouraging investment early on
-    :param k: Return constant of reinvesting into the plant, taking into account cost of labor and land
-    :param x_0: Initial raw timber production
-    :param T: Horizon
-    """
+      \\begin{align}
+      & \\max_{u} \\quad && \\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\\\
+      & \\mathrm{s.t.}\\quad && x'(t) = kx(t)u(t) ,\\; x(0) > 0 \\\\
+      & && 0 \\leq u(t) \\leq 1
+      \\end{align}
+  """
+  def __init__(self, r=0., k=1., x_0=100., T=5.):
     super().__init__(
       x_0=jnp.array([
         x_0,
@@ -54,7 +51,9 @@ class TimberHarvest(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    """Discount rate encouraging investment early on"""
     self.k = k
+    """Return constant of reinvesting into the plant, taking into account cost of labor and land"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
               v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

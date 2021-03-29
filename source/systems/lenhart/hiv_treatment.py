@@ -10,39 +10,29 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class HIVTreatment(IndirectFHCS):
-  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
-               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
-               A=.05, T=20.):
-    """
+  """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 14, Lab 8)
     Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
     infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.
 
-    This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
-    presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
+    This model describes the the evolution of uninfected and infected (respectively \\(x_0\\) and \\(x_1\\) ) CD4⁺T cells, in the
+    presence of free virus particles ( \\(x_2\\) ). The control is the administration of a chemotherapy drug that affects
     the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
-    Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
+    Note that \\(u(t) = 0\\) represents maximum therapy, while \\(u(t) = 1\\) is no therapy. We want to maximize:
 
      .. math::
 
-      \max_u \quad &\int_0^T A x_0(t) - (1-u(t))^2 dt \\
-      \mathrm{s.t.}\qquad & x_0'(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)> 0 \\
-      & x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)> 0 \\
-      & x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)> 0 \\
-      & 0\leq u(t) \leq 1 \; A > 0
-
-    :param s: Parameter varying the rate of generation of new CD4⁺T cells
-    :param m_1: Natural death rate of uninfected CD4⁺T cells
-    :param m_2: Natural death rate of infected CD4⁺T cells
-    :param m_3: Natural death rate of free virus particles
-    :param r: Growth rate of CD4⁺T cells per day
-    :param T_max: Maximum growth of CD4⁺T cells
-    :param k: Rate of infection among CD4⁺T cells from free virus particles
-    :param N: Average number of virus particles produced before the CD4⁺T host cell dies.
-    :param x_0: Initial state (x_0, x_1, x_2)
-    :param A: Weight parameter balancing the cost
-    :param T: Horizon
+      \\begin{align}
+      & \\max_u \\quad && \\int_0^T A x_0(t) - (1-u(t))^2 dt \\\\
+      & \\; \\mathrm{s.t.}\\quad && x_0'(t) = \\frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\\big[1 - \\frac{x_0(t)+x_1(t)}{T_{\\mathrm{max}}} \\big],\\; x_0(0)> 0 \\\\
+      & && x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\\; x_1(0)> 0 \\\\
+      & && x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\\; x_2(0)> 0 \\\\
+      & && 0\\leq u(t) \\leq 1, \\; A > 0
+      \\end{align}
     """
+  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
+               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
+               A=.05, T=20.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -63,14 +53,23 @@ class HIVTreatment(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.s = s
+    """Parameter varying the rate of generation of new CD4⁺T cells"""
     self.m_1 = m_1
+    """Natural death rate of uninfected CD4⁺T cells"""
     self.m_2 = m_2
+    """Natural death rate of infected CD4⁺T cells"""
     self.m_3 = m_3
+    """Natural death rate of free virus particles"""
     self.r = r
+    """Growth rate of CD4⁺T cells per day"""
     self.T_max = T_max
+    """Maximum growth of CD4⁺T cells"""
     self.k = k
+    """Rate of infection among CD4⁺T cells from free virus particles"""
     self.N = N
+    """Average number of virus particles produced before the CD4⁺T host cell dies."""
     self.A = A
+    """Weight parameter balancing the cost"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

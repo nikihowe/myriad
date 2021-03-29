@@ -14,12 +14,17 @@ class Bacteria(IndirectFHCS):
 
       This environment models the concentration level of a bacteria population that we try to control by providing
       a chemical nutrient that stimulates growth. However, the use of the chemical leads to the production of
-      a chemical byproduct by the bacteria that in turn hinders growth. The state (x) is the bacteria population
-      concentration, while the control (u) is the amount of chemical nutrient added. We are trying to maximize:
+      a chemical byproduct by the bacteria that in turn hinders growth. The state ( \\(x\\) ) is the bacteria population
+      concentration, while the control ( \\(u\\) ) is the amount of chemical nutrient added. We are trying to maximize:
 
-        $$\\max_u \\quad Cx(1) - \\int_0^1 u^2(t) dt$$
-        $$\\mathrm{s.t.} \\qquad  x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)}$$
-        $$x(0)=x_0, \\; A,B,C \\geq 0$$
+      .. math::
+
+        \\begin{align}
+        & \\max_u \\quad &&Cx(1) - \\int_0^1 u^2(t) dt \\\\
+        & \\; \\mathrm{s.t.} \\quad  &&x'(t) = rx(t) + Au(t)x(t) - Bu^2(t)e^{-x(t)} \\\\
+        & && x(0)=x_0, \\\\
+        & && A,B,C \\geq 0
+        \\end{align}
       """
   def __init__(self, r=1., A=1., B=12., C=1., x_0=1.):
     super().__init__(

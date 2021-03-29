@@ -39,43 +39,40 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
+      A typical SEIRN (or SEIR) model is considered here in order to find an optimal schedule for a vaccination
+      campaign. Additional information about this model and some of its variations can be found in H. R. Joshi,
+      S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
+      Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
+
+      The model contains multiples state variables; \\(S(t)\\)(i.e. \\(x_0\\)) is the number of individuals susceptible of contracting
+      the disease at time t, while \\(I(t)\\)(i.e. \\(x_2\\)) and \\(R(t)\\)(i.e. \\(x_3\\)), are respectively the number of infectious and recovered
+      (and immune) individuals. \\(E(t)\\)(i.e. \\(x_1\\)) is the number of individuals who have been exposed to the disease and are
+      now in a latent state: they may develop the disease later on and become infectious, or they may simply become
+      immune. \\(N(t)\\)(i.e. \\(x_4\\)) is the total population, i.e., the sum of all other states.
+      The control is the vaccination rate among the susceptible individuals.
+      Finally, note that all individuals are considered to be born susceptible. We want to minimize:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\min_u \\quad &amp;&amp;\\int_0^T A x_0(t) + u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\\; x_0(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_1&#39;(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\\; x_1(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_2&#39;(t) = ex_1(t) - (g+a+d)x_2(t),\\; x_2(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_3&#39;(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\\; x_3(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_4&#39;(t) = (b-d)x_4(t) - ax_2(t),\\; x_4(0)\\geq 0 \\\\
+        &amp; &amp;&amp; 0\\leq u(t) \\leq 0.9, \\; A &gt; 0
+        \\end{align}
+
+
+      Notes
+      -----
+        x_0: The initial state is given here by \\( (S(t_0), E(t_0), I(t_0), R(t_0) ) \\)
+      &#34;&#34;&#34;
   def __init__(self, A=.1, b=.525, d=.5, c=.0001,
          e=.5, g=.1, a=.2, x_0=(1000., 100., 50., 15.), T=20.):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
-    A typical SEIRN (or SEIR) model is considered here in order to find an optimal schedule for a vaccination
-    campaign. Additional information about this model and some of its variations can be found in H. R. Joshi,
-    S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
-    Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
-
-    The model contains multiples state variables; S(t) (x_0) is the number of individuals susceptible of contracting
-    the disease at time t, while I(t) (x_2) and R(t) (x_3) are respectively the number of infectious and recovered
-    (and immune) individuals. E(t) (x_1) is the number of individuals who have been exposed to the disease and are
-    now in a latent state: they may develop the disease later on and become infectious, or they may simply become
-    immune. N(t) (x_4) is the total population, i.e., the sum of all other states.
-    The control is the vaccination rate among the susceptible individuals.
-    Finally, note that all individuals are considered to be born susceptible. We want to minimize:
-
-    .. math::
-
-      \min_u \quad &amp;\int_0^T A x_0(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \\
-      &amp; x_1&#39;(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \\
-      &amp; x_2&#39;(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \\
-      &amp; x_3&#39;(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \\
-      &amp; x_4&#39;(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \\
-      &amp; 0\leq u(t) \leq 0.9 \; A &gt; 0
-
-    :param b: The exponential birth rate of the population
-    :param d: The exponential death rate of the population
-    :param c: The incidence rate of contamination
-    :param e: The rate at which exposed individuals become contagious (1/e is the mean latent period)
-    :param g: The recovery rate among infectious individuals (1/g is the mean infectious period)
-    :param a: The death rate due to the disease
-    :param x_0: The initial state, given by (S(t_0), E(t_0), I(t_0), R(t_0)
-    :param A: Weight parameter balancing between the reduction of the infectious population and the vaccination cost
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -98,12 +95,19 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.b = b
+    &#34;&#34;&#34;The exponential birth rate of the population&#34;&#34;&#34;
     self.d = d
+    &#34;&#34;&#34;The exponential death rate of the population&#34;&#34;&#34;
     self.c = c
+    &#34;&#34;&#34;The incidence rate of contamination&#34;&#34;&#34;
     self.e = e
+    &#34;&#34;&#34;The rate at which exposed individuals become contagious (1/e is the mean latent period)&#34;&#34;&#34;
     self.g = g
+    &#34;&#34;&#34;The recovery rate among infectious individuals (1/g is the mean infectious period)&#34;&#34;&#34;
     self.a = a
+    &#34;The death rate due to the disease&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing between the reduction of the infectious population and the vaccination cost&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -152,88 +156,77 @@ class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
 <span>(</span><span>A=0.1, b=0.525, d=0.5, c=0.0001, e=0.5, g=0.1, a=0.2, x_0=(1000.0, 100.0, 50.0, 15.0), T=20.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
 A typical SEIRN (or SEIR) model is considered here in order to find an optimal schedule for a vaccination
 campaign. Additional information about this model and some of its variations can be found in H. R. Joshi,
 S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
 Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006</p>
-<p>The model contains multiples state variables; S(t) (x_0) is the number of individuals susceptible of contracting
-the disease at time t, while I(t) (x_2) and R(t) (x_3) are respectively the number of infectious and recovered
-(and immune) individuals. E(t) (x_1) is the number of individuals who have been exposed to the disease and are
+<p>The model contains multiples state variables; <span><span class="MathJax_Preview">S(t)</span><script type="math/tex">S(t)</script></span>(i.e. <span><span class="MathJax_Preview">x_0</span><script type="math/tex">x_0</script></span>) is the number of individuals susceptible of contracting
+the disease at time t, while <span><span class="MathJax_Preview">I(t)</span><script type="math/tex">I(t)</script></span>(i.e. <span><span class="MathJax_Preview">x_2</span><script type="math/tex">x_2</script></span>) and <span><span class="MathJax_Preview">R(t)</span><script type="math/tex">R(t)</script></span>(i.e. <span><span class="MathJax_Preview">x_3</span><script type="math/tex">x_3</script></span>), are respectively the number of infectious and recovered
+(and immune) individuals. <span><span class="MathJax_Preview">E(t)</span><script type="math/tex">E(t)</script></span>(i.e. <span><span class="MathJax_Preview">x_1</span><script type="math/tex">x_1</script></span>) is the number of individuals who have been exposed to the disease and are
 now in a latent state: they may develop the disease later on and become infectious, or they may simply become
-immune. N(t) (x_4) is the total population, i.e., the sum of all other states.
+immune. <span><span class="MathJax_Preview">N(t)</span><script type="math/tex">N(t)</script></span>(i.e. <span><span class="MathJax_Preview">x_4</span><script type="math/tex">x_4</script></span>) is the total population, i.e., the sum of all other states.
 The control is the vaccination rate among the susceptible individuals.
 Finally, note that all individuals are considered to be born susceptible. We want to minimize:</p>
-<p><span><span class="MathJax_Preview"> \min_u \quad &amp;\int_0^T A x_0(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad &amp; x_0'(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \
-&amp; x_1'(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \
-&amp; x_2'(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \
-&amp; x_3'(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \
-&amp; x_4'(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \
-&amp; 0\leq u(t) \leq 0.9 \; A &gt; 0 </span><script type="math/tex; mode=display"> \min_u \quad &\int_0^T A x_0(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad & x_0'(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \
-& x_1'(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \
-& x_2'(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \
-& x_3'(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \
-& x_4'(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \
-& 0\leq u(t) \leq 0.9 \; A > 0 </script></span>
-:param b: The exponential birth rate of the population
-:param d: The exponential death rate of the population
-:param c: The incidence rate of contamination
-:param e: The rate at which exposed individuals become contagious (1/e is the mean latent period)
-:param g: The recovery rate among infectious individuals (1/g is the mean infectious period)
-:param a: The death rate due to the disease
-:param x_0: The initial state, given by (S(t_0), E(t_0), I(t_0), R(t_0)
-:param A: Weight parameter balancing between the reduction of the infectious population and the vaccination cost
-:param T: Horizon</p></div>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp;\min_u \quad &amp;&amp;\int_0^T A x_0(t) + u^2(t) dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0'(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \\
+&amp; &amp;&amp; x_1'(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \\
+&amp; &amp;&amp; x_2'(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \\
+&amp; &amp;&amp; x_3'(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \\
+&amp; &amp;&amp; x_4'(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \\
+&amp; &amp;&amp; 0\leq u(t) \leq 0.9, \; A &gt; 0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+&\min_u \quad &&\int_0^T A x_0(t) + u^2(t) dt \\
+& \; \mathrm{s.t.}\quad && x_0'(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \\
+& && x_1'(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \\
+& && x_2'(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \\
+& && x_3'(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \\
+& && x_4'(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \\
+& && 0\leq u(t) \leq 0.9, \; A > 0
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p>x_0: The initial state is given here by <span><span class="MathJax_Preview"> (S(t_0), E(t_0), I(t_0), R(t_0) ) </span><script type="math/tex"> (S(t_0), E(t_0), I(t_0), R(t_0) ) </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EpidemicSEIRN(IndirectFHCS):  # TODO : Add R calculation at the end
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
+      A typical SEIRN (or SEIR) model is considered here in order to find an optimal schedule for a vaccination
+      campaign. Additional information about this model and some of its variations can be found in H. R. Joshi,
+      S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
+      Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
+
+      The model contains multiples state variables; \\(S(t)\\)(i.e. \\(x_0\\)) is the number of individuals susceptible of contracting
+      the disease at time t, while \\(I(t)\\)(i.e. \\(x_2\\)) and \\(R(t)\\)(i.e. \\(x_3\\)), are respectively the number of infectious and recovered
+      (and immune) individuals. \\(E(t)\\)(i.e. \\(x_1\\)) is the number of individuals who have been exposed to the disease and are
+      now in a latent state: they may develop the disease later on and become infectious, or they may simply become
+      immune. \\(N(t)\\)(i.e. \\(x_4\\)) is the total population, i.e., the sum of all other states.
+      The control is the vaccination rate among the susceptible individuals.
+      Finally, note that all individuals are considered to be born susceptible. We want to minimize:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\min_u \\quad &amp;&amp;\\int_0^T A x_0(t) + u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\\; x_0(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_1&#39;(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\\; x_1(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_2&#39;(t) = ex_1(t) - (g+a+d)x_2(t),\\; x_2(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_3&#39;(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\\; x_3(0)\\geq 0 \\\\
+        &amp; &amp;&amp; x_4&#39;(t) = (b-d)x_4(t) - ax_2(t),\\; x_4(0)\\geq 0 \\\\
+        &amp; &amp;&amp; 0\\leq u(t) \\leq 0.9, \\; A &gt; 0
+        \\end{align}
+
+
+      Notes
+      -----
+        x_0: The initial state is given here by \\( (S(t_0), E(t_0), I(t_0), R(t_0) ) \\)
+      &#34;&#34;&#34;
   def __init__(self, A=.1, b=.525, d=.5, c=.0001,
          e=.5, g=.1, a=.2, x_0=(1000., 100., 50., 15.), T=20.):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 13, Lab 7)
-    A typical SEIRN (or SEIR) model is considered here in order to find an optimal schedule for a vaccination
-    campaign. Additional information about this model and some of its variations can be found in H. R. Joshi,
-    S. Lenhart, M. Y. Li, and L. Wang. Optimal control methods applied to disease models. AMS Volume on Mathematical
-    Studies on Human Disease Dynamics Emerging Paradigms and Challenges, 410:187–207, 2006
-
-    The model contains multiples state variables; S(t) (x_0) is the number of individuals susceptible of contracting
-    the disease at time t, while I(t) (x_2) and R(t) (x_3) are respectively the number of infectious and recovered
-    (and immune) individuals. E(t) (x_1) is the number of individuals who have been exposed to the disease and are
-    now in a latent state: they may develop the disease later on and become infectious, or they may simply become
-    immune. N(t) (x_4) is the total population, i.e., the sum of all other states.
-    The control is the vaccination rate among the susceptible individuals.
-    Finally, note that all individuals are considered to be born susceptible. We want to minimize:
-
-    .. math::
-
-      \min_u \quad &amp;\int_0^T A x_0(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = bx_4(t) - dx_0(t) - cx_0(t)x_2(t) - u(t)x_0(t),\; x_0(0)\geq 0 \\
-      &amp; x_1&#39;(t) = cx_0(t)x_2(t) - (e+d)x_1(t),\; x_1(0)\geq 0 \\
-      &amp; x_2&#39;(t) = ex_1(t) - (g+a+d)x_2(t),\; x_2(0)\geq 0 \\
-      &amp; x_3&#39;(t) = gx_2(t) - dx_3(t) + u(t)x_0(t),\; x_3(0)\geq 0 \\
-      &amp; x_4&#39;(t) = (b-d)x_4(t) - ax_2(t),\; x_4(0)\geq 0 \\
-      &amp; 0\leq u(t) \leq 0.9 \; A &gt; 0
-
-    :param b: The exponential birth rate of the population
-    :param d: The exponential death rate of the population
-    :param c: The incidence rate of contamination
-    :param e: The rate at which exposed individuals become contagious (1/e is the mean latent period)
-    :param g: The recovery rate among infectious individuals (1/g is the mean infectious period)
-    :param a: The death rate due to the disease
-    :param x_0: The initial state, given by (S(t_0), E(t_0), I(t_0), R(t_0)
-    :param A: Weight parameter balancing between the reduction of the infectious population and the vaccination cost
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -256,12 +249,19 @@ Finally, note that all individuals are considered to be born susceptible. We wan
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.b = b
+    &#34;&#34;&#34;The exponential birth rate of the population&#34;&#34;&#34;
     self.d = d
+    &#34;&#34;&#34;The exponential death rate of the population&#34;&#34;&#34;
     self.c = c
+    &#34;&#34;&#34;The incidence rate of contamination&#34;&#34;&#34;
     self.e = e
+    &#34;&#34;&#34;The rate at which exposed individuals become contagious (1/e is the mean latent period)&#34;&#34;&#34;
     self.g = g
+    &#34;&#34;&#34;The recovery rate among infectious individuals (1/g is the mean infectious period)&#34;&#34;&#34;
     self.a = a
+    &#34;The death rate due to the disease&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing between the reduction of the infectious population and the vaccination cost&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -301,6 +301,37 @@ Finally, note that all individuals are considered to be born susceptible. We wan
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.b"><code class="name">var <span class="ident">b</span></code></dt>
+<dd>
+<div class="desc"><p>The exponential birth rate of the population</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.d"><code class="name">var <span class="ident">d</span></code></dt>
+<dd>
+<div class="desc"><p>The exponential death rate of the population</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.c"><code class="name">var <span class="ident">c</span></code></dt>
+<dd>
+<div class="desc"><p>The incidence rate of contamination</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.e"><code class="name">var <span class="ident">e</span></code></dt>
+<dd>
+<div class="desc"><p>The rate at which exposed individuals become contagious (1/e is the mean latent period)</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.g"><code class="name">var <span class="ident">g</span></code></dt>
+<dd>
+<div class="desc"><p>The recovery rate among infectious individuals (1/g is the mean infectious period)</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.a"><code class="name">var <span class="ident">a</span></code></dt>
+<dd>
+<div class="desc"><p>The death rate due to the disease</p></div>
+</dd>
+<dt id="source.systems.lenhart.epidemic_seirn.EpidemicSEIRN.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter balancing between the reduction of the infectious population and the vaccination cost</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

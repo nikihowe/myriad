@@ -38,46 +38,42 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class PredatorPrey(IndirectFHCS):
-  def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
-               guess_a=-.52, guess_b=.5, M=1.,
-               x_0=(10., 1., 0.), T=10.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 22, Lab 13)
     The states evolution is base on a standard Lotka-Volterra model.
     This particular environment is inspired from Bean San Goh, George Leitmann, and Thomas L. Vincent.
     Optimal control of a prey-predator system. Mathematical Biosciences, 19, 1974.
 
-    This environment models the evolution of a pest (prey) population (x_0(t)) and a predator population (x_1(t)) in
-    the presence of a pesticide (u(t)) that affects both the pest and predator populations. The objective in mind is
+    This environment models the evolution of a pest (prey) population ( \\(x_0(t)\\) ) and a predator population ( \\(x_1(t) \\)) in
+    the presence of a pesticide ( \\(u(t)\\) ) that affects both the pest and predator populations. The objective in mind is
     to minimize the final pest population, while limiting the usage of the pesticide. Thus:
 
     .. math::
 
-      \min_{u} \quad &amp; x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
-      &amp; x_1&#39;(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
-      &amp; 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
+      \\begin{align}
+      &amp; \\min_{u} \\quad &amp;&amp; x_0(T) + \\frac{A}{2}\\int_0^T u(t)^2 dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\\\
+      &amp; &amp;&amp; x_1&#39;(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\\\
+      &amp; &amp;&amp; 0 \\leq u(t) \\leq M, \\quad \\int_0^T u(t) dt = B
+      \\end{align}
 
     The particularity here is that the total amount of pesticide to be applied is fixed. To take into account this
-    constraint, a virtual state variable (z(t)) is added where:
+    constraint, a virtual state variable ( \\(z(t)\\) ) is added where:
 
     .. math::
 
-      z&#39;(t) = u(t), \; z(0) = 0, \; z(T) = B
+      z&#39;(t) = u(t), \\; z(0) = 0, \\; z(T) = B
 
-    Finally, note that guess_a and guess_b have been carefully chosen in the study cases to allow for fast iteration
+    Finally, note that `guess_a` and `guess_b` have been carefully chosen in the study cases to allow for fast iteration
     and ensure convergence.
 
-    :param d_1: Impact of the pesticide on the pest population
-    :param d_2: Impact of the pesticide on the prey population
-    :param A: Weight parameter balancing the cost
-    :param B: Total amount of pesticide to be applied
-    :param guess_a: Node 2 at which the secant method begins its iteration (Newton&#39;s method)
-    :param guess_b: Node 1 at which the secant method begins its iteration (Newton&#39;s method)
-    :param M: Bound on pesticide application at a given time
-    :param x_0: Initial density of the pest and prey population (x_0, x_1)
-    :param T: Horizon
-    &#34;&#34;&#34;
+    Notes
+    -----
+    x_0: Initial density of the pest and prey population \\( (x_0, x_1) \\)
+  &#34;&#34;&#34;
+  def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
+               guess_a=-.52, guess_b=.5, M=1.,
+               x_0=(10., 1., 0.), T=10.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -98,10 +94,17 @@ class PredatorPrey(IndirectFHCS):
 
     self.adj_T = jnp.array([1, 0, 0])  # Final condition over the adjoint, if any
     self.d_1 = d_1
+    &#34;&#34;&#34;Impact of the pesticide on the pest population&#34;&#34;&#34;
     self.d_2 = d_2
+    &#34;&#34;&#34;Impact of the pesticide on the prey population&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing the cost&#34;&#34;&#34;
     self.guess_a = guess_a
+    &#34;&#34;&#34;Node 2 at which the secant method begins its iteration (Newton&#39;s method)&#34;&#34;&#34;
     self.guess_b = guess_b
+    &#34;&#34;&#34;Node 1 at which the secant method begins its iteration (Newton&#39;s method)&#34;&#34;&#34;
+    self.M = M
+    &#34;&#34;&#34;Bound on pesticide application at a given time&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -154,87 +157,72 @@ class PredatorPrey(IndirectFHCS):
 <span>(</span><span>d_1=0.1, d_2=0.1, A=1.0, B=5.0, guess_a=-0.52, guess_b=0.5, M=1.0, x_0=(10.0, 1.0, 0.0), T=10.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 22, Lab 13)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 22, Lab 13)
 The states evolution is base on a standard Lotka-Volterra model.
 This particular environment is inspired from Bean San Goh, George Leitmann, and Thomas L. Vincent.
 Optimal control of a prey-predator system. Mathematical Biosciences, 19, 1974.</p>
-<p>This environment models the evolution of a pest (prey) population (x_0(t)) and a predator population (x_1(t)) in
-the presence of a pesticide (u(t)) that affects both the pest and predator populations. The objective in mind is
+<p>This environment models the evolution of a pest (prey) population ( <span><span class="MathJax_Preview">x_0(t)</span><script type="math/tex">x_0(t)</script></span> ) and a predator population ( <span><span class="MathJax_Preview">x_1(t) </span><script type="math/tex">x_1(t) </script></span>) in
+the presence of a pesticide ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) that affects both the pest and predator populations. The objective in mind is
 to minimize the final pest population, while limiting the usage of the pesticide. Thus:</p>
-<p><span><span class="MathJax_Preview"> \min_{u} \quad &amp; x_0(T) +
-rac{A}{2}\int_0^T u(t)^2 dt \
-\mathrm{s.t.}\qquad &amp; x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \
-&amp; x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \
-&amp; 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B </span><script type="math/tex; mode=display"> \min_{u} \quad & x_0(T) +
-rac{A}{2}\int_0^T u(t)^2 dt \
-\mathrm{s.t.}\qquad & x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \
-& x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \
-& 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B </script></span>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
+&amp; &amp;&amp; x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
+&amp; &amp;&amp; 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
+& \; \mathrm{s.t.}\quad && x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
+& && x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
+& && 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
+\end{align} </script></span>
 The particularity here is that the total amount of pesticide to be applied is fixed. To take into account this
-constraint, a virtual state variable (z(t)) is added where:</p>
+constraint, a virtual state variable ( <span><span class="MathJax_Preview">z(t)</span><script type="math/tex">z(t)</script></span> ) is added where:</p>
 <p><span><span class="MathJax_Preview"> z'(t) = u(t), \; z(0) = 0, \; z(T) = B </span><script type="math/tex; mode=display"> z'(t) = u(t), \; z(0) = 0, \; z(T) = B </script></span>
-Finally, note that guess_a and guess_b have been carefully chosen in the study cases to allow for fast iteration
+Finally, note that <code>guess_a</code> and <code>guess_b</code> have been carefully chosen in the study cases to allow for fast iteration
 and ensure convergence.</p>
-<p>:param d_1: Impact of the pesticide on the pest population
-:param d_2: Impact of the pesticide on the prey population
-:param A: Weight parameter balancing the cost
-:param B: Total amount of pesticide to be applied
-:param guess_a: Node 2 at which the secant method begins its iteration (Newton's method)
-:param guess_b: Node 1 at which the secant method begins its iteration (Newton's method)
-:param M: Bound on pesticide application at a given time
-:param x_0: Initial density of the pest and prey population (x_0, x_1)
-:param T: Horizon</p></div>
+<h2 id="notes">Notes</h2>
+<p>x_0: Initial density of the pest and prey population <span><span class="MathJax_Preview"> (x_0, x_1) </span><script type="math/tex"> (x_0, x_1) </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PredatorPrey(IndirectFHCS):
-  def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
-               guess_a=-.52, guess_b=.5, M=1.,
-               x_0=(10., 1., 0.), T=10.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 22, Lab 13)
     The states evolution is base on a standard Lotka-Volterra model.
     This particular environment is inspired from Bean San Goh, George Leitmann, and Thomas L. Vincent.
     Optimal control of a prey-predator system. Mathematical Biosciences, 19, 1974.
 
-    This environment models the evolution of a pest (prey) population (x_0(t)) and a predator population (x_1(t)) in
-    the presence of a pesticide (u(t)) that affects both the pest and predator populations. The objective in mind is
+    This environment models the evolution of a pest (prey) population ( \\(x_0(t)\\) ) and a predator population ( \\(x_1(t) \\)) in
+    the presence of a pesticide ( \\(u(t)\\) ) that affects both the pest and predator populations. The objective in mind is
     to minimize the final pest population, while limiting the usage of the pesticide. Thus:
 
     .. math::
 
-      \min_{u} \quad &amp; x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
-      &amp; x_1&#39;(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
-      &amp; 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
+      \\begin{align}
+      &amp; \\min_{u} \\quad &amp;&amp; x_0(T) + \\frac{A}{2}\\int_0^T u(t)^2 dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\\\
+      &amp; &amp;&amp; x_1&#39;(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\\\
+      &amp; &amp;&amp; 0 \\leq u(t) \\leq M, \\quad \\int_0^T u(t) dt = B
+      \\end{align}
 
     The particularity here is that the total amount of pesticide to be applied is fixed. To take into account this
-    constraint, a virtual state variable (z(t)) is added where:
+    constraint, a virtual state variable ( \\(z(t)\\) ) is added where:
 
     .. math::
 
-      z&#39;(t) = u(t), \; z(0) = 0, \; z(T) = B
+      z&#39;(t) = u(t), \\; z(0) = 0, \\; z(T) = B
 
-    Finally, note that guess_a and guess_b have been carefully chosen in the study cases to allow for fast iteration
+    Finally, note that `guess_a` and `guess_b` have been carefully chosen in the study cases to allow for fast iteration
     and ensure convergence.
 
-    :param d_1: Impact of the pesticide on the pest population
-    :param d_2: Impact of the pesticide on the prey population
-    :param A: Weight parameter balancing the cost
-    :param B: Total amount of pesticide to be applied
-    :param guess_a: Node 2 at which the secant method begins its iteration (Newton&#39;s method)
-    :param guess_b: Node 1 at which the secant method begins its iteration (Newton&#39;s method)
-    :param M: Bound on pesticide application at a given time
-    :param x_0: Initial density of the pest and prey population (x_0, x_1)
-    :param T: Horizon
-    &#34;&#34;&#34;
+    Notes
+    -----
+    x_0: Initial density of the pest and prey population \\( (x_0, x_1) \\)
+  &#34;&#34;&#34;
+  def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
+               guess_a=-.52, guess_b=.5, M=1.,
+               x_0=(10., 1., 0.), T=10.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -255,10 +243,17 @@ and ensure convergence.</p>
 
     self.adj_T = jnp.array([1, 0, 0])  # Final condition over the adjoint, if any
     self.d_1 = d_1
+    &#34;&#34;&#34;Impact of the pesticide on the pest population&#34;&#34;&#34;
     self.d_2 = d_2
+    &#34;&#34;&#34;Impact of the pesticide on the prey population&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing the cost&#34;&#34;&#34;
     self.guess_a = guess_a
+    &#34;&#34;&#34;Node 2 at which the secant method begins its iteration (Newton&#39;s method)&#34;&#34;&#34;
     self.guess_b = guess_b
+    &#34;&#34;&#34;Node 1 at which the secant method begins its iteration (Newton&#39;s method)&#34;&#34;&#34;
+    self.M = M
+    &#34;&#34;&#34;Bound on pesticide application at a given time&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -302,6 +297,25 @@ and ensure convergence.</p>
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.predator_prey.PredatorPrey.d_1"><code class="name">var <span class="ident">d_1</span></code></dt>
+<dd>
+<div class="desc"><p>Impact of the pesticide on the pest population</p></div>
+</dd>
+<dt id="source.systems.lenhart.predator_prey.PredatorPrey.d_2"><code class="name">var <span class="ident">d_2</span></code></dt>
+<dd>
+<div class="desc"><p>Impact of the pesticide on the prey population</p></div>
+</dd>
+<dt id="source.systems.lenhart.predator_prey.PredatorPrey.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter balancing the cost</p></div>
+</dd>
+<dt id="source.systems.lenhart.predator_prey.PredatorPrey.M"><code class="name">var <span class="ident">M</span></code></dt>
+<dd>
+<div class="desc"><p>Bound on pesticide application at a given time</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

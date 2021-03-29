@@ -38,8 +38,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class TimberHarvest(IndirectFHCS):
-  def __init__(self, r=0., k=1., x_0=100., T=5.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 18, Lab 11)
     Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
     The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.
@@ -49,24 +48,22 @@ class TimberHarvest(IndirectFHCS):
     i.e., it jumps from one boundary value to the other.
 
     In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
-    raw timber (x(t)). The harvest percentage over the land is low enough that we can assume that there will always
+    raw timber ( \((x(t)\\) ). The harvest percentage over the land is low enough that we can assume that there will always
     be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
     generating a income proportional to the production at every time t. The operators then have the choice of
-    reinvesting a fraction of this revenue directly into the plant (u(t)), thus stimulating future production.
+    reinvesting a fraction of this revenue directly into the plant ( \\(u(t)\\) ), thus stimulating future production.
     But, this reinvestment comes at the price of losing potential interest over the period T if the
     revenue were saved. The control problem is therefore:
 
     .. math::
 
-      \max_{u} \quad &amp;\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = kx(t)u(t) ,\; x(0) &gt; 0 \\
-      &amp; 0 \leq u(t) \leq 1
-
-    :param r: Discount rate encouraging investment early on
-    :param k: Return constant of reinvesting into the plant, taking into account cost of labor and land
-    :param x_0: Initial raw timber production
-    :param T: Horizon
-    &#34;&#34;&#34;
+      \\begin{align}
+      &amp; \\max_{u} \\quad &amp;&amp; \\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\\\
+      &amp; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = kx(t)u(t) ,\\; x(0) &gt; 0 \\\\
+      &amp; &amp;&amp; 0 \\leq u(t) \\leq 1
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, r=0., k=1., x_0=100., T=5.):
     super().__init__(
       x_0=jnp.array([
         x_0,
@@ -83,7 +80,9 @@ class TimberHarvest(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Discount rate encouraging investment early on&#34;&#34;&#34;
     self.k = k
+    &#34;&#34;&#34;Return constant of reinvesting into the plant, taking into account cost of labor and land&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
               v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -127,41 +126,34 @@ class TimberHarvest(IndirectFHCS):
 <span>(</span><span>r=0.0, k=1.0, x_0=100.0, T=5.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 18, Lab 11)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 18, Lab 11)
 Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
 The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.</p>
 <p>This environment is an example of model where the cost is linear with respect to the control.
 It can still be solved by the FBSM algorithm since the optimal control are of the "bang-bang" type,
 i.e., it jumps from one boundary value to the other.</p>
 <p>In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
-raw timber (x(t)). The harvest percentage over the land is low enough that we can assume that there will always
+raw timber ( <span><span class="MathJax_Preview">(x(t)</span><script type="math/tex">(x(t)</script></span> ). The harvest percentage over the land is low enough that we can assume that there will always
 be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
 generating a income proportional to the production at every time t. The operators then have the choice of
-reinvesting a fraction of this revenue directly into the plant (u(t)), thus stimulating future production.
+reinvesting a fraction of this revenue directly into the plant ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ), thus stimulating future production.
 But, this reinvestment comes at the price of losing potential interest over the period T if the
 revenue were saved. The control problem is therefore:</p>
-<p><span><span class="MathJax_Preview"> \max_{u} \quad &amp;\int_0^T e^{-rt}x(t)[1 - u(t)] dt \
-\mathrm{s.t.}\qquad &amp; x'(t) = kx(t)u(t) ,\; x(0) &gt; 0 \
-&amp; 0 \leq u(t) \leq 1 </span><script type="math/tex; mode=display"> \max_{u} \quad &\int_0^T e^{-rt}x(t)[1 - u(t)] dt \
-\mathrm{s.t.}\qquad & x'(t) = kx(t)u(t) ,\; x(0) > 0 \
-& 0 \leq u(t) \leq 1 </script></span>
-:param r: Discount rate encouraging investment early on
-:param k: Return constant of reinvesting into the plant, taking into account cost of labor and land
-:param x_0: Initial raw timber production
-:param T: Horizon</p></div>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \max_{u} \quad &amp;&amp; \int_0^T e^{-rt}x(t)[1 - u(t)] dt \\
+&amp; \mathrm{s.t.}\quad &amp;&amp; x'(t) = kx(t)u(t) ,\; x(0) &gt; 0 \\
+&amp; &amp;&amp; 0 \leq u(t) \leq 1
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \max_{u} \quad && \int_0^T e^{-rt}x(t)[1 - u(t)] dt \\
+& \mathrm{s.t.}\quad && x'(t) = kx(t)u(t) ,\; x(0) > 0 \\
+& && 0 \leq u(t) \leq 1
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TimberHarvest(IndirectFHCS):
-  def __init__(self, r=0., k=1., x_0=100., T=5.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 18, Lab 11)
     Additional information can be found in Morton I. Kamien and Nancy L. Schwartz. Dynamic Optimization:
     The Calculus of Variations and Optimal Control in Economics and Management. North-Holland, New York, 1991.
@@ -171,24 +163,22 @@ revenue were saved. The control problem is therefore:</p>
     i.e., it jumps from one boundary value to the other.
 
     In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
-    raw timber (x(t)). The harvest percentage over the land is low enough that we can assume that there will always
+    raw timber ( \((x(t)\\) ). The harvest percentage over the land is low enough that we can assume that there will always
     be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
     generating a income proportional to the production at every time t. The operators then have the choice of
-    reinvesting a fraction of this revenue directly into the plant (u(t)), thus stimulating future production.
+    reinvesting a fraction of this revenue directly into the plant ( \\(u(t)\\) ), thus stimulating future production.
     But, this reinvestment comes at the price of losing potential interest over the period T if the
     revenue were saved. The control problem is therefore:
 
     .. math::
 
-      \max_{u} \quad &amp;\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = kx(t)u(t) ,\; x(0) &gt; 0 \\
-      &amp; 0 \leq u(t) \leq 1
-
-    :param r: Discount rate encouraging investment early on
-    :param k: Return constant of reinvesting into the plant, taking into account cost of labor and land
-    :param x_0: Initial raw timber production
-    :param T: Horizon
-    &#34;&#34;&#34;
+      \\begin{align}
+      &amp; \\max_{u} \\quad &amp;&amp; \\int_0^T e^{-rt}x(t)[1 - u(t)] dt \\\\
+      &amp; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = kx(t)u(t) ,\\; x(0) &gt; 0 \\\\
+      &amp; &amp;&amp; 0 \\leq u(t) \\leq 1
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, r=0., k=1., x_0=100., T=5.):
     super().__init__(
       x_0=jnp.array([
         x_0,
@@ -205,7 +195,9 @@ revenue were saved. The control problem is therefore:</p>
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Discount rate encouraging investment early on&#34;&#34;&#34;
     self.k = k
+    &#34;&#34;&#34;Return constant of reinvesting into the plant, taking into account cost of labor and land&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
               v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -240,6 +232,17 @@ revenue were saved. The control problem is therefore:</p>
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.timber_harvest.TimberHarvest.r"><code class="name">var <span class="ident">r</span></code></dt>
+<dd>
+<div class="desc"><p>Discount rate encouraging investment early on</p></div>
+</dd>
+<dt id="source.systems.lenhart.timber_harvest.TimberHarvest.k"><code class="name">var <span class="ident">k</span></code></dt>
+<dd>
+<div class="desc"><p>Return constant of reinvesting into the plant, taking into account cost of labor and land</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

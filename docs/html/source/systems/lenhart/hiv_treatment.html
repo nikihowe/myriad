@@ -39,39 +39,29 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class HIVTreatment(IndirectFHCS):
-  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
-               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
-               A=.05, T=20.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 14, Lab 8)
     Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
     infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.
 
-    This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
-    presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
+    This model describes the the evolution of uninfected and infected (respectively \\(x_0\\) and \\(x_1\\) ) CD4⁺T cells, in the
+    presence of free virus particles ( \\(x_2\\) ). The control is the administration of a chemotherapy drug that affects
     the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
-    Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
+    Note that \\(u(t) = 0\\) represents maximum therapy, while \\(u(t) = 1\\) is no therapy. We want to maximize:
 
      .. math::
 
-      \max_u \quad &amp;\int_0^T A x_0(t) - (1-u(t))^2 dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)&gt; 0 \\
-      &amp; x_1&#39;(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)&gt; 0 \\
-      &amp; x_2&#39;(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)&gt; 0 \\
-      &amp; 0\leq u(t) \leq 1 \; A &gt; 0
-
-    :param s: Parameter varying the rate of generation of new CD4⁺T cells
-    :param m_1: Natural death rate of uninfected CD4⁺T cells
-    :param m_2: Natural death rate of infected CD4⁺T cells
-    :param m_3: Natural death rate of free virus particles
-    :param r: Growth rate of CD4⁺T cells per day
-    :param T_max: Maximum growth of CD4⁺T cells
-    :param k: Rate of infection among CD4⁺T cells from free virus particles
-    :param N: Average number of virus particles produced before the CD4⁺T host cell dies.
-    :param x_0: Initial state (x_0, x_1, x_2)
-    :param A: Weight parameter balancing the cost
-    :param T: Horizon
+      \\begin{align}
+      &amp; \\max_u \\quad &amp;&amp; \\int_0^T A x_0(t) - (1-u(t))^2 dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = \\frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\\big[1 - \\frac{x_0(t)+x_1(t)}{T_{\\mathrm{max}}} \\big],\\; x_0(0)&gt; 0 \\\\
+      &amp; &amp;&amp; x_1&#39;(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\\; x_1(0)&gt; 0 \\\\
+      &amp; &amp;&amp; x_2&#39;(t) = Nm_2x_1(t) - m_3x_2(t),\\; x_2(0)&gt; 0 \\\\
+      &amp; &amp;&amp; 0\\leq u(t) \\leq 1, \\; A &gt; 0
+      \\end{align}
     &#34;&#34;&#34;
+  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
+               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
+               A=.05, T=20.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -92,14 +82,23 @@ class HIVTreatment(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.s = s
+    &#34;&#34;&#34;Parameter varying the rate of generation of new CD4⁺T cells&#34;&#34;&#34;
     self.m_1 = m_1
+    &#34;&#34;&#34;Natural death rate of uninfected CD4⁺T cells&#34;&#34;&#34;
     self.m_2 = m_2
+    &#34;&#34;&#34;Natural death rate of infected CD4⁺T cells&#34;&#34;&#34;
     self.m_3 = m_3
+    &#34;&#34;&#34;Natural death rate of free virus particles&#34;&#34;&#34;
     self.r = r
+    &#34;&#34;&#34;Growth rate of CD4⁺T cells per day&#34;&#34;&#34;
     self.T_max = T_max
+    &#34;&#34;&#34;Maximum growth of CD4⁺T cells&#34;&#34;&#34;
     self.k = k
+    &#34;&#34;&#34;Rate of infection among CD4⁺T cells from free virus particles&#34;&#34;&#34;
     self.N = N
+    &#34;&#34;&#34;Average number of virus particles produced before the CD4⁺T host cell dies.&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing the cost&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -147,81 +146,54 @@ class HIVTreatment(IndirectFHCS):
 <span>(</span><span>s=10.0, m_1=0.02, m_2=0.5, m_3=4.4, r=0.03, T_max=1500.0, k=2.4e-05, N=300, x_0=(800.0, 0.04, 1.5), A=0.05, T=20.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 14, Lab 8)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 14, Lab 8)
 Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
 infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.</p>
-<p>This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
-presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
+<p>This model describes the the evolution of uninfected and infected (respectively <span><span class="MathJax_Preview">x_0</span><script type="math/tex">x_0</script></span> and <span><span class="MathJax_Preview">x_1</span><script type="math/tex">x_1</script></span> ) CD4⁺T cells, in the
+presence of free virus particles ( <span><span class="MathJax_Preview">x_2</span><script type="math/tex">x_2</script></span> ). The control is the administration of a chemotherapy drug that affects
 the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
-Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:</p>
-<p><span><span class="MathJax_Preview"> \max_u \quad &amp;\int_0^T A x_0(t) - (1-u(t))^2 dt \
-\mathrm{s.t.}\qquad &amp; x_0'(t) =
-rac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)ig[1 -
-rac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} ig],\; x_0(0)&gt; 0 \
-&amp; x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)&gt; 0 \
-&amp; x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)&gt; 0 \
-&amp; 0\leq u(t) \leq 1 \; A &gt; 0 </span><script type="math/tex; mode=display"> \max_u \quad &\int_0^T A x_0(t) - (1-u(t))^2 dt \
-\mathrm{s.t.}\qquad & x_0'(t) =
-rac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)ig[1 -
-rac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} ig],\; x_0(0)> 0 \
-& x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)> 0 \
-& x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)> 0 \
-& 0\leq u(t) \leq 1 \; A > 0 </script></span>
-:param s: Parameter varying the rate of generation of new CD4⁺T cells
-:param m_1: Natural death rate of uninfected CD4⁺T cells
-:param m_2: Natural death rate of infected CD4⁺T cells
-:param m_3: Natural death rate of free virus particles
-:param r: Growth rate of CD4⁺T cells per day
-:param T_max: Maximum growth of CD4⁺T cells
-:param k: Rate of infection among CD4⁺T cells from free virus particles
-:param N: Average number of virus particles produced before the CD4⁺T host cell dies.
-:param x_0: Initial state (x_0, x_1, x_2)
-:param A: Weight parameter balancing the cost
-:param T: Horizon</p></div>
+Note that <span><span class="MathJax_Preview">u(t) = 0</span><script type="math/tex">u(t) = 0</script></span> represents maximum therapy, while <span><span class="MathJax_Preview">u(t) = 1</span><script type="math/tex">u(t) = 1</script></span> is no therapy. We want to maximize:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \max_u \quad &amp;&amp; \int_0^T A x_0(t) - (1-u(t))^2 dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0'(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)&gt; 0 \\
+&amp; &amp;&amp; x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)&gt; 0 \\
+&amp; &amp;&amp; x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)&gt; 0 \\
+&amp; &amp;&amp; 0\leq u(t) \leq 1, \; A &gt; 0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \max_u \quad && \int_0^T A x_0(t) - (1-u(t))^2 dt \\
+& \; \mathrm{s.t.}\quad && x_0'(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)> 0 \\
+& && x_1'(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)> 0 \\
+& && x_2'(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)> 0 \\
+& && 0\leq u(t) \leq 1, \; A > 0
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HIVTreatment(IndirectFHCS):
-  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
-               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
-               A=.05, T=20.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 14, Lab 8)
     Model adapted from : S. Butler, D. Kirschner, and S. Lenhart. Optimal control of chemotherapy affecting the
     infectivity of HIV. Advances in Mathematical Population Dynamics - Molecules, Cells and Man, 6:557–69, 1997.
 
-    This model describes the the evolution of uninfected and infected (respectively x_0 and x_1) CD4⁺T cells, in the
-    presence of free virus particles (x_2). The control is the administration of a chemotherapy drug that affects
+    This model describes the the evolution of uninfected and infected (respectively \\(x_0\\) and \\(x_1\\) ) CD4⁺T cells, in the
+    presence of free virus particles ( \\(x_2\\) ). The control is the administration of a chemotherapy drug that affects
     the infectivity of the virus. The goal is to maximize the number of uninfected CD4⁺T cells.
-    Note that u(t) = 0 represents maximum therapy, while u(t) = 1 is no therapy. We want to maximize:
+    Note that \\(u(t) = 0\\) represents maximum therapy, while \\(u(t) = 1\\) is no therapy. We want to maximize:
 
      .. math::
 
-      \max_u \quad &amp;\int_0^T A x_0(t) - (1-u(t))^2 dt \\
-      \mathrm{s.t.}\qquad &amp; x_0&#39;(t) = \frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\big[1 - \frac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} \big],\; x_0(0)&gt; 0 \\
-      &amp; x_1&#39;(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\; x_1(0)&gt; 0 \\
-      &amp; x_2&#39;(t) = Nm_2x_1(t) - m_3x_2(t),\; x_2(0)&gt; 0 \\
-      &amp; 0\leq u(t) \leq 1 \; A &gt; 0
-
-    :param s: Parameter varying the rate of generation of new CD4⁺T cells
-    :param m_1: Natural death rate of uninfected CD4⁺T cells
-    :param m_2: Natural death rate of infected CD4⁺T cells
-    :param m_3: Natural death rate of free virus particles
-    :param r: Growth rate of CD4⁺T cells per day
-    :param T_max: Maximum growth of CD4⁺T cells
-    :param k: Rate of infection among CD4⁺T cells from free virus particles
-    :param N: Average number of virus particles produced before the CD4⁺T host cell dies.
-    :param x_0: Initial state (x_0, x_1, x_2)
-    :param A: Weight parameter balancing the cost
-    :param T: Horizon
+      \\begin{align}
+      &amp; \\max_u \\quad &amp;&amp; \\int_0^T A x_0(t) - (1-u(t))^2 dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x_0&#39;(t) = \\frac{s}{1+x_2(t)} - m_1x_0(t) + rx_0(t)\\big[1 - \\frac{x_0(t)+x_1(t)}{T_{\\mathrm{max}}} \\big],\\; x_0(0)&gt; 0 \\\\
+      &amp; &amp;&amp; x_1&#39;(t) = u(t)kx_2(t)x_0(t) - m_2x_1(t),\\; x_1(0)&gt; 0 \\\\
+      &amp; &amp;&amp; x_2&#39;(t) = Nm_2x_1(t) - m_3x_2(t),\\; x_2(0)&gt; 0 \\\\
+      &amp; &amp;&amp; 0\\leq u(t) \\leq 1, \\; A &gt; 0
+      \\end{align}
     &#34;&#34;&#34;
+  def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
+               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
+               A=.05, T=20.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -242,14 +214,23 @@ rac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} ig],\; x_0(0)> 0 \
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.s = s
+    &#34;&#34;&#34;Parameter varying the rate of generation of new CD4⁺T cells&#34;&#34;&#34;
     self.m_1 = m_1
+    &#34;&#34;&#34;Natural death rate of uninfected CD4⁺T cells&#34;&#34;&#34;
     self.m_2 = m_2
+    &#34;&#34;&#34;Natural death rate of infected CD4⁺T cells&#34;&#34;&#34;
     self.m_3 = m_3
+    &#34;&#34;&#34;Natural death rate of free virus particles&#34;&#34;&#34;
     self.r = r
+    &#34;&#34;&#34;Growth rate of CD4⁺T cells per day&#34;&#34;&#34;
     self.T_max = T_max
+    &#34;&#34;&#34;Maximum growth of CD4⁺T cells&#34;&#34;&#34;
     self.k = k
+    &#34;&#34;&#34;Rate of infection among CD4⁺T cells from free virus particles&#34;&#34;&#34;
     self.N = N
+    &#34;&#34;&#34;Average number of virus particles produced before the CD4⁺T host cell dies.&#34;&#34;&#34;
     self.A = A
+    &#34;&#34;&#34;Weight parameter balancing the cost&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -288,6 +269,45 @@ rac{x_0(t)+x_1(t)}{T_{\mathrm{max}}} ig],\; x_0(0)> 0 \
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.s"><code class="name">var <span class="ident">s</span></code></dt>
+<dd>
+<div class="desc"><p>Parameter varying the rate of generation of new CD4⁺T cells</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.m_1"><code class="name">var <span class="ident">m_1</span></code></dt>
+<dd>
+<div class="desc"><p>Natural death rate of uninfected CD4⁺T cells</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.m_2"><code class="name">var <span class="ident">m_2</span></code></dt>
+<dd>
+<div class="desc"><p>Natural death rate of infected CD4⁺T cells</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.m_3"><code class="name">var <span class="ident">m_3</span></code></dt>
+<dd>
+<div class="desc"><p>Natural death rate of free virus particles</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.r"><code class="name">var <span class="ident">r</span></code></dt>
+<dd>
+<div class="desc"><p>Growth rate of CD4⁺T cells per day</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.T_max"><code class="name">var <span class="ident">T_max</span></code></dt>
+<dd>
+<div class="desc"><p>Maximum growth of CD4⁺T cells</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.k"><code class="name">var <span class="ident">k</span></code></dt>
+<dd>
+<div class="desc"><p>Rate of infection among CD4⁺T cells from free virus particles</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.N"><code class="name">var <span class="ident">N</span></code></dt>
+<dd>
+<div class="desc"><p>Average number of virus particles produced before the CD4⁺T host cell dies.</p></div>
+</dd>
+<dt id="source.systems.lenhart.hiv_treatment.HIVTreatment.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter balancing the cost</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

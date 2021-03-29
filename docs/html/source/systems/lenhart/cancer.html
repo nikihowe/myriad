@@ -39,31 +39,27 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class Cancer(IndirectFHCS):
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
+      The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
+      competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
+
+      The tumour is assumed to Gompertzian growth and the model follows a Skipper&#39;s log-kill hypothesis, that is, the
+      cell-kill due to the chemotherapy treatment is proportional to the tumour population.
+
+      This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state ( \\(x\\) ) is the
+      normalized density of the tumour, while the control ( \\(u\\) ) is the strength of the drug used for chemotherapy.
+      We are trying to minimize:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\min_u \\quad &amp;&amp; \\int_0^T ax^2(t) + u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad  &amp;&amp;x&#39;(t) = rx(t)\\ln \\big( \\frac{1}{x(t)} \\big) - u(t)\\delta x(t) \\\\
+        &amp; &amp;&amp; x(0)=x_0, \\; u(t) \\geq 0
+        \\end{align}
+      &#34;&#34;&#34;
   def __init__(self, r=0.3, a=3., delta=0.45, x_0=0.975, T=20):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
-    The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
-    competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
-
-    The tumour is assumed to Gompertzian growth and the model follows a Skipper&#39;s log-kill hypothesis, that is, the
-    cell-kill due to the chemotherapy treatment is proportional to the tumour population.
-
-    This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state (x) is the
-    normalized density of the tumour, while the control (u) is the strength of the drug used for chemotherapy.
-    We are trying to minimize:
-
-    .. math::
-
-      \min_u \quad &amp;\int_0^T ax^2(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
-      &amp; x(0)=x_0, \; u(t) \geq 0
-
-    :param r: Growth rate of the tumour
-    :param a: Positive weight parameter
-    :param delta: Magnitude of the dose administered
-    :param x_0: Initial normalized density of the tumour
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -78,8 +74,11 @@ class Cancer(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Growth rate of the tumour&#34;&#34;&#34;
     self.a = a
+    &#34;&#34;&#34;Positive weight parameter&#34;&#34;&#34;
     self.delta = delta
+    &#34;&#34;&#34;Magnitude of the dose administered&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -113,62 +112,51 @@ class Cancer(IndirectFHCS):
 <span>(</span><span>r=0.3, a=3.0, delta=0.45, x_0=0.975, T=20)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
 The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
 competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.</p>
 <p>The tumour is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
 cell-kill due to the chemotherapy treatment is proportional to the tumour population.</p>
-<p>This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state (x) is the
-normalized density of the tumour, while the control (u) is the strength of the drug used for chemotherapy.
+<p>This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state ( <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> ) is the
+normalized density of the tumour, while the control ( <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> ) is the strength of the drug used for chemotherapy.
 We are trying to minimize:</p>
-<p><span><span class="MathJax_Preview"> \min_u \quad &amp;\int_0^T ax^2(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad &amp; x'(t) = rx(t)\ln ig(
-rac{1}{x(t)} ig) - u(t)\delta x(t) \
-&amp; x(0)=x_0, \; u(t) \geq 0 </span><script type="math/tex; mode=display"> \min_u \quad &\int_0^T ax^2(t) + u^2(t) dt \
-\mathrm{s.t.}\qquad & x'(t) = rx(t)\ln ig(
-rac{1}{x(t)} ig) - u(t)\delta x(t) \
-& x(0)=x_0, \; u(t) \geq 0 </script></span>
-:param r: Growth rate of the tumour
-:param a: Positive weight parameter
-:param delta: Magnitude of the dose administered
-:param x_0: Initial normalized density of the tumour
-:param T: Horizon</p></div>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp;\min_u \quad &amp;&amp; \int_0^T ax^2(t) + u^2(t) dt \\
+&amp; \; \mathrm{s.t.}\quad
+&amp;&amp;x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
+&amp; &amp;&amp; x(0)=x_0, \; u(t) \geq 0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+&\min_u \quad && \int_0^T ax^2(t) + u^2(t) dt \\
+& \; \mathrm{s.t.}\quad
+&&x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
+& && x(0)=x_0, \; u(t) \geq 0
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Cancer(IndirectFHCS):
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
+      The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
+      competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
+
+      The tumour is assumed to Gompertzian growth and the model follows a Skipper&#39;s log-kill hypothesis, that is, the
+      cell-kill due to the chemotherapy treatment is proportional to the tumour population.
+
+      This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state ( \\(x\\) ) is the
+      normalized density of the tumour, while the control ( \\(u\\) ) is the strength of the drug used for chemotherapy.
+      We are trying to minimize:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\min_u \\quad &amp;&amp; \\int_0^T ax^2(t) + u^2(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad  &amp;&amp;x&#39;(t) = rx(t)\\ln \\big( \\frac{1}{x(t)} \\big) - u(t)\\delta x(t) \\\\
+        &amp; &amp;&amp; x(0)=x_0, \\; u(t) \\geq 0
+        \\end{align}
+      &#34;&#34;&#34;
   def __init__(self, r=0.3, a=3., delta=0.45, x_0=0.975, T=20):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
-    The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
-    competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.
-
-    The tumour is assumed to Gompertzian growth and the model follows a Skipper&#39;s log-kill hypothesis, that is, the
-    cell-kill due to the chemotherapy treatment is proportional to the tumour population.
-
-    This environment models the normalized density of a cancerous tumour undergoing chemotherapy. The state (x) is the
-    normalized density of the tumour, while the control (u) is the strength of the drug used for chemotherapy.
-    We are trying to minimize:
-
-    .. math::
-
-      \min_u \quad &amp;\int_0^T ax^2(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
-      &amp; x(0)=x_0, \; u(t) \geq 0
-
-    :param r: Growth rate of the tumour
-    :param a: Positive weight parameter
-    :param delta: Magnitude of the dose administered
-    :param x_0: Initial normalized density of the tumour
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -183,8 +171,11 @@ rac{1}{x(t)} ig) - u(t)\delta x(t) \
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    &#34;&#34;&#34;Growth rate of the tumour&#34;&#34;&#34;
     self.a = a
+    &#34;&#34;&#34;Positive weight parameter&#34;&#34;&#34;
     self.delta = delta
+    &#34;&#34;&#34;Magnitude of the dose administered&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -209,6 +200,21 @@ rac{1}{x(t)} ig) - u(t)\delta x(t) \
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.cancer.Cancer.r"><code class="name">var <span class="ident">r</span></code></dt>
+<dd>
+<div class="desc"><p>Growth rate of the tumour</p></div>
+</dd>
+<dt id="source.systems.lenhart.cancer.Cancer.a"><code class="name">var <span class="ident">a</span></code></dt>
+<dd>
+<div class="desc"><p>Positive weight parameter</p></div>
+</dd>
+<dt id="source.systems.lenhart.cancer.Cancer.delta"><code class="name">var <span class="ident">delta</span></code></dt>
+<dd>
+<div class="desc"><p>Magnitude of the dose administered</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

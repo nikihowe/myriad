@@ -10,22 +10,21 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class MoldFungicide(IndirectFHCS):
-  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
-    """
+  """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 6, Lab 2)
     This environment models the concentration level of a mould population that we try to control by
-    applying a fungicide. The state (x) is the population concentration, while the control (u) is
+    applying a fungicide. The state ( \\(x\\) ) is the population concentration, while the control ( \\(u\\) ) is
     the amount of fungicide added. We are trying to minimize:
+
     .. math::
-      \min_u \quad &\int_0^T Ax^2(t) + u^2(t) dt \\
-      \mathrm{s.t.}\qquad & x'(t) = r(M - x(t)) - u(t)x(t) \\
-      & x(0)=x_0 \;
-    :param r: Growth rate
-    :param M: Carrying capacity
-    :param A: Weight parameter, balancing between controlling the population and limiting the fungicide use
-    :param x_0: Initial mold population concentration
-    :param T: Horizon
-    """
+
+      \\begin{align}
+      & \\min_u \\quad &&\\int_0^T Ax^2(t) + u^2(t) dt \\\\
+      &\\; \\mathrm{s.t.}\\quad && x'(t) = r(M - x(t)) - u(t)x(t) \\\\
+      & && x(0)=x_0 \\;
+      \\end{align}
+  """
+  def __init__(self, r=0.3, M=10, A=10, x_0=1.0, T=5):
     super().__init__(
       x_0=jnp.array([x_0]),  # Starting state
       x_T=None,              # Terminal state, if any
@@ -40,8 +39,11 @@ class MoldFungicide(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.r = r
+    """Growth rate"""
     self.M = M
+    """Carrying capacity"""
     self.A = A
+    """Weight parameter, balancing between controlling the population and limiting the fungicide use"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
          v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

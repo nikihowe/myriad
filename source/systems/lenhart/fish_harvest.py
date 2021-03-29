@@ -10,31 +10,26 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class FishHarvest(IndirectFHCS):
+  """
+  Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 11, Lab 6)
+  The model was was adapted from Wayne M. Getz. Optimal control and principles in population management.
+  Proceedings of Symposia in Applied Mathematics, 30:63–82, 1984.
+
+  This environment models the population level (scaled) of a fish population to be harvested, which was
+  introduced into a fishery of some kind (so the initial level of population is known). The time before harvesting
+  is too small for reproduction to occur, but the average mass of the fish will grow over time following
+  \\(\\frac{kt}{t+1}\\). The state ( \\(x\\) ) is the population level, while the control ( \\(u\\) ) is the harvest rate.
+  We are trying to maximize:
+
+  .. math::
+
+    \\begin{align}
+    & \\max_u \\quad && \\int_0^T A \\frac{kt}{t+1}x(t)u(t) - u^2(t) dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && x'(t) = -(m+u(t)) x(t) \\\\
+    & && x(0)=x_0, \\; 0\\leq u(t) \\leq M, \\; A > 0
+    \\end{align}
+  """
   def __init__(self, A=5., k=10., m=.2, M=1., x_0=.4, T=10.):
-    """
-    Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 11, Lab 6)
-    The model was was adapted from Wayne M. Getz. Optimal control and principles in population management.
-    Proceedings of Symposia in Applied Mathematics, 30:63–82, 1984.
-
-    This environment models the population level (scaled) of a fish population to be harvested, which was
-    introduced into a fishery of some kind (so the initial level of population is known). The time before harvesting
-    is too small for reproduction to occur, but the average mass of the fish will grow over time following
-    :math:`\frac{kt}{t+1}`. The state (x) is the population level, while the control (u) is the harvest rate.
-    We are trying to maximize:
-
-    .. math::
-
-      \max_u \quad &\int_0^T A \frac{kt}{t+1}x(t)u(t) - u^2(t) dt \\
-      \mathrm{s.t.}\qquad & x'(t) = -(m+u(t)) x(t) \\
-      & x(0)=x_0, \; 0\leq u(t) \leq M \; A > 0
-
-    :param A: Nonnegative weight parameter
-    :param k: Maximum mass of the fish species
-    :param m: Natural death rate of the fish
-    :param M: Upper bound on harvesting that may represent physical limitations
-    :param x_0: Initial fish population level
-    :param T: Horizon
-    """
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -49,9 +44,13 @@ class FishHarvest(IndirectFHCS):
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.A = A
+    """Nonnegative weight parameter"""
     self.k = k
+    """Maximum mass of the fish species"""
     self.m = m
+    """Natural death rate of the fish"""
     self.M = M
+    """Upper bound on harvesting that may represent physical limitations"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

@@ -17,17 +17,21 @@ class BearPopulations(IndirectFHCS):
 
       The model represents the metapopulation of black bears, i.e. a population consisting of multiple local
       populations, which can interact with each other. In this particular scenario, the author models the
-      bear population density in a park (protected) area (x_0), a forest area (x_1) and a urban area (x_2). Natural
-      reproduction happens only inside the park and forest area, and the goal is to limit the bear population that
-      migrates to the urban area.
+      bear population density in a park (protected) area ( \\(x_0\\)), a forest area ( \\(x_1\\)) and a urban area
+      ( \\(x_2\\)). Natural reproduction happens only inside the park and forest area, and the goal is to limit the bear
+      population that migrates to the urban area.
       The control is a harvesting rate (hunting) that occurs inside the forest area and, with bigger cost, in the
       park area. The goal is thus to minimize:
 
-      $$\\min_{u_p,u_f} \\quad \\int_0^T x_2(t) + c_p u_p(t)^2 + c_f u_f(t)^2  dt$$
-      $$\\mathrm{s.t.}\\qquad x_0'(t) = rx_0(t) - \\frac{r}{K}x_0(t)^2 + \\frac{m_f r}{K}\\big( 1 - \\frac{x_0(t)}{K} \\big)x_1(t)^2 - u_p(t)x_0(t),\\; x_0(0)\\geq 0$$
-      $$x_1'(t) = rx_1(t) - \\frac{r}{K}x_1(t)^2 + \\frac{m_p r}{K}\\big( 1 - \\frac{x_1(t)}{K} \\big)x_0(t)^2 - u_f(t)x_1(t),\\; x_1(0)\\geq 0$$
-      $$x_2'(t) = r(1-m_p)\\frac{x_0(t)^2}{K} + r(1-m_f)\\frac{x_1(t)^2}{K} + \\frac{m_f r}{K^2}x_0(t)x_1(t)^2 + \\frac{m_p r}{K^2}x_0(t)^2x_1(t)^,\\; x_2(0)\\geq 0$$
-      $$0\\leq u_p(t) \\leq 1, \\; 0\\leq u_f(t) \\leq 1$$
+      .. math::
+
+        \\begin{align}
+        &\\min_{u_p,u_f} \\quad &&\\int_0^T x_2(t) + c_p u_p(t)^2 + c_f u_f(t)^2  dt \\\\
+        & \\; \\mathrm{s.t.}\\quad && x_0'(t) = rx_0(t) - \\frac{r}{K}x_0(t)^2 + \\frac{m_f r}{K}\\big( 1 - \\frac{x_0(t)}{K} \\big)x_1(t)^2 - u_p(t)x_0(t),\\; x_0(0)\\geq 0 \\\\
+        & && x_1'(t) = rx_1(t) - \\frac{r}{K}x_1(t)^2 + \\frac{m_p r}{K}\\big( 1 - \\frac{x_1(t)}{K} \\big)x_0(t)^2 - u_f(t)x_1(t),\\; x_1(0)\\geq 0 \\\\
+        & && x_2'(t) = r(1-m_p)\\frac{x_0(t)^2}{K} + r(1-m_f)\\frac{x_1(t)^2}{K} + \\frac{m_f r}{K^2}x_0(t)x_1(t)^2 + \\frac{m_p r}{K^2}x_0(t)^2x_1(t)^,\\; x_2(0)\\geq 0 \\\\
+        & && 0\\leq u_p(t) \\leq 1, \\; 0\\leq u_f(t) \\leq 1
+        \\end{align}
       """
   def __init__(self, r=.1, K=.75, m_p=.5, m_f=.5, c_p=10_000,
                c_f=10, x_0=(.4, .2, 0.), T=25):

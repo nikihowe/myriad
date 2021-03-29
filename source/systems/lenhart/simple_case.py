@@ -10,23 +10,19 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class SimpleCase(IndirectFHCS):
-  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
-    """
+  """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 5, Lab 1)
     A simple introductory environment example of the form:
 
     .. math::
 
-      \max_u \quad &\int_0^1 Ax(t) - Bu^2(t) dt \\
-      \mathrm{s.t.}\qquad & x'(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
-      & x(0)=x_0>-2, \; A \geq 0, \; B > 0
-
-    :param A: Weight parameter
-    :param B: Weight parameter
-    :param C: Weight parameter
-    :param x_0: Initial state
-    :param T: Horizon
-    """
+      \\begin{align}
+      & \\max_u \\quad && \\int_0^1 Ax(t) - Bu^2(t) dt \\\\
+      & \\; \\mathrm{s.t.}\\quad && x'(t) = -\\frac{1}{2}x^2(t) + Cu(t) \\\\
+      & && x(0)=x_0>-2, \\; A \\geq 0, \\; B > 0
+      \\end{align}
+  """
+  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -40,8 +36,11 @@ class SimpleCase(IndirectFHCS):
     )
 
     self.A = A
+    """Weight parameter"""
     self.B = B
+    """Weight parameter"""
     self.C = C
+    """Weight parameter"""
     self.adj_T = None  # Final condition over the adjoint, if any
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],

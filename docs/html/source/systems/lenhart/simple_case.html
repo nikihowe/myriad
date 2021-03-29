@@ -39,23 +39,19 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class SimpleCase(IndirectFHCS):
-  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 5, Lab 1)
     A simple introductory environment example of the form:
 
     .. math::
 
-      \max_u \quad &amp;\int_0^1 Ax(t) - Bu^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
-      &amp; x(0)=x_0&gt;-2, \; A \geq 0, \; B &gt; 0
-
-    :param A: Weight parameter
-    :param B: Weight parameter
-    :param C: Weight parameter
-    :param x_0: Initial state
-    :param T: Horizon
-    &#34;&#34;&#34;
+      \\begin{align}
+      &amp; \\max_u \\quad &amp;&amp; \\int_0^1 Ax(t) - Bu^2(t) dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = -\\frac{1}{2}x^2(t) + Cu(t) \\\\
+      &amp; &amp;&amp; x(0)=x_0&gt;-2, \\; A \\geq 0, \\; B &gt; 0
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -69,8 +65,11 @@ class SimpleCase(IndirectFHCS):
     )
 
     self.A = A
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.B = B
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.C = C
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.adj_T = None  # Final condition over the adjoint, if any
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
@@ -106,46 +105,35 @@ class SimpleCase(IndirectFHCS):
 <span>(</span><span>A=1.0, B=1.0, C=4.0, x_0=1.0, T=1.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 5, Lab 1)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 5, Lab 1)
 A simple introductory environment example of the form:</p>
-<p><span><span class="MathJax_Preview"> \max_u \quad &amp;\int_0^1 Ax(t) - Bu^2(t) dt \
-\mathrm{s.t.}\qquad &amp; x'(t) = -rac{1}{2}x^2(t) + Cu(t) \
-&amp; x(0)=x_0&gt;-2, \; A \geq 0, \; B &gt; 0 </span><script type="math/tex; mode=display"> \max_u \quad &\int_0^1 Ax(t) - Bu^2(t) dt \
-\mathrm{s.t.}\qquad & x'(t) = -rac{1}{2}x^2(t) + Cu(t) \
-& x(0)=x_0>-2, \; A \geq 0, \; B > 0 </script></span>
-:param A: Weight parameter
-:param B: Weight parameter
-:param C: Weight parameter
-:param x_0: Initial state
-:param T: Horizon</p></div>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \max_u \quad &amp;&amp; \int_0^1 Ax(t) - Bu^2(t) dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
+&amp; &amp;&amp; x(0)=x_0&gt;-2, \; A \geq 0, \; B &gt; 0
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \max_u \quad && \int_0^1 Ax(t) - Bu^2(t) dt \\
+& \; \mathrm{s.t.}\quad && x'(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
+& && x(0)=x_0>-2, \; A \geq 0, \; B > 0
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SimpleCase(IndirectFHCS):
-  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
     Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 5, Lab 1)
     A simple introductory environment example of the form:
 
     .. math::
 
-      \max_u \quad &amp;\int_0^1 Ax(t) - Bu^2(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = -\frac{1}{2}x^2(t) + Cu(t) \\
-      &amp; x(0)=x_0&gt;-2, \; A \geq 0, \; B &gt; 0
-
-    :param A: Weight parameter
-    :param B: Weight parameter
-    :param C: Weight parameter
-    :param x_0: Initial state
-    :param T: Horizon
-    &#34;&#34;&#34;
+      \\begin{align}
+      &amp; \\max_u \\quad &amp;&amp; \\int_0^1 Ax(t) - Bu^2(t) dt \\\\
+      &amp; \\; \\mathrm{s.t.}\\quad &amp;&amp; x&#39;(t) = -\\frac{1}{2}x^2(t) + Cu(t) \\\\
+      &amp; &amp;&amp; x(0)=x_0&gt;-2, \\; A \\geq 0, \\; B &gt; 0
+      \\end{align}
+  &#34;&#34;&#34;
+  def __init__(self, A=1., B=1., C=4., x_0=1., T=1.):
     super().__init__(
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
@@ -159,8 +147,11 @@ A simple introductory environment example of the form:</p>
     )
 
     self.A = A
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.B = B
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.C = C
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.adj_T = None  # Final condition over the adjoint, if any
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
@@ -187,6 +178,21 @@ A simple introductory environment example of the form:</p>
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.simple_case.SimpleCase.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter</p></div>
+</dd>
+<dt id="source.systems.lenhart.simple_case.SimpleCase.B"><code class="name">var <span class="ident">B</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter</p></div>
+</dd>
+<dt id="source.systems.lenhart.simple_case.SimpleCase.C"><code class="name">var <span class="ident">C</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:

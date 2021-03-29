@@ -9,9 +9,7 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class InvasivePlant(IndirectFHCS):
-  def __init__(self, B=1., k=1., eps=.01,
-               x_0=(.5, 1., 1.5, 2., 10.), T=10.):
-    """
+  """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 24, Lab 14)
     This problem was first look at in M. E. Moody and R. N. Mack. Controlling the spread of plant invasions:
     the importance of nascent foci. Journal of Applied Ecology, 25:1009–21, 1988.
@@ -23,24 +21,22 @@ class InvasivePlant(IndirectFHCS):
     so that the state terminal cost term is linear instead of quadratic. Obviously, the optimal solutions are
     different from the original problem, but the model behavior is similar.
 
-    In this environment, we look at the growth of an invasive species that has a main focus population (x_i) and
-    4 smaller satellite populations (x_{i\neq j}. The area occupied by the different population are assumed to be
+    In this environment, we look at the growth of an invasive species that has a main focus population ( \\(x_i\\) ) and
+    4 smaller satellite populations ( \\(x_{i\\neq j}\\) ). The area occupied by the different population are assumed to be
     circular, with a growth that can be represented via the total radius of the population area. Annual interventions
-    are made after the growth period, removing a ratio of the population radius (u_{j,t}). Since the interventions are
+    are made after the growth period, removing a ratio of the population radius ( \\(u_{j,t}\\) ). Since the interventions are
     annual, we are in a discrete time model. We aim to:
 
     .. math::
 
-      \min_{u} \quad &\sum_{j=0}^4 \bigg[x_{j,T} + B\sum_{t=0}^{T-1} u_{j,t}^2 \bigg] \\
-      \mathrm{s.t.}\qquad & x_{j,t+1} = \bigg( x_{j,t} + \frac{k x_{j,t}}{\epsilon + x_{j,t}}\bigg) (1-u_{j,t}) ,\; x_{j,0} = \rho_j \\
-      & 0 \leq u_{j,t} \leq 1
-
-    :param B: Positive weight parameter
-    :param k: Spread rate of the population
-    :param eps: Small constant, used to scale the spread by :math:`\frac{r}{\epsilon+r}` so eradication is possible
-    :param x_0: Initial radius of the different populations
-    :param T: Horizon
+      \\begin{align}
+      & \\min_{u} \\quad &&\\sum_{j=0}^4 \\bigg[x_{j,T} + B\\sum_{t=0}^{T-1} u_{j,t}^2 \\bigg] \\\\
+      & \\; \\mathrm{s.t.}\\quad && x_{j,t+1} = \\bigg( x_{j,t} + \\frac{k x_{j,t}}{\\epsilon + x_{j,t}}\\bigg) (1-u_{j,t}) ,\\; x_{j,0} = \\rho_j \\\\
+      & && 0 \\leq u_{j,t} \\leq 1
+      \\end{align}
     """
+  def __init__(self, B=1., k=1., eps=.01,
+               x_0=(.5, 1., 1.5, 2., 10.), T=10.):
     super().__init__(
       x_0=jnp.array(x_0),    # Starting state
       x_T=None,         # Terminal state, if any
@@ -63,8 +59,11 @@ class InvasivePlant(IndirectFHCS):
 
     self.adj_T = jnp.ones(5)  # Final condition over the adjoint, if any
     self.B = B
+    """Positive weight parameter"""
     self.k = k
+    """Spread rate of the population"""
     self.eps = eps
+    """Small constant, used to scale the spread by \\(\\frac{r}{\\epsilon+r}\\) so eradication is possible"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:

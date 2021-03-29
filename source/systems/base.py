@@ -9,16 +9,21 @@ import jax.numpy as jnp
 class FiniteHorizonControlSystem(object):
   """
   Base class for defining control problem under a finite horizon. Model a problem of the form:
-  $$\\min_u \\quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt$$
-  $$\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)$$
-  $$x(0)=x_0$$
+
+  .. math::
+
+    \\begin{align}
+    &\\min_u \\quad &&g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && x'(t) = f(x,u,t) \\\\
+    & && x(0)=x_0
+    \\end{align}
   """
   x_0: jnp.ndarray
-  """ state at time 0"""
+  """ State at time 0"""
   x_T: Optional[jnp.ndarray]
-  """state at time T"""
+  """State at time T"""
   T: float
-  """duration of trajectory"""
+  """Duration of trajectory"""
   bounds: jnp.ndarray
   """State and control bounds"""
   terminal_cost: bool
@@ -37,7 +42,7 @@ class FiniteHorizonControlSystem(object):
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
     """ The set of equations defining the dynamics of the system. In continuous system, return the vector fields
      of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
-     $$\\dot{x} = f(x,u,t)$$
+     $$x'(t) = f(x,u,t)$$
 
     Args:
         x_t: state variables at time t
@@ -81,24 +86,29 @@ class IndirectFHCS(FiniteHorizonControlSystem, ABC):
   """
     Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
     Model a problem of the form:
-    $$\\min_u \\quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt$$
-    $$\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)$$
-    $$x(0)=x_0$$
+
+    .. math::
+
+      \\begin{align}
+      & \\min_u \\quad && g_T(x_T,u_T,T) + \\int_0^T g(x,u,t) dt\\\\
+      & \\; \\mathrm{s.t.}\\quad && x'(t) = f(x,u,t)\\\\
+      & &&x(0)=x_0
+      \\end{align}
 
     Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle
     """
   adj_T: Optional[jnp.ndarray] = None
-  """adjoint at time T"""
+  """Adjoint at time T"""
   guess_a: Optional[float] = None
-  """initial lower guess for secant method"""
+  """Initial lower guess for secant method"""
   guess_b: Optional[float] = None
-  """initial upper guess for secant method"""
+  """Initial upper guess for secant method"""
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
               t: Optional[jnp.ndarray]) -> jnp.ndarray:
     """
     The adjoint dynamics, given by:
-    $$\\dot{\\lambda} = -\\frac{\\partial H}{\\partial x}$$
+    $$\\lambda '(t) = -\\frac{\\partial H}{\\partial x}$$
 
     \\( H \\) being the system Hamiltonian
 
@@ -118,6 +128,9 @@ class IndirectFHCS(FiniteHorizonControlSystem, ABC):
     The optimality characterization of the controls w/r to the state and adjoint variables. That is, the controls cannot
     be optimal if they don't satisfy:
     $$\\frac{\\partial H}{\\partial u} = 0 \\; \\mathrm{at} \\; u^*$$
+    This leads to the following condition, the optimality characterization, on \\(u^*\\) if \\(H\\) is quadratic in
+     \\(u\\):
+    $$u^* = h(x,t)$$
 
     Args:
         adj_t: adjoint variables at time t

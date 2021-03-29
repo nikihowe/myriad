@@ -10,6 +10,7 @@ cython
 ipopt~=0.2.0
 gin-config
 absl-py
+pdoc3
 
 gin~=0.1.6
 tensorboardx~=2.1

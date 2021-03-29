@@ -38,35 +38,30 @@ from source.systems import IndirectFHCS
 
 @gin.configurable
 class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optimization
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
+      Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
+      The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
+      1995.
+
+      This environment is an example of a model where the cost is linear with respect to the control.
+      It can still be solved by the FBSM algorithm since the optimal control are of the &#34;bang-bang&#34; type,
+      i.e. it jumps from one boundary value to the other.
+
+      This environment models the evolution of a bacteria population ( \\(x(t)\\) ) that helps in the degradation of a
+      contaminant ( \\(z(t)\\) ) in the presence of a chemical nutrient ( \\(u(t)\\) ) that is added to boost the bacteria population
+      growth. In this particular problem, the fact that only a terminal cost is associated to the state variable \\(z(t)\\)
+      allows for the simplification of the problem into:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\max_{u} \\quad &amp;&amp;\\int_0^T Kx(t) - u(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad  &amp;&amp;x&#39;(t) = Gu(t)x(t) - Dx^2(t) ,\\; x(0) = x_0 \\\\
+        &amp; &amp;&amp; 0 \\leq u(t) \\leq M
+        \\end{align}
+      &#34;&#34;&#34;
   def __init__(self, K=2., G=1., D=1., M=1., x_0=(.5, .1), T=2.):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
-    Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
-    The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
-    1995.
-
-    This environment is an example of a model where the cost is linear with respect to the control.
-    It can still be solved by the FBSM algorithm since the optimal control are of the &#34;bang-bang&#34; type,
-    i.e. it jumps from one boundary value to the other.
-
-    This environment models the evolution of a bacteria population (x(t)) that helps in the degradation of a
-    contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
-    growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
-    allows for the simplification of the problem into:
-
-    .. math::
-
-      \max_{u} \quad &amp;\int_0^T Kx(t) - u(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \\
-      &amp; 0 \leq u(t) \leq M
-
-    :param K: Weight parameter
-    :param G: Maximum growth rate of the bacteria population
-    :param D: Natural  death rate of the bacteria population
-    :param M: Physical limitation into the application of the chemical nutrient
-    :param x_0: Initial bacteria concentration
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -83,8 +78,13 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.K = K
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.G = G
+    &#34;&#34;&#34;Maximum growth rate of the bacteria population&#34;&#34;&#34;
     self.D = D
+    &#34;&#34;&#34;Natural  death rate of the bacteria population&#34;&#34;&#34;
+    self.M = M
+    &#34;&#34;&#34;Physical limitation into the application of the chemical nutrient&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -128,69 +128,57 @@ class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optim
 <span>(</span><span>K=2.0, G=1.0, D=1.0, M=1.0, x_0=(0.5, 0.1), T=2.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Augment the base class for defining control problem under a finite horizon so that indirect methods can be use.
-Model a problem of the form:
-<span><span class="MathJax_Preview">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</span><script type="math/tex; mode=display">\min_u \quad g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt</script></span>
-<span><span class="MathJax_Preview">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</span><script type="math/tex; mode=display">\mathrm{s.t.}\qquad \dot{x} = f(x,u,t)</script></span>
-<span><span class="MathJax_Preview">x(0)=x_0</span><script type="math/tex; mode=display">x(0)=x_0</script></span></p>
-<p>Taking into account the adjoint dynamics and the optimal characterization given by the Pontryagin's maximum principle</p>
-<p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
 Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
 The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
 1995.</p>
 <p>This environment is an example of a model where the cost is linear with respect to the control.
 It can still be solved by the FBSM algorithm since the optimal control are of the "bang-bang" type,
 i.e. it jumps from one boundary value to the other.</p>
-<p>This environment models the evolution of a bacteria population (x(t)) that helps in the degradation of a
-contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
-growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
+<p>This environment models the evolution of a bacteria population ( <span><span class="MathJax_Preview">x(t)</span><script type="math/tex">x(t)</script></span> ) that helps in the degradation of a
+contaminant ( <span><span class="MathJax_Preview">z(t)</span><script type="math/tex">z(t)</script></span> ) in the presence of a chemical nutrient ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) that is added to boost the bacteria population
+growth. In this particular problem, the fact that only a terminal cost is associated to the state variable <span><span class="MathJax_Preview">z(t)</span><script type="math/tex">z(t)</script></span>
 allows for the simplification of the problem into:</p>
-<p><span><span class="MathJax_Preview"> \max_{u} \quad &amp;\int_0^T Kx(t) - u(t) dt \
-\mathrm{s.t.}\qquad &amp; x'(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \
-&amp; 0 \leq u(t) \leq M </span><script type="math/tex; mode=display"> \max_{u} \quad &\int_0^T Kx(t) - u(t) dt \
-\mathrm{s.t.}\qquad & x'(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \
-& 0 \leq u(t) \leq M </script></span>
-:param K: Weight parameter
-:param G: Maximum growth rate of the bacteria population
-:param D: Natural
-death rate of the bacteria population
-:param M: Physical limitation into the application of the chemical nutrient
-:param x_0: Initial bacteria concentration
-:param T: Horizon</p></div>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp;\max_{u} \quad &amp;&amp;\int_0^T Kx(t) - u(t) dt \\
+&amp; \; \mathrm{s.t.}\quad
+&amp;&amp;x'(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \\
+&amp; &amp;&amp; 0 \leq u(t) \leq M
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+&\max_{u} \quad &&\int_0^T Kx(t) - u(t) dt \\
+& \; \mathrm{s.t.}\quad
+&&x'(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \\
+& && 0 \leq u(t) \leq M
+\end{align} </script></span></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Bioreactor(IndirectFHCS):   # TODO: Add resolution for z state after optimization
+  &#34;&#34;&#34;
+      Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
+      Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
+      The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
+      1995.
+
+      This environment is an example of a model where the cost is linear with respect to the control.
+      It can still be solved by the FBSM algorithm since the optimal control are of the &#34;bang-bang&#34; type,
+      i.e. it jumps from one boundary value to the other.
+
+      This environment models the evolution of a bacteria population ( \\(x(t)\\) ) that helps in the degradation of a
+      contaminant ( \\(z(t)\\) ) in the presence of a chemical nutrient ( \\(u(t)\\) ) that is added to boost the bacteria population
+      growth. In this particular problem, the fact that only a terminal cost is associated to the state variable \\(z(t)\\)
+      allows for the simplification of the problem into:
+
+      .. math::
+
+        \\begin{align}
+        &amp;\\max_{u} \\quad &amp;&amp;\\int_0^T Kx(t) - u(t) dt \\\\
+        &amp; \\; \\mathrm{s.t.}\\quad  &amp;&amp;x&#39;(t) = Gu(t)x(t) - Dx^2(t) ,\\; x(0) = x_0 \\\\
+        &amp; &amp;&amp; 0 \\leq u(t) \\leq M
+        \\end{align}
+      &#34;&#34;&#34;
   def __init__(self, K=2., G=1., D=1., M=1., x_0=(.5, .1), T=2.):
-    &#34;&#34;&#34;
-    Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 19, Lab 12)
-    Additional information about this kind of model can be found in A. Heinricher, S. Lenhart, and A. Solomon.
-    The application of optimal control methodology to a well-stirred bioreactor. Natural Resource Modeling, 9:61–80,
-    1995.
-
-    This environment is an example of a model where the cost is linear with respect to the control.
-    It can still be solved by the FBSM algorithm since the optimal control are of the &#34;bang-bang&#34; type,
-    i.e. it jumps from one boundary value to the other.
-
-    This environment models the evolution of a bacteria population (x(t)) that helps in the degradation of a
-    contaminant (z(t)) in the presence of a chemical nutrient (u(t)) that is added to boost the bacteria population
-    growth. In this particular problem, the fact that only a terminal cost is associated to the state variable z(t)
-    allows for the simplification of the problem into:
-
-    .. math::
-
-      \max_{u} \quad &amp;\int_0^T Kx(t) - u(t) dt \\
-      \mathrm{s.t.}\qquad &amp; x&#39;(t) = Gu(t)x(t) - Dx^2(t) ,\; x(0) = x_0 \\
-      &amp; 0 \leq u(t) \leq M
-
-    :param K: Weight parameter
-    :param G: Maximum growth rate of the bacteria population
-    :param D: Natural  death rate of the bacteria population
-    :param M: Physical limitation into the application of the chemical nutrient
-    :param x_0: Initial bacteria concentration
-    :param T: Horizon
-    &#34;&#34;&#34;
     super().__init__(
       x_0=jnp.array([
         x_0[0],
@@ -207,8 +195,13 @@ death rate of the bacteria population
 
     self.adj_T = None  # Final condition over the adjoint, if any
     self.K = K
+    &#34;&#34;&#34;Weight parameter&#34;&#34;&#34;
     self.G = G
+    &#34;&#34;&#34;Maximum growth rate of the bacteria population&#34;&#34;&#34;
     self.D = D
+    &#34;&#34;&#34;Natural  death rate of the bacteria population&#34;&#34;&#34;
+    self.M = M
+    &#34;&#34;&#34;Physical limitation into the application of the chemical nutrient&#34;&#34;&#34;
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -&gt; jnp.ndarray:
@@ -243,6 +236,26 @@ death rate of the bacteria population
 <li><a title="source.systems.base.FiniteHorizonControlSystem" href="../base.html#source.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="source.systems.lenhart.bioreactor.Bioreactor.K"><code class="name">var <span class="ident">K</span></code></dt>
+<dd>
+<div class="desc"><p>Weight parameter</p></div>
+</dd>
+<dt id="source.systems.lenhart.bioreactor.Bioreactor.G"><code class="name">var <span class="ident">G</span></code></dt>
+<dd>
+<div class="desc"><p>Maximum growth rate of the bacteria population</p></div>
+</dd>
+<dt id="source.systems.lenhart.bioreactor.Bioreactor.D"><code class="name">var <span class="ident">D</span></code></dt>
+<dd>
+<div class="desc"><p>Natural
+death rate of the bacteria population</p></div>
+</dd>
+<dt id="source.systems.lenhart.bioreactor.Bioreactor.M"><code class="name">var <span class="ident">M</span></code></dt>
+<dd>
+<div class="desc"><p>Physical limitation into the application of the chemical nutrient</p></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="source.systems.base.IndirectFHCS" href="../base.html#source.systems.base.IndirectFHCS">IndirectFHCS</a></b></code>:
