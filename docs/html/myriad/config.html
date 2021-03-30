@@ -38,7 +38,7 @@
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An enumeration.</p></div>
+<div class="desc"><p>Parser argument. Optimizing strategy used to solve the OCP</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>enum.Enum</li>
@@ -47,15 +47,15 @@
 <dl>
 <dt id="myriad.config.OptimizerType.COLLOCATION"><code class="name">var <span class="ident">COLLOCATION</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Collocation method, select with <code>--optimizer=COLLOCATION</code></p></div>
 </dd>
 <dt id="myriad.config.OptimizerType.SHOOTING"><code class="name">var <span class="ident">SHOOTING</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Shooting method (single and multi), select with <code>--optimizer=SHOOTING</code></p></div>
 </dd>
 <dt id="myriad.config.OptimizerType.FBSM"><code class="name">var <span class="ident">FBSM</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Forward-Backward Sweep method (indirect), select with <code>--optimizer=FBSM</code></p></div>
 </dd>
 </dl>
 </dd>
@@ -120,44 +120,44 @@
 <span>(</span><span>seed=2020, system=SystemType.EPIDEMICSEIRN, optimizer=OptimizerType.SHOOTING, nlpsolver=NLPSolverType.SLSQP, order=IntegrationOrder.LINEAR, max_iter=1000, intervals=1, controls_per_interval=100, fbsm_intervals=1000)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>HParams(seed: int = 2020, system: myriad.systems.SystemType = <SystemType.EPIDEMICSEIRN: \<class 'myriad.systems.lenhart.epidemic_seirn.EpidemicSEIRN'>>, optimizer: myriad.config.OptimizerType = <OptimizerType.SHOOTING: 'SHOOTING'>, nlpsolver: myriad.config.NLPSolverType = <NLPSolverType.SLSQP: 'SLSQP'>, order: myriad.config.IntegrationOrder = <IntegrationOrder.LINEAR: 'LINEAR'>, max_iter: int = 1000, intervals: int = 1, controls_per_interval: int = 100, fbsm_intervals: int = 1000)</p></div>
+<div class="desc"><p>The hyperparameters of the experiment. Modifying those should slightly change the results</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="myriad.config.HParams.seed"><code class="name">var <span class="ident">seed</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The seed of the RNG; set with <code>seed=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.system"><code class="name">var <span class="ident">system</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The system to run the experiment on; set with <code>system=&lt;SystemType&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType">SystemType</a></p></div>
 </dd>
 <dt id="myriad.config.HParams.optimizer"><code class="name">var <span class="ident">optimizer</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The optimizer to solve the OCP. Select from <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.OptimizerType">OptimizerType</a></p></div>
 </dd>
 <dt id="myriad.config.HParams.nlpsolver"><code class="name">var <span class="ident">nlpsolver</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The NLP solver to use during optimization; set with <code>nlpsolver=&lt;NLPSolverType&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.NLPSolverType">NLPSolverType</a></p></div>
 </dd>
 <dt id="myriad.config.HParams.order"><code class="name">var <span class="ident">order</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Order when integrating; set with <code>order=&lt;IntegrationOrder&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.IntegrationOrder">IntegrationOrder</a></p></div>
 </dd>
 <dt id="myriad.config.HParams.max_iter"><code class="name">var <span class="ident">max_iter</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Maximum iteration for NLP solvers; set wit <code>max_iter=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.intervals"><code class="name">var <span class="ident">intervals</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Used by <code>COLLOCATION</code> and <code>SHOOTING</code> methods; set with <code>intervals=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.controls_per_interval"><code class="name">var <span class="ident">controls_per_interval</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Used by <code>SHOOTING</code> method; set with <code>controls_per_interval=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.fbsm_intervals"><code class="name">var <span class="ident">fbsm_intervals</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Used by <code>FBSM</code> method; set with <code>fbsm_intervals=&lt;int&gt;</code></p></div>
 </dd>
 </dl>
 </dd>
@@ -166,20 +166,21 @@
 <span>(</span><span>verbose=True, jit=True, plot_results=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Config(verbose: bool = True, jit: bool = True, plot_results: bool = True)</p></div>
+<div class="desc"><p>Secondary configurations which should not change experiment results
+and should be largely used for debugging</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="myriad.config.Config.verbose"><code class="name">var <span class="ident">verbose</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Verbose mode; default to <code>True</code></p></div>
 </dd>
 <dt id="myriad.config.Config.jit"><code class="name">var <span class="ident">jit</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Enable <a href="https://jax.readthedocs.io/en/latest/notebooks/quickstart.html#using-jit-to-speed-up-functions"><code>@jit</code></a> compilation; default to <code>True</code></p></div>
 </dd>
 <dt id="myriad.config.Config.plot_results"><code class="name">var <span class="ident">plot_results</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Plot results after running the experiment; default to <code>True</code></p></div>
 </dd>
 </dl>
 </dd>
