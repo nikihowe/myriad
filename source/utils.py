@@ -16,9 +16,31 @@ def integrate(
   ts: Optional[jnp.ndarray],  # allow for optional time-dependent dynamics
   integration_order: IntegrationOrder = IntegrationOrder.LINEAR,  # allows user to choose interpolation for controls
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+  """
+  Integrate an ODE on a given time interval using a fixed-step Runge-Kutta method.
+
+  :param dynamics_t: Dynamics function f = \dot x
+  :param x_0: Start state
+  :param interval_us: Controls to apply over interval
+  :param h: Stepsize
+  :param N: Number of integration interval boundaries
+  :param ts: Times at timestep boundaries
+  :param integration_order: Order of interpolation to use
+  :return: (xt, xs) xt: final state, xs: state at each timestep boundary, including starting state
+  """
   # QUESTION: do we want to keep this interpolation for rk4, or move to linear?
   @jit
   def rk4_step(x, u1, u2, u3, t=0):
+    """
+    Runge-Kutta 4th order.
+
+    :param x: State at start of interval
+    :param u1: Control at start of interval
+    :param u2: Control at midpoint of interval
+    :param u3: Control at end of interval
+    :param t: Time at start of interval
+    :return: State at end of interval
+    """
     k1 = dynamics_t(x, u1, t)
     k2 = dynamics_t(x + h*k1/2, u2, t + h/2)
     k3 = dynamics_t(x + h*k2/2, u2, t + h/2)
@@ -27,15 +49,39 @@ def integrate(
 
   @jit
   def heun_step(x, u1, u2, t=0):
+    """
+    Heun's method.
+
+    :param x: State at start of interval
+    :param u1: Control at start of interval
+    :param u2: Control at end of interval
+    :param t: Time at start of interval
+    :return: State at end of interval
+    """
     k1 = dynamics_t(x, u1, t)
     k2 = dynamics_t(x + h*k1, u2, t + h/2)
     return x + (h/2) * (k1 + k2)
 
   @jit
   def euler_step(x, u, t=0):
+    """
+    Euler's method.
+
+    :param x: State at start of interval
+    :param u: Control at start of interval
+    :param t: Time at start of interval
+    :return: State at end of interval
+    """
     return x + h*dynamics_t(x, u, t)
 
   def fn(carried_state, idx):
+    """
+    Take one step of integration.
+
+    :param carried_state: Current state
+    :param idx: Current timestep
+    :return: State at next timestep
+    """
     nonlocal integration_order
     if not integration_order:
       integration_order = IntegrationOrder.CONSTANT
@@ -71,6 +117,7 @@ integrate_in_parallel = vmap(integrate, in_axes=(None, 0, 0, None, None, 0, None
 
 # Used for the adjoint integration
 def integrate_v2(
+  # TODO: @Simon could you please add docstrings here?
   dynamics_t: Callable[[jnp.ndarray, Union[float, jnp.ndarray], Optional[jnp.ndarray], Optional[jnp.ndarray]],
                        jnp.ndarray],  # dynamics function
   x_0: jnp.ndarray,                   # starting state
