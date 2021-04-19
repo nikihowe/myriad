@@ -119,7 +119,7 @@ class IndirectMethodOptimizer(object):
     :param hp: The hyperparameters
     :param cfg: Additional hyperparemeters
     :param bounds: Bounds for the states and controls
-    :param guess: An initial guess for the states and controls
+    :param guess: An initial guess for the states, controls, and adjoint
     :param unravel: Use to separate decision variable array into states and controls
     :param require_adj: Does this trajectory optimizer require adjoint dynamics in order to work?
     """
