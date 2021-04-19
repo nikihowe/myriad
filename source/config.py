@@ -27,15 +27,27 @@ class IntegrationOrder(Enum):
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=False)
 class HParams:
-  seed: int = 2020
+  """
+  Hyperparameters
+
+  :param system: System on which to perform trajectory optimization
+  :param optimizer: Optimizer to use for trajectory optimization
+  :param nlpsolver: Solver to use on nonlinear program created by optimizer
+  :param order: Order of interpolation to use for optimizer
+  :param max_iter: Iteration limit for nlpsolver
+  :param intervals: Number of intervals to use for optimizer (applicable only to direct trajectory optimizers)
+  :param controls_per_interval: Number of controls per interval (applicable only to multiple shooting)
+  :param fbsm_intervals: Number of intervals for optimizer (applicable only to indirect trajectory optimizers)
+  """
+  # seed: int = 2020
   system: SystemType = SystemType.EPIDEMICSEIRN
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.SLSQP
   order: IntegrationOrder = IntegrationOrder.LINEAR
-  max_iter: int = 1000              # maxiter for NLP solver
-  intervals: int = 1               # used by COLLOCATION and SHOOTING
-  controls_per_interval: int = 100   # used by SHOOTING
-  fbsm_intervals: int = 1000        # used by FBSM
+  max_iter: int = 1000
+  intervals: int = 1
+  controls_per_interval: int = 100
+  fbsm_intervals: int = 1000
 
   # Collocation requires exactly one control per interval
   def __post_init__(self):
