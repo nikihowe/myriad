@@ -20,6 +20,18 @@ pre_tuned = {
 
 # NOTE: need to tune eta_x and eta_v for each system
 def extra_gradient(fun, x0, constraints, bounds, options, system_type):
+  """
+  Implementation of extragradient method for finding Lagrangian fixed points.
+
+  :param fun: Objective function
+  :param x0: Start state
+  :param constraints: Equality constraint violation function
+  :param bounds: Bounds for decision variables
+  :param options: Additional solver options, such as stepsize for primal and dual variable update
+  :param system_type: The system under study. Used to set default hyperparameter values.
+  :return: A solution dict, containing the values of primal and dual variables,
+            whether or not it exited with success, and the value of the objective function at the solution.
+  """
   constraint_fun = constraints['fun']
   max_iter = options['maxiter'] if 'maxiter' in options else 30_000
   max_iter = 30_000
@@ -33,6 +45,11 @@ def extra_gradient(fun, x0, constraints, bounds, options, system_type):
 
   @jit
   def lagrangian(x, lmbda):
+    """
+    :param x: Primals
+    :param lmbda: Duals
+    :return: Lagrangian
+    """
     return fun(x) + lmbda @ constraint_fun(x)
 
   # Use this for debugging
@@ -48,6 +65,13 @@ def extra_gradient(fun, x0, constraints, bounds, options, system_type):
 
   @jit
   def step(x, lmbda):
+    """
+    Take one step of extragradient.
+
+    :param x: Primals
+    :param lmbda: Duals
+    :return: (next x, next lmbda)
+    """
     x_bar = jnp.clip(x - eta_x * grad(lagrangian, argnums=0)(x, lmbda),
       a_min=bounds[:, 0], a_max=bounds[:, 1])
     lmbda_bar = lmbda + eta_v * grad(lagrangian, argnums=1)(x, lmbda)

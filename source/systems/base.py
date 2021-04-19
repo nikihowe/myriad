@@ -7,12 +7,22 @@ import jax.numpy as jnp
 
 @dataclass
 class FiniteHorizonControlSystem(object):
-  x_0: jnp.ndarray  # state at time 0
-  x_T: Optional[jnp.ndarray]  # state at time T
-  T: float  # duration of trajectory
-  bounds: jnp.ndarray  # State and control bounds
-  terminal_cost: bool  # Whether only the final state and control are inputs to the cost
-  discrete: bool = False  # Whether we are working with a system with continuous cost or not
+  """
+  Abstract class describing a finite-horizon control system.
+
+  :param x_0: The start state
+  :param x_T: The end state (optional)
+  :param T: The end time (start time is always set to 0)
+  :param bounds: Bounds on the states and controls
+  :param terminal_cost: Whether or not there is an additional cost added at the end of the trajectory
+  :param discrete: Whether or not the system is discrete
+  """
+  x_0: jnp.ndarray
+  x_T: Optional[jnp.ndarray]
+  T: float
+  bounds: jnp.ndarray
+  terminal_cost: bool
+  discrete: bool = False
 
   # def __post_init__(self):
   #   self.x_0 = self.x_0.astype(jnp.float64)
@@ -23,20 +33,57 @@ class FiniteHorizonControlSystem(object):
   #   assert self.T > 0
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
+    #TODO: nh: make this accept time-dependent dynamics
+    """
+    System dynamics
+
+     ..math::
+
+        f(x(t), u(t), t) = \dot x
+
+    :param x_t: State
+    :param u_t: Control
+    :return: \dot x
+    """
     raise NotImplementedError
   
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -> float:
+    """
+    Instantaneous cost function
+
+    :param x_t: State
+    :param u_t: Control
+    :param t: Time
+    :return: Instantaneous cost
+    """
     raise NotImplementedError
 
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -> float:
+  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray],
+                       T: Optional[Union[float, jnp.ndarray]] = None) -> float:
+    """
+    Terminal cost function
+
+    :param x_T: Final state
+    :param u_T: Final control
+    :param T: Final time
+    :return: Terminal cost
+    """
     return 0
 
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+    """
+    Plot your state and control trajectory.
+
+    :param x: State array
+    :param u: Control array
+    :return:
+    """
     raise NotImplementedError
 
 
 @dataclass
 class IndirectFHCS(FiniteHorizonControlSystem, ABC):
+  # TODO: @Simon could you please fill out docstrings here?
   adj_T: Optional[jnp.ndarray] = None  # adjoint at time T
   guess_a: Optional[float] = None  # Initial guess for secant method
   guess_b: Optional[float] = None  # Initial guess for secant method

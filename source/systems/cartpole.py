@@ -8,6 +8,11 @@ from .base import FiniteHorizonControlSystem
 
 class CartPole(FiniteHorizonControlSystem):
   def __init__(self):
+    """
+    Cart-pole swing-up,
+      from https://epubs.siam.org/doi/10.1137/16M1062569
+    """
+
     # Physical parameters for the cart-pole example (Table 3)
     self.m1 = 1.0  # kg mass of cart
     self.m2 = 0.3  # kg mass of pole
@@ -18,17 +23,17 @@ class CartPole(FiniteHorizonControlSystem):
     self.d = 1.0   # m distance traveled during swing-up
 
     super().__init__(
-      x_0 = jnp.array([0., 0., 0., 0.]),  # Starting state (Eq. 6.9)
-      x_T = jnp.array([self.d, jnp.pi, 0., 0.]),  # Ending state (Eq. 6.9)
-      T = 2.0,  # s duration of swing-up,
-      bounds = jnp.array([
+      x_0=jnp.array([0., 0., 0., 0.]),  # Starting state (Eq. 6.9)
+      x_T=jnp.array([self.d, jnp.pi, 0., 0.]),  # Ending state (Eq. 6.9)
+      T=2.0,  # s duration of swing-up,
+      bounds=jnp.array([
         [-self.d_max, self.d_max],  # Eq. 6.7
         [-2*jnp.pi, 2*jnp.pi],
         [-jnp.inf, jnp.inf],
         [-jnp.inf, jnp.inf],
         [-self.u_max, self.u_max],  # Control bounds (Eq. 6.8)
       ]),
-      terminal_cost = False,
+      terminal_cost=False,
     )
 
   # Cart-Pole Example: System Dynamics (Section 6.1)
