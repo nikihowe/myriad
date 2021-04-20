@@ -4,10 +4,10 @@ import unittest
 import jax
 import numpy as np
 
-from source.config import Config, SystemType, HParams, OptimizerType, IntegrationOrder
-from source.optimizers import get_optimizer
-from source.systems import IndirectFHCS
-from source.plotting import plot_result
+from myriad.config import Config, SystemType, HParams, OptimizerType, IntegrationOrder
+from myriad.optimizers import get_optimizer
+from myriad.systems import IndirectFHCS
+from myriad.plotting import plot_result
 
 # import os
 # os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'

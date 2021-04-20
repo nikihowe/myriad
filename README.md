@@ -1,5 +1,9 @@
 # optimal-control
 
+A library for solving continuous optimal control problem in JAX
+
+Please read the [full documentation](https://simonduflab.github.io/optimal-control/html/myriad/index.html)
+
 ## Directory structure
 ```
 ├── notebooks
