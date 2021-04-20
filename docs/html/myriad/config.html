@@ -117,16 +117,12 @@
 </dd>
 <dt id="myriad.config.HParams"><code class="flex name class">
 <span>class <span class="ident">HParams</span></span>
-<span>(</span><span>seed=2020, system=SystemType.EPIDEMICSEIRN, optimizer=OptimizerType.SHOOTING, nlpsolver=NLPSolverType.SLSQP, order=IntegrationOrder.LINEAR, max_iter=1000, intervals=1, controls_per_interval=100, fbsm_intervals=1000)</span>
+<span>(</span><span>system=SystemType.EPIDEMICSEIRN, optimizer=OptimizerType.SHOOTING, nlpsolver=NLPSolverType.SLSQP, order=IntegrationOrder.LINEAR, max_iter=1000, intervals=1, controls_per_interval=100, fbsm_intervals=1000)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The hyperparameters of the experiment. Modifying those should slightly change the results</p></div>
 <h3>Class variables</h3>
 <dl>
-<dt id="myriad.config.HParams.seed"><code class="name">var <span class="ident">seed</span></code></dt>
-<dd>
-<div class="desc"><p>The seed of the RNG; set with <code>seed=&lt;int&gt;</code></p></div>
-</dd>
 <dt id="myriad.config.HParams.system"><code class="name">var <span class="ident">system</span></code></dt>
 <dd>
 <div class="desc"><p>The system to run the experiment on; set with <code>system=&lt;SystemType&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType">SystemType</a></p></div>
@@ -149,11 +145,11 @@
 </dd>
 <dt id="myriad.config.HParams.intervals"><code class="name">var <span class="ident">intervals</span></code></dt>
 <dd>
-<div class="desc"><p>Used by <code>COLLOCATION</code> and <code>SHOOTING</code> methods; set with <code>intervals=&lt;int&gt;</code></p></div>
+<div class="desc"><p>Number of intervals to use for optimizer, used by <code>COLLOCATION</code> and <code>SHOOTING</code> methods; set with <code>intervals=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.controls_per_interval"><code class="name">var <span class="ident">controls_per_interval</span></code></dt>
 <dd>
-<div class="desc"><p>Used by <code>SHOOTING</code> method; set with <code>controls_per_interval=&lt;int&gt;</code></p></div>
+<div class="desc"><p>Number of controls per interval, used by <code>SHOOTING</code> (multiple) method; set with <code>controls_per_interval=&lt;int&gt;</code></p></div>
 </dd>
 <dt id="myriad.config.HParams.fbsm_intervals"><code class="name">var <span class="ident">fbsm_intervals</span></code></dt>
 <dd>
@@ -166,7 +162,7 @@
 <span>(</span><span>verbose=True, jit=True, plot_results=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Secondary configurations which should not change experiment results
+<div class="desc"><p>Secondary configurations that should not change experiment results
 and should be largely used for debugging</p></div>
 <h3>Class variables</h3>
 <dl>

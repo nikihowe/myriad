@@ -7,35 +7,40 @@ from .base import FiniteHorizonControlSystem
 
 
 class Tumour(FiniteHorizonControlSystem):
-  # Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 8.17)
   def __init__(self):
+    """
+    Tumour anti-angiogenesis model,
+      from Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)
+    """
     # Parameters
-    self.ξ = 0.084 # per day (tumour growth)
-    self.b = 5.85 # per day (birth rate)
-    self.d = 0.00873 # per mm^2 per day (death rate)
-    self.G = 0.15 # kg per mg of dose per day (antiangiogenic killing)
-    self.mu = 0.02 # per day (loss of endothelial cells due to natural causes)
-    t_F = 1.2 # days
+    self.ξ = 0.084    # per day (tumour growth)
+    self.b = 5.85     # per day (birth rate)
+    self.d = 0.00873  # per mm^2 per day (death rate)
+    self.G = 0.15     # kg per mg of dose per day (antiangiogenic killing)
+    self.mu = 0.02    # per day (loss of endothelial cells due to natural causes)
+    t_F = 1.2         # days
+
     # State and Control Bounds
-    a = 75 # maximum instantaneous dosage
-    A = 15 # maximum cumulative dosage
-    p_ = q_ = ((self.b-self.mu)/self.d)**(3/2) # asymptotically stable focus
+    a = 75  # maximum instantaneous dosage
+    A = 15  # maximum cumulative dosage
+    p_ = q_ = ((self.b-self.mu)/self.d)**(3/2)  # asymptotically stable focus
+
     # Initial State
-    p_0 = p_ / 2 # Initial tumour volume
-    q_0 = q_ / 4 # Initial vascular capacity
-    y_0 = 0 # Initial cumulative dosage
-    assert p_0 >= q_0 # condition for well-posed problem
+    p_0 = p_ / 2       # Initial tumour volume
+    q_0 = q_ / 4       # Initial vascular capacity
+    y_0 = 0            # Initial cumulative dosage
+    assert p_0 >= q_0  # condition for well-posed problem
     super().__init__(
-      x_0 = jnp.array([p_0, q_0, y_0]),
-      x_T = None,
-      T = t_F,
-      bounds = jnp.array([
-        [0., p_], # p
-        [0., q_], # q
-        [0., A], # y
-        [0., a], # control
+      x_0=jnp.array([p_0, q_0, y_0]),
+      x_T=None,
+      T=t_F,
+      bounds=jnp.array([
+        [0., p_],  # p
+        [0., q_],  # q
+        [0., A],   # y
+        [0., a],   # control
       ]),
-      terminal_cost = True,
+      terminal_cost=True,
     )
 
   def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:

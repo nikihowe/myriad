@@ -32,8 +32,8 @@ class IntegrationOrder(Enum):
 @dataclass(eq=True, frozen=False)
 class HParams:
   """The hyperparameters of the experiment. Modifying those should slightly change the results"""
-  seed: int = 2020
-  """The seed of the RNG; set with `seed=<int>`"""
+  # seed: int = 2020
+  # """The seed of the RNG; set with `seed=<int>`"""
   system: SystemType = SystemType.EPIDEMICSEIRN
   """The system to run the experiment on; set with `system=<SystemType>`. Value can be any of [SystemType](https://simonduflab.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType)"""
   optimizer: OptimizerType = OptimizerType.SHOOTING
@@ -45,10 +45,10 @@ class HParams:
   max_iter: int = 1000              # maxiter for NLP solver
   """Maximum iteration for NLP solvers; set wit `max_iter=<int>`"""
   intervals: int = 1               # used by COLLOCATION and SHOOTING
-  """Used by `COLLOCATION` and `SHOOTING` methods; set with `intervals=<int>`"""
+  """Number of intervals to use for optimizer, used by `COLLOCATION` and `SHOOTING` methods; set with `intervals=<int>`"""
   controls_per_interval: int = 100   # used by SHOOTING
-  """Used by `SHOOTING` method; set with `controls_per_interval=<int>`"""
-  fbsm_intervals: int = 1000        # used by FBSM # TODO: merge with intervals option
+  """Number of controls per interval, used by `SHOOTING` (multiple) method; set with `controls_per_interval=<int>`"""
+  fbsm_intervals: int = 1000        # used by FBSM # TODO: merge with previous interval option
   """Used by `FBSM` method; set with `fbsm_intervals=<int>`"""
 
   # Collocation requires exactly one control per interval
@@ -59,7 +59,7 @@ class HParams:
 
 @dataclass(eq=True, frozen=True)
 class Config:
-  """Secondary configurations which should not change experiment results
+  """Secondary configurations that should not change experiment results
   and should be largely used for debugging"""
   verbose: bool = True
   """Verbose mode; default to `True`"""

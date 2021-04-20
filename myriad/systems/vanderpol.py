@@ -8,16 +8,20 @@ from .base import FiniteHorizonControlSystem
 
 class VanDerPol(FiniteHorizonControlSystem):
   def __init__(self):
+    """
+    Driven Van der Pol oscillator,
+      from http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html
+    """
     super().__init__(
-      x_0 = jnp.array([0., 1.]),
-      x_T = jnp.zeros(2),
-      T = 10.0,
-      bounds = jnp.array([
-        [-jnp.inf, jnp.inf], # state 1
-        [-jnp.inf, jnp.inf], # state 2
-        [-0.75, 1.0],        # control
+      x_0=jnp.array([0., 1.]),
+      x_T=jnp.zeros(2),
+      T=10.0,
+      bounds=jnp.array([
+        [-jnp.inf, jnp.inf],  # state 1
+        [-jnp.inf, jnp.inf],  # state 2
+        [-0.75, 1.0],         # control
       ]),
-      terminal_cost = False,
+      terminal_cost=False,
     )
 
   def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
