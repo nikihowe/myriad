@@ -19,7 +19,7 @@ class TimberHarvest(IndirectFHCS):
     i.e., it jumps from one boundary value to the other.
 
     In this problem we are trying to optimize tree harvesting in a timber farm, resulting in the production of
-    raw timber ( \((x(t)\\) ). The harvest percentage over the land is low enough that we can assume that there will always
+    raw timber ( \\(x(t)\\) ). The harvest percentage over the land is low enough that we can assume that there will always
     be sufficiently many mature trees ready for harvest. The timber is sold immediately after production,
     generating a income proportional to the production at every time t. The operators then have the choice of
     reinvesting a fraction of this revenue directly into the plant ( \\(u(t)\\) ), thus stimulating future production.
