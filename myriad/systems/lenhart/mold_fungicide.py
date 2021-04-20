@@ -30,8 +30,8 @@ class MoldFungicide(IndirectFHCS):
       x_T=None,              # Terminal state, if any
       T=T,                   # Duration of experiment
       bounds=jnp.array([     # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],    # followed by bounds over controls (u_0,u_1,...)
-        [jnp.NINF, jnp.inf],
+        [0., jnp.inf],       # followed by bounds over controls (u_0, u_1,...)
+        [0., jnp.inf],  # nh: I replaced lower bound with 0 because amount can't be negative
       ]),
       terminal_cost=False,
       discrete=False,

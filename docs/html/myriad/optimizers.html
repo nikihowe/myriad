@@ -47,7 +47,8 @@
 <span>(</span><span>_type, hp, cfg, objective, constraints, bounds, guess, unravel, require_adj=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TrajectoryOptimizer(_type: myriad.config.OptimizerType, hp: myriad.config.HParams, cfg: myriad.config.Config, objective: Callable[[jax._src.numpy.lax_numpy.ndarray], float], constraints: Callable[[jax._src.numpy.lax_numpy.ndarray], jax._src.numpy.lax_numpy.ndarray], bounds: jax._src.numpy.lax_numpy.ndarray, guess: jax._src.numpy.lax_numpy.ndarray, unravel: Callable[[jax._src.numpy.lax_numpy.ndarray], Tuple], require_adj: bool = False)</p></div>
+<div class="desc"><p>An abstract class representing an "optimizer" which can find the solution
+(an optimal trajectory) to a given "system", using a direct approach.</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="myriad.optimizers.HermiteSimpsonCollocationOptimizer" href="#myriad.optimizers.HermiteSimpsonCollocationOptimizer">HermiteSimpsonCollocationOptimizer</a></li>
@@ -58,31 +59,31 @@
 <dl>
 <dt id="myriad.optimizers.TrajectoryOptimizer.hp"><code class="name">var <span class="ident">hp</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The hyperparameters</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.cfg"><code class="name">var <span class="ident">cfg</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Additional hyperparemeters</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.objective"><code class="name">var <span class="ident">objective</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Given a sequence of controls and states, calculates how "good" they are</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.constraints"><code class="name">var <span class="ident">constraints</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Given a sequence of controls and states, calculates the magnitude of violations of dynamics</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.bounds"><code class="name">var <span class="ident">bounds</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Bounds for the states and controls</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.guess"><code class="name">var <span class="ident">guess</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>An initial guess for the states and controls</p></div>
 </dd>
 <dt id="myriad.optimizers.TrajectoryOptimizer.unravel"><code class="name">var <span class="ident">unravel</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Use to separate decision variable array into states and controls</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -91,7 +92,14 @@
 <span>def <span class="ident">solve</span></span>(<span>self, extra_options=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Use a the solver indicated in the hyper-parameters to solve the constrained optimization problem.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>extra_options</code></strong></dt>
+<dd>Extra options to pass to the solver. Can also use to overrule options from hyper-parameters.</dd>
+</dl>
+<p>Returns
+A dictionary with the optimal controls and corresponding states (and for quadratic interpolation schemes, the midpoints too)</p></div>
 </dd>
 </dl>
 </dd>
@@ -100,7 +108,7 @@
 <span>(</span><span>hp, cfg, bounds, guess, unravel, require_adj=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for implementing indirect method optimizers, i.e. optimizers that relies on the Pontryagin's maximum principle</p></div>
+<div class="desc"><p>Abstract class for implementing indirect method optimizers, i.e. optimizers that relies on the Pontryagin's maximum principle</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="myriad.optimizers.FBSM" href="#myriad.optimizers.FBSM">FBSM</a></li>
@@ -125,7 +133,7 @@
 </dd>
 <dt id="myriad.optimizers.IndirectMethodOptimizer.unravel"><code class="name">var <span class="ident">unravel</span></code></dt>
 <dd>
-<div class="desc"><p>Callable to unravel the pytree</p></div>
+<div class="desc"><p>Callable to unravel the pytree &ndash; separate decision variable array into states and controls</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -143,126 +151,114 @@
 <span>(</span><span>hp, cfg, system)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TrajectoryOptimizer(_type: myriad.config.OptimizerType, hp: myriad.config.HParams, cfg: myriad.config.Config, objective: Callable[[jax._src.numpy.lax_numpy.ndarray], float], constraints: Callable[[jax._src.numpy.lax_numpy.ndarray], jax._src.numpy.lax_numpy.ndarray], bounds: jax._src.numpy.lax_numpy.ndarray, guess: jax._src.numpy.lax_numpy.ndarray, unravel: Callable[[jax._src.numpy.lax_numpy.ndarray], Tuple], require_adj: bool = False)</p></div>
+<div class="desc"><p>An abstract class representing an "optimizer" which can find the solution
+(an optimal trajectory) to a given "system", using a direct approach.</p>
+<p>An optimizer that uses direct trapezoidal collocation.
+For reference, see <a href="https://epubs.siam.org/doi/10.1137/16M1062569">https://epubs.siam.org/doi/10.1137/16M1062569</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hp</code></strong></dt>
+<dd>Hyperparameters</dd>
+<dt><strong><code>cfg</code></strong></dt>
+<dd>Additional hyperparameters</dd>
+<dt><strong><code>system</code></strong></dt>
+<dd>The system on which to perform the optimization</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.hp"><code class="name">var <span class="ident">hp</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.cfg"><code class="name">var <span class="ident">cfg</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.objective"><code class="name">var <span class="ident">objective</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.constraints"><code class="name">var <span class="ident">constraints</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.bounds"><code class="name">var <span class="ident">bounds</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.guess"><code class="name">var <span class="ident">guess</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.TrapezoidalCollocationOptimizer.unravel"><code class="name">var <span class="ident">unravel</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.bounds" href="#myriad.optimizers.TrajectoryOptimizer.bounds">bounds</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.cfg" href="#myriad.optimizers.TrajectoryOptimizer.cfg">cfg</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.constraints" href="#myriad.optimizers.TrajectoryOptimizer.constraints">constraints</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.guess" href="#myriad.optimizers.TrajectoryOptimizer.guess">guess</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.hp" href="#myriad.optimizers.TrajectoryOptimizer.hp">hp</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.objective" href="#myriad.optimizers.TrajectoryOptimizer.objective">objective</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.solve" href="#myriad.optimizers.TrajectoryOptimizer.solve">solve</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.unravel" href="#myriad.optimizers.TrajectoryOptimizer.unravel">unravel</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer"><code class="flex name class">
 <span>class <span class="ident">HermiteSimpsonCollocationOptimizer</span></span>
 <span>(</span><span>hp, cfg, system)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TrajectoryOptimizer(_type: myriad.config.OptimizerType, hp: myriad.config.HParams, cfg: myriad.config.Config, objective: Callable[[jax._src.numpy.lax_numpy.ndarray], float], constraints: Callable[[jax._src.numpy.lax_numpy.ndarray], jax._src.numpy.lax_numpy.ndarray], bounds: jax._src.numpy.lax_numpy.ndarray, guess: jax._src.numpy.lax_numpy.ndarray, unravel: Callable[[jax._src.numpy.lax_numpy.ndarray], Tuple], require_adj: bool = False)</p></div>
+<div class="desc"><p>An abstract class representing an "optimizer" which can find the solution
+(an optimal trajectory) to a given "system", using a direct approach.</p>
+<p>An optimizer that uses direct Hermite-Simpson collocation.
+For reference, see <a href="https://epubs.siam.org/doi/10.1137/16M1062569">https://epubs.siam.org/doi/10.1137/16M1062569</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hp</code></strong></dt>
+<dd>Hyperparameters</dd>
+<dt><strong><code>cfg</code></strong></dt>
+<dd>Additional hyperparameters</dd>
+<dt><strong><code>system</code></strong></dt>
+<dd>The system on which to perform the optimization</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.hp"><code class="name">var <span class="ident">hp</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.cfg"><code class="name">var <span class="ident">cfg</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.objective"><code class="name">var <span class="ident">objective</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.constraints"><code class="name">var <span class="ident">constraints</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.bounds"><code class="name">var <span class="ident">bounds</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.guess"><code class="name">var <span class="ident">guess</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.HermiteSimpsonCollocationOptimizer.unravel"><code class="name">var <span class="ident">unravel</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.bounds" href="#myriad.optimizers.TrajectoryOptimizer.bounds">bounds</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.cfg" href="#myriad.optimizers.TrajectoryOptimizer.cfg">cfg</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.constraints" href="#myriad.optimizers.TrajectoryOptimizer.constraints">constraints</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.guess" href="#myriad.optimizers.TrajectoryOptimizer.guess">guess</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.hp" href="#myriad.optimizers.TrajectoryOptimizer.hp">hp</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.objective" href="#myriad.optimizers.TrajectoryOptimizer.objective">objective</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.solve" href="#myriad.optimizers.TrajectoryOptimizer.solve">solve</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.unravel" href="#myriad.optimizers.TrajectoryOptimizer.unravel">unravel</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="myriad.optimizers.MultipleShootingOptimizer"><code class="flex name class">
 <span>class <span class="ident">MultipleShootingOptimizer</span></span>
 <span>(</span><span>hp, cfg, system)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TrajectoryOptimizer(_type: myriad.config.OptimizerType, hp: myriad.config.HParams, cfg: myriad.config.Config, objective: Callable[[jax._src.numpy.lax_numpy.ndarray], float], constraints: Callable[[jax._src.numpy.lax_numpy.ndarray], jax._src.numpy.lax_numpy.ndarray], bounds: jax._src.numpy.lax_numpy.ndarray, guess: jax._src.numpy.lax_numpy.ndarray, unravel: Callable[[jax._src.numpy.lax_numpy.ndarray], Tuple], require_adj: bool = False)</p></div>
+<div class="desc"><p>An abstract class representing an "optimizer" which can find the solution
+(an optimal trajectory) to a given "system", using a direct approach.</p>
+<p>An optimizer that uses performs direct multiple shooting.
+For reference, see <a href="https://epubs.siam.org/doi/book/10.1137/1.9780898718577">https://epubs.siam.org/doi/book/10.1137/1.9780898718577</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hp</code></strong></dt>
+<dd>Hyperparameters</dd>
+<dt><strong><code>cfg</code></strong></dt>
+<dd>Additional hyperparameters</dd>
+<dt><strong><code>system</code></strong></dt>
+<dd>The system on which to perform the optimization</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.hp"><code class="name">var <span class="ident">hp</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.cfg"><code class="name">var <span class="ident">cfg</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.objective"><code class="name">var <span class="ident">objective</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.constraints"><code class="name">var <span class="ident">constraints</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.bounds"><code class="name">var <span class="ident">bounds</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.guess"><code class="name">var <span class="ident">guess</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="myriad.optimizers.MultipleShootingOptimizer.unravel"><code class="name">var <span class="ident">unravel</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="myriad.optimizers.TrajectoryOptimizer" href="#myriad.optimizers.TrajectoryOptimizer">TrajectoryOptimizer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.bounds" href="#myriad.optimizers.TrajectoryOptimizer.bounds">bounds</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.cfg" href="#myriad.optimizers.TrajectoryOptimizer.cfg">cfg</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.constraints" href="#myriad.optimizers.TrajectoryOptimizer.constraints">constraints</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.guess" href="#myriad.optimizers.TrajectoryOptimizer.guess">guess</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.hp" href="#myriad.optimizers.TrajectoryOptimizer.hp">hp</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.objective" href="#myriad.optimizers.TrajectoryOptimizer.objective">objective</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.solve" href="#myriad.optimizers.TrajectoryOptimizer.solve">solve</a></code></li>
+<li><code><a title="myriad.optimizers.TrajectoryOptimizer.unravel" href="#myriad.optimizers.TrajectoryOptimizer.unravel">unravel</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="myriad.optimizers.FBSM"><code class="flex name class">
 <span>class <span class="ident">FBSM</span></span>

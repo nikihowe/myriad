@@ -4,11 +4,12 @@ import jax
 import numpy as np
 import simple_parsing
 import gin
+from jax.flatten_util import ravel_pytree
 
 from absl import app
 from absl import flags
 
-from myriad.config import Config, HParams
+from myriad.config import Config, HParams, OptimizerType
 from myriad.optimizers import get_optimizer
 from myriad.plotting import plot_result
 
@@ -62,8 +63,21 @@ def main(unused_argv):
   # Run experiment
   optimizer = get_optimizer(hp, cfg, system)
   results = optimizer.solve()
+  # print("results", results)
+  # print('integrated cost:', optimizer.objective(ravel_pytree(results)))
   if cfg.plot_results:
     plot_result(results, hp)
+
+  # Check how good the run was
+  if hp.optimizer == OptimizerType.FBSM:
+    x, u, adj = results
+    print("xs", x.shape)
+    print("us", u.shape)
+    hp.intervals = 1
+    hp.controls_per_interval = hp.fbsm_intervals
+    hp.optimizer = OptimizerType.SHOOTING
+    new_optimizer = get_optimizer(hp, cfg, system)
+    print("integrated cost", new_optimizer.objective(ravel_pytree((x, u))))
 
 
 if __name__ == '__main__':

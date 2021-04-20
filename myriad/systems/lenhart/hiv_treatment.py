@@ -2,8 +2,6 @@ from typing import Union, Optional
 
 import gin
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from myriad.systems import IndirectFHCS
 
@@ -40,12 +38,12 @@ class HIVTreatment(IndirectFHCS):
         x_0[2],
       ]),               # Starting state
       x_T=None,         # Terminal state, if any
-      T=T,             # Duration of experiment
+      T=T,              # Duration of experiment
       bounds=jnp.array([     # Bounds over the states (x_0, x_1 ...) are given first,
-        [0, jnp.inf],    # followed by bounds over controls (u_0,u_1,...)
-        [0, jnp.inf],
-        [0, jnp.inf],
-        [0, 1],
+        [0., jnp.inf],       # followed by bounds over controls (u_0, u_1,...)
+        [0., jnp.inf],
+        [0., jnp.inf],
+        [0., 1.],
       ]),
       terminal_cost=False,
       discrete=False,

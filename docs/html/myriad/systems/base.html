@@ -38,7 +38,7 @@
 <span>(</span><span>x_0, x_T, T, bounds, terminal_cost, discrete=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for defining control problem under a finite horizon. Model a problem of the form:</p>
+<div class="desc"><p>Abstract class describing a finite-horizon control system. Model a problem of the form:</p>
 <p><span><span class="MathJax_Preview"> \begin{align}
 &amp;\min_u \quad &amp;&amp;g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
 &amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = f(x,u,t) \\
@@ -76,11 +76,11 @@
 </dd>
 <dt id="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost"><code class="name">var <span class="ident">terminal_cost</span></code></dt>
 <dd>
-<div class="desc"><p>Whether only the final state and control are inputs to the cost</p></div>
+<div class="desc"><p>Whether or not there is an additional cost added at the end of the trajectory</p></div>
 </dd>
 <dt id="myriad.systems.base.FiniteHorizonControlSystem.discrete"><code class="name">var <span class="ident">discrete</span></code></dt>
 <dd>
-<div class="desc"><p>Whether we are working with a system with continuous cost or not</p></div>
+<div class="desc"><p>Whether or not the system is discrete</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -109,7 +109,7 @@ of the state variables <span><span class="MathJax_Preview">x</span><script type=
 <span>def <span class="ident">cost</span></span>(<span>self, x_t, u_t, t)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The continuous time function that the system seeks to minimize.</p>
+<div class="desc"><p>The instantaneous time function that the system seeks to minimize.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>x_t</code></strong></dt>
@@ -149,7 +149,14 @@ of the state variables <span><span class="MathJax_Preview">x</span><script type=
 <span>def <span class="ident">plot_solution</span></span>(<span>self, x, u)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The plotting tool for the current system</p></div>
+<div class="desc"><p>The plotting tool for the current system</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong></dt>
+<dd>State array</dd>
+<dt><strong><code>u</code></strong></dt>
+<dd>Control array</dd>
+</dl></div>
 </dd>
 </dl>
 </dd>

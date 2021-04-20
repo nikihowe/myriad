@@ -32,10 +32,28 @@
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="myriad.nlp_solvers.extra_gradient"><code class="name flex">
-<span>def <span class="ident">extra_gradient</span></span>(<span>fun, x0, constraints, bounds, options)</span>
+<span>def <span class="ident">extra_gradient</span></span>(<span>fun, x0, constraints, bounds, options, system_type)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Implementation of extragradient method for finding Lagrangian fixed points.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>fun</code></strong></dt>
+<dd>Objective function</dd>
+<dt><strong><code>x0</code></strong></dt>
+<dd>Start state</dd>
+<dt><strong><code>constraints</code></strong></dt>
+<dd>Equality constraint violation function</dd>
+<dt><strong><code>bounds</code></strong></dt>
+<dd>Bounds for decision variables</dd>
+<dt><strong><code>options</code></strong></dt>
+<dd>Additional solver options, such as stepsize for primal and dual variable update</dd>
+<dt><strong><code>system_type</code></strong></dt>
+<dd>The system under study. Used to set default hyperparameter values.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A solution dict, containing the values of primal and dual variables,
+whether or not it exited with success, and the value of the objective function at the solution.</p></div>
 </dd>
 </dl>
 </section>

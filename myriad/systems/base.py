@@ -8,7 +8,7 @@ import jax.numpy as jnp
 @dataclass
 class FiniteHorizonControlSystem(object):
   """
-  Base class for defining control problem under a finite horizon. Model a problem of the form:
+  Abstract class describing a finite-horizon control system. Model a problem of the form:
 
   .. math::
 
@@ -27,9 +27,9 @@ class FiniteHorizonControlSystem(object):
   bounds: jnp.ndarray
   """State and control bounds"""
   terminal_cost: bool
-  """Whether only the final state and control are inputs to the cost"""
+  """Whether or not there is an additional cost added at the end of the trajectory"""
   discrete: bool = False
-  """Whether we are working with a system with continuous cost or not"""
+  """Whether or not the system is discrete"""
 
   # def __post_init__(self):
   #   self.x_0 = self.x_0.astype(jnp.float64)
@@ -40,6 +40,7 @@ class FiniteHorizonControlSystem(object):
   #   assert self.T > 0
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
+    # TODO: nh: make this accept time-dependent dynamics
     """ The set of equations defining the dynamics of the system. For continuous system, return the vector fields
      of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
      $$x'(t) = f(x,u,t)$$
@@ -53,7 +54,7 @@ class FiniteHorizonControlSystem(object):
     raise NotImplementedError
   
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -> float:
-    """ The continuous time function that the system seeks to minimize.
+    """ The instantaneous time function that the system seeks to minimize.
 
     Args:
         x_t: (jnp.ndarray) -- State variables at time t
@@ -77,7 +78,13 @@ class FiniteHorizonControlSystem(object):
     return 0
 
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
-    """ The plotting tool for the current system"""
+    """ The plotting tool for the current system
+
+    Args:
+      x: State array
+      u: Control array
+    """
+
     raise NotImplementedError
 
 

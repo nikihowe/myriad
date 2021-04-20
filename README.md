@@ -79,8 +79,9 @@ python -m unittest discover -s tests
 ```
 
 ## References
-[Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
-
+- [Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
+- [Betts, *Practical Methods for Optimal Control and Estimation Using Nonlinear Pcrogramming*. SIAM Advances in Design and Control, 2010.](https://epubs.siam.org/doi/book/10.1137/1.9780898718577)
+- [Kelly, *An Introduction to Trajectory Optimization: How to Do Your Own Direct Collocation*. SIAM Rev., 2017.](https://www.semanticscholar.org/paper/An-Introduction-to-Trajectory-Optimization%3A-How-to-Kelly/ba1f38d6bbbf7227cda93f3915bc3fa7fc37b58e)
 ## Citing this repo
 
 ```
