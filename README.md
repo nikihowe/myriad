@@ -1,24 +1,22 @@
-# optimal-control
+# Myriad
 
-A library for solving continuous optimal control problem in JAX
-
-Please read the [full documentation](https://simonduflab.github.io/optimal-control/html/myriad/index.html)
+A library for solving continuous optimal control problem in JAX.
+For more information than this readme,
+please see the full [documentation](https://nikihowe.github.io/optimal-control/html/myriad/index.html).
 
 ## Directory structure
 ```
-├── notebooks
-    └── ...             # Unstructured one-off notebooks and scripts
-├── paper
-    └── ...             # ICLR 2021 paper draft
-├── source
+├── myriad
     ├── gin-configs     # Contains gin configuration files
         └── ...
-    ├── LenhartSystems  # Dynamical systems presented in Lenhart book
+    ├── systems         # Dynamical systems
         └── ...
     ├── config.py       # Configuration and data types
+    ├── nlp_solvers     # Nonlinear program solvers
     ├── optimizers.py   # Trajectory optimization algorithms
-    ├── systems.py      # Dynamical systems
-    └── utils.py        # Helper methods
+    ├── plotting.py     # Code for plotting results
+    ├── scripts.py      # Some useful scripts
+    └── utils.py        # Helper functions
 ├── tests
     └── ...             # Automated tests
 └── run.py              # Entry point for all experiments

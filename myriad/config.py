@@ -35,13 +35,13 @@ class HParams:
   # seed: int = 2020
   # """The seed of the RNG; set with `seed=<int>`"""
   system: SystemType = SystemType.EPIDEMICSEIRN
-  """The system to run the experiment on; set with `system=<SystemType>`. Value can be any of [SystemType](https://simonduflab.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType)"""
+  """The system to run the experiment on; set with `system=<SystemType>`. Value can be any of [SystemType](https://nikihowe.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType)"""
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  """The optimizer to solve the OCP. Select from [OptimizerType](https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.OptimizerType)"""
+  """The optimizer to solve the OCP. Select from [OptimizerType](https://nikihowe.github.io/optimal-control/html/myriad/config.html#myriad.config.OptimizerType)"""
   nlpsolver: NLPSolverType = NLPSolverType.SLSQP
-  """The NLP solver to use during optimization; set with `nlpsolver=<NLPSolverType>`. Value can be any of [NLPSolverType](https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.NLPSolverType)"""
+  """The NLP solver to use during optimization; set with `nlpsolver=<NLPSolverType>`. Value can be any of [NLPSolverType](https://nikihowe.github.io/optimal-control/html/myriad/config.html#myriad.config.NLPSolverType)"""
   order: IntegrationOrder = IntegrationOrder.LINEAR
-  """Order when integrating; set with `order=<IntegrationOrder>`. Value can be any of [IntegrationOrder](https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.IntegrationOrder)"""
+  """Order when integrating; set with `order=<IntegrationOrder>`. Value can be any of [IntegrationOrder](https://nikihowe.github.io/optimal-control/html/myriad/config.html#myriad.config.IntegrationOrder)"""
   max_iter: int = 1000              # maxiter for NLP solver
   """Maximum iteration for NLP solvers; set wit `max_iter=<int>`"""
   intervals: int = 1               # used by COLLOCATION and SHOOTING
