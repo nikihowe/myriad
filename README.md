@@ -1,8 +1,8 @@
 # Myriad
 
-A library for solving continuous optimal control problem in JAX.
-For more information than this readme,
-please see the full [documentation](https://nikihowe.github.io/optimal-control/html/myriad/index.html).
+A library for solving trajectory optimization problems in JAX.
+For descriptions of the available environments, optimizers, and other
+aspects of this repository, please see the [documentation](https://nikihowe.github.io/optimal-control/html/myriad/index.html).
 
 ## Directory structure
 ```
@@ -67,9 +67,6 @@ python run.py --system=GLUCOSE --optimizer=FBSM \
 # etc.
 ```
 
-## Metrics
-TODO: Set up wandb
-
 ## Tests
 ```bash
 source env/bin/activate
@@ -84,9 +81,9 @@ python -m unittest discover -s tests
 
 ```
 @misc{optimal-control,
-  author = {Howe, Nikolaus and Rajkumar, Nitarshan and Dufort-Labbé, Simon},
-  title = {{what is the name (myriad?)}},
-  note = {Available at: https://github.com/nikihowe/put_place_here},
+  author = {Howe, Nikolaus and Dufort-Labbé, Simon and Rajkumar, Nitarshan},
+  title = {Myriad},
+  note = {Available at: https://github.com/nikihowe/myriad},
   year = {2021}
 }
 ```
