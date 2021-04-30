@@ -1,6 +1,12 @@
 # Myriad
 
-A library for solving trajectory optimization problems in JAX.
+Myriad is a collection of dynamical system environments in which to perform optimal control,
+along with a collection of optimization techniques which can be applied to them in
+a mix-and-match fasion.
+
+The aim of this repo is promote and support the development of learning algorithms applicable to a wide
+range of real-world problems.
+
 For descriptions of the available environments, optimizers, and other
 aspects of this repository, please see the [documentation](https://nikihowe.github.io/optimal-control/html/myriad/index.html).
 
