@@ -52,8 +52,9 @@ class FiniteHorizonControlSystem(object):
         dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
      """
     raise NotImplementedError
-  
-  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -> float:
+
+  def cost(self, x_t: Union[float, jnp.ndarray], u_t: Union[float, jnp.ndarray],
+           t: Optional[Union[float, jnp.ndarray]]) -> float:
     """ The instantaneous time function that the system seeks to minimize.
 
     Args:
@@ -65,7 +66,8 @@ class FiniteHorizonControlSystem(object):
     """
     raise NotImplementedError
 
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -> float:
+  def terminal_cost_fn(self, x_T: Union[float, jnp.ndarray], u_T: Union[float, jnp.ndarray],
+                       T: Optional[Union[float, jnp.ndarray]] = None) -> float:
     """ The cost function associated to the final state
 
     Args:
