@@ -1,4 +1,4 @@
-import source.systems
+import myriad.systems
 
 # SimpleCase parameters default values
 SimpleCase.A = 1.0
