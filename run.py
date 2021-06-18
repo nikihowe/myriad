@@ -1,30 +1,34 @@
-import random
-
+# (c) 2021 Nikolaus Howe
+import gin
 import jax
+import jax.numpy as jnp
 import numpy as np
 import simple_parsing
-import gin
+
+from absl import app, flags
 from jax.flatten_util import ravel_pytree
+from jax.config import config
 
-from absl import app
-from absl import flags
-
-from myriad.config import Config, HParams, OptimizerType
+from myriad.config import Config, HParams, IntegrationOrder, OptimizerType
 from myriad.optimizers import get_optimizer
-from myriad.plotting import plot_result
+from myriad.plotting import plot
+from myriad.utils import integrate
+
+config.update("jax_enable_x64", True)
 
 
-# Prepare experiment settings   # TODO: Use only 1 parsing technique?
+# Prepare experiment settings
+# TODO: Migrate to only using a single parsing technique
 parser = simple_parsing.ArgumentParser()
 parser.add_arguments(HParams, dest="hparams")
 parser.add_arguments(Config, dest="config")
-parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjonction to absl.flags
+parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
 
 key_dict = HParams.__dict__.copy()
 key_dict.update(Config.__dict__)
 for key in key_dict.keys():
   if "__" not in key:
-    flags.DEFINE_string(key, None,    # Parser arguments need to be accepted by the flags
+    flags.DEFINE_string(key, None,  # Parser arguments need to be accepted by the flags
                         'Backward compatibility with previous parser')
 
 flags.DEFINE_multi_string(
@@ -35,6 +39,85 @@ flags.DEFINE_multi_string(
 FLAGS = flags.FLAGS
 
 
+def plot_zero_control_dynamics(hp, cfg):
+  system = hp.system()
+  optimizer = get_optimizer(hp, cfg, system)
+  num_steps = hp.intervals * hp.controls_per_interval
+  stepsize = system.T / num_steps
+  zero_us = jnp.zeros((num_steps + 1,))
+
+  _, opt_x = integrate(system.dynamics, system.x_0, zero_us,
+                       stepsize, num_steps, None, hp.order)
+
+  plot(hp, system,
+       data={'x': opt_x, 'u': zero_us},
+       labels={'x': 'Integrated state',
+               'u': 'Zero controls'})
+
+  xs_and_us, unused_unravel = ravel_pytree((opt_x, zero_us))
+  if hp.optimizer != OptimizerType.FBSM:
+    print("control cost from optimizer", optimizer.objective(xs_and_us))
+    print('constraint violations from optimizer', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+
+
+# Script for running the standard trajectory optimization
+def run_trajectory_opt(hp, cfg):
+  system = hp.system()
+  optimizer = get_optimizer(hp, cfg, system)
+  solution = optimizer.solve()
+  x = solution['x']
+  u = solution['u']
+  if hp.order == IntegrationOrder.QUADRATIC and hp.optimizer == OptimizerType.COLLOCATION:
+    x_mid = solution['x_mid']
+    u_mid = solution['u_mid']
+  if optimizer.require_adj:
+    adj = solution['adj']
+
+  # TODO: figure out what happens in the quadratic case for integration (how many timesteps does it use in HS vs shooting)
+
+  num_steps = hp.intervals * hp.controls_per_interval
+  stepsize = system.T / num_steps
+
+  print("the shapes of x and u are", x.shape, u.shape)
+
+  # times = jnp.linspace(0, system.T, num_steps+1)
+  #
+  # def dynamics_wrapper(x, t, u):
+  #   print("t is", t, ", index is", int(t / stepsize))
+  #   single_u = u[int(t / stepsize)]
+  #   print("input u", single_u)
+  #   return system.dynamics(x, single_u)
+  #
+  # state_trajectory = odeint(dynamics_wrapper, system.x_0, times, (u,))
+  # opt_x = state_trajectory
+
+  _, opt_x = integrate(system.dynamics, system.x_0, u,
+                       stepsize, num_steps, None, hp.order)
+
+  if cfg.plot_results:
+    if optimizer.require_adj:
+      plot(hp, system,
+           data={'x': x, 'u': u, 'adj': adj, 'other_x': opt_x},
+           labels={'x': ' (from solver)',
+                   'u': 'Controls from solver',
+                   'adj': 'Adjoint from solver',
+                   'other_x': ' (from integrating controls from solver)'})
+    else:
+      plot(hp, system,
+           data={'x': x, 'u': u, 'other_x': opt_x},
+           labels={'x': ' (from solver)',
+                   'u': 'Controls from solver',
+                   'other_x': ' (from integrating controls from solver)'})
+
+  if hp.order == IntegrationOrder.QUADRATIC and hp.optimizer == OptimizerType.COLLOCATION:
+    xs_and_us, unused_unravel = ravel_pytree((x, x_mid, u, u_mid))
+  else:
+    xs_and_us, unused_unravel = ravel_pytree((x, u))
+  if hp.optimizer != OptimizerType.FBSM:
+    print("control cost from optimizer", optimizer.objective(xs_and_us))
+    print('constraint violations from optimizer', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
+
+
 def main(unused_argv):
   """Main method.
     Args:
@@ -43,41 +126,46 @@ def main(unused_argv):
   jax.config.update("jax_enable_x64", True)
 
   args = parser.parse_args()
-  hp: HParams = args.hparams
-  cfg: Config = args.config
+  hp = args.hparams
+  cfg = args.config
   print(hp)
   print(cfg)
 
   # Set our seeds for reproducibility
-  random.seed(hp.seed)
   np.random.seed(hp.seed)
 
   # Load config, then build system
-  gin_files = ['./myriad/gin-configs/default.gin']
+  gin_files = ['./source/gin-configs/default.gin']
   gin_bindings = FLAGS.gin_bindings
   gin.parse_config_files_and_bindings(gin_files,
                                       bindings=gin_bindings,
                                       skip_unknown=False)
-  system = hp.system()
 
-  # Run experiment
-  optimizer = get_optimizer(hp, cfg, system)
-  results = optimizer.solve()
-  # print("results", results)
-  # print('integrated cost:', optimizer.objective(ravel_pytree(results)))
-  if cfg.plot_results:
-    plot_result(results, hp)
+  # -----------------------------------------------------------------------
+  ######################
+  # Place scripts here #
+  ######################
+  # system = hp.system()
+  # optimizer = get_optimizer(hp, cfg, system)
+  # # solution = optimizer.solve()
+  # num_steps = hp.intervals * hp.controls_per_interval
+  # stepsize = system.T / num_steps
+  # u = jnp.sin(jnp.arange(num_steps + 1) * 0.08)
+  # # u = jnp.zeros(num_steps + 1)
+  # _, opt_x = integrate(system.dynamics, system.x_0, u,
+  #                      stepsize, num_steps, None, hp.order)
+  # plot(hp, system,
+  #      data={'x': opt_x, 'u': u},
+  #      labels={'x': ' (from solver)',
+  #              'u': 'Controls from solver'})
 
-  # Check how good the run was
-  if hp.optimizer == OptimizerType.FBSM:
-    x, u, adj = results
-    print("xs", x.shape)
-    print("us", u.shape)
-    hp.intervals = 1
-    hp.controls_per_interval = hp.fbsm_intervals
-    hp.optimizer = OptimizerType.SHOOTING
-    new_optimizer = get_optimizer(hp, cfg, system)
-    print("integrated cost", new_optimizer.objective(ravel_pytree((x, u))))
+  # plot_zero_control_dynamics(hp, cfg)
+  #
+  run_trajectory_opt(hp, cfg)
+  # raise SystemExit
+
+  # run_trajectory_opt(hp, cfg)
+  # -----------------------------------------------------------------------
 
 
 if __name__ == '__main__':
