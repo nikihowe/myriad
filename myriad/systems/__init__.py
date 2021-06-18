@@ -5,6 +5,8 @@ from .base import FiniteHorizonControlSystem
 from .base import IndirectFHCS
 from .cartpole import CartPole
 from .vanderpol import VanDerPol
+from .mountaincar import MountainCar
+from .pendulum import Pendulum
 from .seir import SEIR
 from .tumour import Tumour
 from .lenhart.simple_case import SimpleCase
@@ -28,6 +30,8 @@ class SystemType(Enum):
   VANDERPOL = VanDerPol
   SEIR = SEIR
   TUMOUR = Tumour
+  MOUNTAINCAR = MountainCar
+  PENDULUM = Pendulum
   SIMPLECASE = SimpleCase
   MOLDFUNGICIDE = MoldFungicide
   BACTERIA = Bacteria
@@ -42,6 +46,7 @@ class SystemType(Enum):
   BIOREACTOR = Bioreactor
   PREDATORPREY = PredatorPrey
   INVASIVEPLANT = InvasivePlant
+
 
   def __call__(self, *args, **kwargs) -> Union[FiniteHorizonControlSystem, IndirectFHCS]:
       return self.value(*args, **kwargs)
