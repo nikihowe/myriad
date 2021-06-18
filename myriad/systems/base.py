@@ -4,6 +4,8 @@ from typing import Optional, Union
 
 import jax.numpy as jnp
 
+from myriad.types import State, DState, States, Control, Controls, Cost
+
 
 @dataclass
 class FiniteHorizonControlSystem(object):
@@ -39,45 +41,46 @@ class FiniteHorizonControlSystem(object):
   #   assert self.bounds.shape == (self.x_0.shape[0]+1, 2)
   #   assert self.T > 0
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray]) -> jnp.ndarray:
-    # TODO: nh: make this accept time-dependent dynamics
+  def dynamics(self, x_t: State, u_t: Control) -> DState:
+    # TODO: nh: make this accept time-dependent dynamics. (actually, do we want to do this?
+    #  what kind of system would this be?)
     """ The set of equations defining the dynamics of the system. For continuous system, return the vector fields
      of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
      $$x'(t) = f(x,u,t)$$
 
     Args:
-        x_t: (jnp.ndarray) -- An array, representing the state variables at various time t
-        u_t: (float, jnp.ndarray) -- An array, representing the control variables at various time t
+        x_t: (State) -- An array, representing the state variables at various time t
+        u_t: (Control) -- An array, representing the control variables at various time t
     Returns:
-        dx_t: (jnp.ndarray) -- The derivative value of the state variables, x_t, at corresponding time t
+        dx_t: (DState) -- The derivative value of the state variables, x_t, at corresponding time t
      """
     raise NotImplementedError
-  
-  def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[Union[float, jnp.ndarray]]) -> float:
+
+  def cost(self, x_t: State, u_t: Control, t: Optional[float]) -> Cost:
     """ The instantaneous time function that the system seeks to minimize.
 
     Args:
-        x_t: (jnp.ndarray) -- State variables at time t
-        u_t: (jnp.ndarray) -- Control variables at time t
-        t: (jnp.ndarray, optional) -- Time parameter
+        x_t: (State) -- State variables at time t
+        u_t: (Control) -- Control variables at time t
+        t: (float, optional) -- Time parameter
     Returns:
-        cost: (float) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
+        cost: (Cost) -- The instantaneous cost \\( g(x_t,u_t,t) \\)
     """
     raise NotImplementedError
 
-  def terminal_cost_fn(self, x_T: jnp.ndarray, u_T: Union[float, jnp.ndarray], T: Optional[Union[float, jnp.ndarray]] = None) -> float:
+  def terminal_cost_fn(self, x_T: State, u_T: Control, T: Optional[float] = None) -> Cost:
     """ The cost function associated to the final state
 
     Args:
-        x_T: (jnp.ndarray) -- Final state
-        u_T: (jnp.ndarray) -- Final control
-        T: (jnp.ndarray, float) -- The Horizon
+        x_T: (State) -- Final state
+        u_T: (Control) -- Final control
+        T: (float) -- The Horizon
     Returns:
-        cost_T: (float) -- The terminal cost \\(g_T(x_T,u_T,T\\)
+        cost_T: (Cost) -- The terminal cost \\(g_T(x_T,u_T,T\\)
     """
     return 0
 
-  def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
+  def plot_solution(self, x: States, u: Controls) -> None:
     """ The plotting tool for the current system
 
     Args:
