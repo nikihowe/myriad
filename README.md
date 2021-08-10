@@ -78,6 +78,7 @@ python run.py --system=GLUCOSE --optimizer=FBSM \
 source env/bin/activate
 python -m unittest discover -s tests
 ```
+There will be more test documentation soon.
 
 ## References
 - [Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
