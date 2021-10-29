@@ -17,7 +17,7 @@ from myriad.systems import FiniteHorizonControlSystem
 # from source.optimizers import get_optimizer
 from myriad.nlp_solvers import extra_gradient
 from myriad.plotting import plot
-from myriad.types import Control, Controls, State, States, Cost, Time
+from myriad.custom_types import Control, Controls, State, States, Cost, Time
 
 
 def integrate(

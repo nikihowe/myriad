@@ -7,10 +7,10 @@ import sys
 import unittest
 
 from run import run_trajectory_opt
-from source.config import IntegrationMethod, NLPSolverType, OptimizerType, QuadratureRule, SystemType
-from source.custom_types import State, Control, Timestep, States
-from source.useful_scripts import run_setup
-from source.utils import integrate
+from myriad.config import IntegrationMethod, NLPSolverType, OptimizerType, QuadratureRule, SystemType
+from myriad.custom_types import State, Control, Timestep, States
+from myriad.useful_scripts import run_setup
+from myriad.utils import integrate
 
 hp, cfg = run_setup(sys.argv, gin_path='../source/gin-configs/default.gin')
 

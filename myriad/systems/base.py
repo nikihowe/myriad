@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import jax.numpy as jnp
 
-from myriad.types import State, DState, States, Control, Controls, Cost
+from myriad.custom_types import State, DState, States, Control, Controls, Cost
 
 
 @dataclass

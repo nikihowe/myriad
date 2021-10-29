@@ -9,7 +9,7 @@ import jax
 from typing import Optional
 
 from myriad.systems.base import FiniteHorizonControlSystem
-from myriad.types import State, DState, Control
+from myriad.custom_types import State, DState, Control
 
 
 # https://github.com/openai/gym/blob/ee5ee3a4a5b9d09219ff4c932a45c4a661778cd7/gym/envs/classic_control/pendulum.py#L101
