@@ -1,6 +1,4 @@
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from .base import FiniteHorizonControlSystem
 
@@ -33,11 +31,15 @@ class SEIR(FiniteHorizonControlSystem):
       x_T=None,
       T=20,
       bounds=jnp.array([
-        [-jnp.inf, jnp.inf],
-        [-jnp.inf, jnp.inf],
-        [-jnp.inf, jnp.inf],
-        [-jnp.inf, jnp.inf],
-        [0.0, 1.0],
+        # [-jnp.inf, jnp.inf],
+        # [-jnp.inf, jnp.inf],
+        # [-jnp.inf, jnp.inf],
+        # [-jnp.inf, jnp.inf],
+        [0., 2000.],  # Chosen by observation
+        [0., 250.],  # "
+        [0., 250.],  # "
+        [0., 3000.],  # "
+        [0., 1.],
       ]),
       terminal_cost=False,
     )

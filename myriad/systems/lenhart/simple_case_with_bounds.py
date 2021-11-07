@@ -28,7 +28,8 @@ class SimpleCaseWithBounds(IndirectFHCS):
       x_T=None,               # Terminal state, if any
       T=T,                    # Duration of experiment
       bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
+        # [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
+        [0., 3.],  # changed based on observation of the true optimal trajectory using default M_1 and M_2
         [M_1, M_2],
       ]),
       terminal_cost=False,

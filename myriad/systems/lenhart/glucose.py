@@ -1,9 +1,9 @@
-from typing import Union, Optional
 import gin
-
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+from typing import Union, Optional
+
+from myriad.custom_types import Params
 from myriad.systems import IndirectFHCS
 
 
@@ -39,18 +39,19 @@ class Glucose(IndirectFHCS):
     x_0: Initial blood glucose level and insulin level \\((x_0,x_1)\\) \n
     T: The horizon should be kept under 0.45
   """
+
   def __init__(self, a=1., b=1., c=1., A=2., l=.5, x_0=(.75, 0.), T=.2):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
         x_0[1],
-      ]),                     # Starting state
-      x_T=None,               # Terminal state, if any
-      T=T,                    # Duration of experiment
-      bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
-        [jnp.NINF, jnp.inf],
-        [0, jnp.inf],
+      ]),  # Starting state
+      x_T=None,  # Terminal state, if any
+      T=T,  # Duration of experiment
+      bounds=jnp.array([  # Bounds over the states (x_0, x_1, ...) are given first,
+        [0., 1.],  # followed by bounds over controls (u_0, u_1, ...)
+        [0., 1.],
+        [0., 0.01],
       ]),
       terminal_cost=False,
       discrete=False,
@@ -75,25 +76,51 @@ class Glucose(IndirectFHCS):
       u_t, = u_t
 
     d_x = jnp.array([
-      -self.a*x_0 - self.b*x_1,
-      -self.c*x_1 + u_t
-      ])
+      -self.a * x_0 - self.b * x_1,
+      -self.c * x_1 + u_t
+    ])
+
+    return d_x
+
+  def parametrized_dynamics(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                            v_t: Optional[Union[float, jnp.ndarray]] = None,
+                            t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+    a = params['a']
+    b = params['b']
+    c = params['c']
+
+    x_0, x_1 = x_t
+    if u_t.ndim > 0:
+      u_t, = u_t
+
+    d_x = jnp.array([
+      -a * x_0 - b * x_1,
+      -c * x_1 + u_t
+    ])
 
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return self.A*(x_t[0]-self.l)**2 + u_t**2
+    return 100_000 * (self.A * (x_t[0] - self.l) ** 2 + u_t ** 2)  # multiplying by 100_000 so we can actually see it
+
+  def parametrized_cost(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                        t: Optional[jnp.ndarray] = None) -> float:
+    # A = params['A']  # Uncomment these and recomment the others
+    # l = params['l']  # if we want to also learn the cost
+    A = self.A
+    l = self.l
+    return 100_000 * (A * (x_t[0] - l) ** 2 + u_t ** 2)  # multiplying by 100_000 so we can actually see it
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
               t: Optional[jnp.ndarray]) -> jnp.ndarray:
     return jnp.array([
-      -2*self.A*(x_t[0]-self.l) + adj_t[0]*self.a,
-      adj_t[0]*self.b + adj_t[1]*self.c
+      -2 * self.A * (x_t[0] - self.l) + adj_t[0] * self.a,
+      adj_t[0] * self.b + adj_t[1] * self.c
     ])
 
   def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
                              t: Optional[jnp.ndarray]) -> jnp.ndarray:
-    char_0 = -adj_t[:, 1]/2
+    char_0 = -adj_t[:, 1] / 2
     char_0 = char_0.reshape(-1, 1)
 
     return char_0

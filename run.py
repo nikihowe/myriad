@@ -1,171 +1,99 @@
 # (c) 2021 Nikolaus Howe
-import gin
-import jax
-import jax.numpy as jnp
-import numpy as np
-import simple_parsing
 
-from absl import app, flags
-from jax.flatten_util import ravel_pytree
+import numpy as np
+import random
+
+from absl import app
 from jax.config import config
 
-from myriad.config import Config, HParams, IntegrationOrder, OptimizerType
-from myriad.optimizers import get_optimizer
-from myriad.plotting import plot
-from myriad.utils import integrate
+from pathlib import Path
+
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle as pkl
+import random
+
+from absl import app
+from jax.config import config
+
+from myriad.experiments.e2e_sysid import run_endtoend
+from myriad.experiments.mle_sysid import run_mle_sysid
+from myriad.experiments.node_e2e_sysid import run_node_endtoend
+from myriad.experiments.node_mle_sysid import run_node_mle_sysid
+from myriad.useful_scripts import run_setup, run_trajectory_opt, load_node_and_plan
+from myriad.probing_numerical_instability import probe, special_probe
+from myriad.utils import integrate_time_independent, yield_minibatches
 
 config.update("jax_enable_x64", True)
 
-
-# Prepare experiment settings
-# TODO: Migrate to only using a single parsing technique
-parser = simple_parsing.ArgumentParser()
-parser.add_arguments(HParams, dest="hparams")
-parser.add_arguments(Config, dest="config")
-parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
-
-key_dict = HParams.__dict__.copy()
-key_dict.update(Config.__dict__)
-for key in key_dict.keys():
-  if "__" not in key:
-    flags.DEFINE_string(key, None,  # Parser arguments need to be accepted by the flags
-                        'Backward compatibility with previous parser')
-
-flags.DEFINE_multi_string(
-    'gin_bindings', [],
-    'Gin bindings to override the values set in the config files '
-    '(e.g. "Lab1.A=1.0").')
-
-FLAGS = flags.FLAGS
+run_buddy = True
 
 
-def plot_zero_control_dynamics(hp, cfg):
-  system = hp.system()
-  optimizer = get_optimizer(hp, cfg, system)
-  num_steps = hp.intervals * hp.controls_per_interval
-  stepsize = system.T / num_steps
-  zero_us = jnp.zeros((num_steps + 1,))
-
-  _, opt_x = integrate(system.dynamics, system.x_0, zero_us,
-                       stepsize, num_steps, None, hp.order)
-
-  plot(hp, system,
-       data={'x': opt_x, 'u': zero_us},
-       labels={'x': 'Integrated state',
-               'u': 'Zero controls'})
-
-  xs_and_us, unused_unravel = ravel_pytree((opt_x, zero_us))
-  if hp.optimizer != OptimizerType.FBSM:
-    print("control cost from optimizer", optimizer.objective(xs_and_us))
-    print('constraint violations from optimizer', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-
-
-# Script for running the standard trajectory optimization
-def run_trajectory_opt(hp, cfg):
-  system = hp.system()
-  optimizer = get_optimizer(hp, cfg, system)
-  solution = optimizer.solve()
-  x = solution['x']
-  u = solution['u']
-  if hp.order == IntegrationOrder.QUADRATIC and hp.optimizer == OptimizerType.COLLOCATION:
-    x_mid = solution['x_mid']
-    u_mid = solution['u_mid']
-  if optimizer.require_adj:
-    adj = solution['adj']
-
-  # TODO: figure out what happens in the quadratic case for integration (how many timesteps does it use in HS vs shooting)
-
-  num_steps = hp.intervals * hp.controls_per_interval
-  stepsize = system.T / num_steps
-
-  print("the shapes of x and u are", x.shape, u.shape)
-
-  # times = jnp.linspace(0, system.T, num_steps+1)
-  #
-  # def dynamics_wrapper(x, t, u):
-  #   print("t is", t, ", index is", int(t / stepsize))
-  #   single_u = u[int(t / stepsize)]
-  #   print("input u", single_u)
-  #   return system.dynamics(x, single_u)
-  #
-  # state_trajectory = odeint(dynamics_wrapper, system.x_0, times, (u,))
-  # opt_x = state_trajectory
-
-  _, opt_x = integrate(system.dynamics, system.x_0, u,
-                       stepsize, num_steps, None, hp.order)
-
-  if cfg.plot_results:
-    if optimizer.require_adj:
-      plot(hp, system,
-           data={'x': x, 'u': u, 'adj': adj, 'other_x': opt_x},
-           labels={'x': ' (from solver)',
-                   'u': 'Controls from solver',
-                   'adj': 'Adjoint from solver',
-                   'other_x': ' (from integrating controls from solver)'})
-    else:
-      plot(hp, system,
-           data={'x': x, 'u': u, 'other_x': opt_x},
-           labels={'x': ' (from solver)',
-                   'u': 'Controls from solver',
-                   'other_x': ' (from integrating controls from solver)'})
-
-  if hp.order == IntegrationOrder.QUADRATIC and hp.optimizer == OptimizerType.COLLOCATION:
-    xs_and_us, unused_unravel = ravel_pytree((x, x_mid, u, u_mid))
-  else:
-    xs_and_us, unused_unravel = ravel_pytree((x, u))
-  if hp.optimizer != OptimizerType.FBSM:
-    print("control cost from optimizer", optimizer.objective(xs_and_us))
-    print('constraint violations from optimizer', jnp.linalg.norm(optimizer.constraints(xs_and_us)))
-
-
-def main(unused_argv):
-  """Main method.
-    Args:
-      unused_argv: Arguments (unused).
-    """
-  jax.config.update("jax_enable_x64", True)
-
-  args = parser.parse_args()
-  hp = args.hparams
-  cfg = args.config
-  print(hp)
-  print(cfg)
-
-  # Set our seeds for reproducibility
+def main(argv):
+  #########
+  # Setup #
+  #########
+  hp, cfg = run_setup(argv)
+  random.seed(hp.seed)
   np.random.seed(hp.seed)
 
-  # Load config, then build system
-  gin_files = ['./source/gin-configs/default.gin']
-  gin_bindings = FLAGS.gin_bindings
-  gin.parse_config_files_and_bindings(gin_files,
-                                      bindings=gin_bindings,
-                                      skip_unknown=False)
+  if run_buddy:
+    # random.seed(hp.seed)
+    # np.random.seed(hp.seed)
+    import experiment_buddy
+    experiment_buddy.register(hp.__dict__)
+    # tensorboard = experiment_buddy.deploy(host='mila', sweep_yaml="sweep.yaml")
+    tensorboard = experiment_buddy.deploy(host='mila', sweep_yaml="")
+    # tensorboard = experiment_buddy.deploy(host='', sweep_yaml='')
 
-  # -----------------------------------------------------------------------
+  ########################################
+  # Probing Systems' Numerical Stability #
+  ########################################
+  # for st in SystemType:
+  #   if st in [SystemType.SIMPLECASE, SystemType.INVASIVEPLANT]:
+  #     continue
+  #   print("system", st)
+  #   hp.system = st
+  #   probe(hp, cfg)
+
+  # probe(hp, cfg)
+  # special_probe(hp, cfg)
+
+  ###########################################
+  # Trajectory optimization with true model #
+  ###########################################
+  # run_trajectory_opt(hp, cfg, save_as='bloop.pdf')
+
   ######################
-  # Place scripts here #
+  # MLE model learning #
   ######################
-  # system = hp.system()
-  # optimizer = get_optimizer(hp, cfg, system)
-  # # solution = optimizer.solve()
-  # num_steps = hp.intervals * hp.controls_per_interval
-  # stepsize = system.T / num_steps
-  # u = jnp.sin(jnp.arange(num_steps + 1) * 0.08)
-  # # u = jnp.zeros(num_steps + 1)
-  # _, opt_x = integrate(system.dynamics, system.x_0, u,
-  #                      stepsize, num_steps, None, hp.order)
-  # plot(hp, system,
-  #      data={'x': opt_x, 'u': u},
-  #      labels={'x': ' (from solver)',
-  #              'u': 'Controls from solver'})
+  # Parametric, MLE
+  # run_mle_sysid(hp, cfg)
 
-  # plot_zero_control_dynamics(hp, cfg)
-  #
-  run_trajectory_opt(hp, cfg)
-  # raise SystemExit
+  # NODE, MLE
+  run_node_mle_sysid(hp, cfg)
 
-  # run_trajectory_opt(hp, cfg)
-  # -----------------------------------------------------------------------
+  #############################
+  # End to end model learning #
+  #############################
+  # Parametric, end-to-end
+  # run_endtoend(hp, cfg)
+
+  # NODE, end-to-end
+  # run_node_endtoend(hp, cfg)
+
+  ###############
+  # Noise study #
+  ###############
+  # study_noise(hp, cfg, experiment_string='mle_sysid')
+  # study_noise(hp, cfg, experiment_string='node_mle_sysid')
+
+  ##################
+  # Dynamics study #
+  ##################
+  # study_vector_field(hp, cfg, 'mle', 0)
+  # study_vector_field(hp, cfg, 'e2e', 0, file_extension='pdf')
 
 
 if __name__ == '__main__':
