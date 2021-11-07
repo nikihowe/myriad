@@ -1,9 +1,9 @@
-from typing import Union, Optional
 import gin
-
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import seaborn as sns
+
+from typing import Union, Optional
+
 from myriad.systems import IndirectFHCS
 
 
@@ -91,7 +91,7 @@ class InvasivePlant(IndirectFHCS):
   def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray,
                     adj: Optional[jnp.ndarray] = None,
                     other_x: Optional[jnp.ndarray] = None) -> None:
-    sns.set(style='darkgrid')
+    # sns.set(style='darkgrid')
     plt.figure(figsize=(9, 9))
 
     x, u, adj = x.T, u.T, adj.T

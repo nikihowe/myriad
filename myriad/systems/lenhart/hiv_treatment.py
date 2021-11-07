@@ -1,8 +1,9 @@
-from typing import Union, Optional
-
 import gin
 import jax.numpy as jnp
 
+from typing import Union, Optional
+
+from myriad.custom_types import Params
 from myriad.systems import IndirectFHCS
 
 
@@ -28,21 +29,22 @@ class HIVTreatment(IndirectFHCS):
       & && 0\\leq u(t) \\leq 1, \\; A > 0
       \\end{align}
     """
+
   def __init__(self, s=10., m_1=.02, m_2=.5, m_3=4.4, r=.03,
-               T_max=1500., k=.000024, N=300, x_0=(800., .04, 1.5),
+               T_max=1500., k=.000024, N=300., x_0=(800., .04, 1.5),
                A=.05, T=20.):
     super().__init__(
       x_0=jnp.array([
         x_0[0],
         x_0[1],
         x_0[2],
-      ]),               # Starting state
-      x_T=None,         # Terminal state, if any
-      T=T,              # Duration of experiment
-      bounds=jnp.array([     # Bounds over the states (x_0, x_1 ...) are given first,
-        [0., jnp.inf],       # followed by bounds over controls (u_0, u_1,...)
-        [0., jnp.inf],
-        [0., jnp.inf],
+      ]),  # Starting state
+      x_T=None,  # Terminal state, if any
+      T=T,  # Duration of experiment
+      bounds=jnp.array([  # Bounds over the states (x_0, x_1 ...) are given first,
+        [0., 1600.],    # followed by bounds over controls (u_0, u_1,...)
+        [0., 100.],
+        [0., 100.],  # all were inf before, except control
         [0., 1.],
       ]),
       terminal_cost=False,
@@ -70,32 +72,60 @@ class HIVTreatment(IndirectFHCS):
     """Weight parameter balancing the cost"""
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
-         v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+               v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
     x_0, x_1, x_2 = x_t
     if u_t.ndim > 0:
       u_t, = u_t
     d_x = jnp.array([
-      self.s/(1+x_2) - self.m_1*x_0 + self.r*x_0*(1-(x_0+x_1)/self.T_max) - u_t*self.k*x_0*x_2,
-      u_t*self.k*x_0*x_2 - self.m_2*x_1,
-      self.N*self.m_2*x_1 - self.m_3*x_2,
-      ])
+      self.s / (1 + x_2) - self.m_1 * x_0 + self.r * x_0 * (1 - (x_0 + x_1) / self.T_max) - u_t * self.k * x_0 * x_2,
+      u_t * self.k * x_0 * x_2 - self.m_2 * x_1,
+      self.N * self.m_2 * x_1 - self.m_3 * x_2,
+    ])
+
+    return d_x
+
+  def parametrized_dynamics(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                            v_t: Optional[Union[float, jnp.ndarray]] = None,
+                            t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+    k = params['k']
+    m_1 = params['m_1']
+    m_2 = params['m_2']
+    m_3 = params['m_3']
+    N = params['N']
+    r = params['r']
+    s = params['s']
+    T_max = params['T_max']
+
+    x_0, x_1, x_2 = x_t
+    if u_t.ndim > 0:
+      u_t, = u_t
+    d_x = jnp.array([
+      s / (1 + x_2) - m_1 * x_0 + r * x_0 * (1 - (x_0 + x_1) / T_max) - u_t * k * x_0 * x_2,
+      u_t * k * x_0 * x_2 - m_2 * x_1,
+      N * m_2 * x_1 - m_3 * x_2,
+    ])
 
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return -self.A*x_t[0] + (1-u_t)**2  # Maximization problem converted to minimization
+    return -self.A * x_t[0] + (1 - u_t) ** 2  # Maximization problem converted to minimization
+
+  def parametrized_cost(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                        t: Optional[jnp.ndarray] = None) -> float:
+    return -self.A * x_t[0] + (1 - u_t) ** 2  # No cost learning for now
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
-        t: Optional[jnp.ndarray]) -> jnp.ndarray:
+              t: Optional[jnp.ndarray]) -> jnp.ndarray:
     return jnp.array([
-      -self.A + adj_t[0]*(self.m_1 - self.r*(1-(x_t[0]+x_t[1])/self.T_max) + self.r*x_t[0]/self.T_max
-                + u_t[0]*self.k*x_t[2]) - adj_t[1]*u_t[0]*self.k*x_t[2],
-      adj_t[0]*self.r*x_t[0]/self.T_max + adj_t[1]*self.m_2 - adj_t[2]*self.N*self.m_2,
-      adj_t[0]*(self.s/(1+x_t[2])**2 + u_t[0]*self.k*x_t[0]) - adj_t[1]*u_t[0]*self.k*x_t[0] + adj_t[2]*self.m_3,
+      -self.A + adj_t[0] * (self.m_1 - self.r * (1 - (x_t[0] + x_t[1]) / self.T_max) + self.r * x_t[0] / self.T_max
+                            + u_t[0] * self.k * x_t[2]) - adj_t[1] * u_t[0] * self.k * x_t[2],
+      adj_t[0] * self.r * x_t[0] / self.T_max + adj_t[1] * self.m_2 - adj_t[2] * self.N * self.m_2,
+      adj_t[0] * (self.s / (1 + x_t[2]) ** 2 + u_t[0] * self.k * x_t[0]) - adj_t[1] * u_t[0] * self.k * x_t[0] + adj_t[
+        2] * self.m_3,
     ])
 
   def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
-                 t: Optional[jnp.ndarray]) -> jnp.ndarray:
-    char = 1 + 0.5*self.k*x_t[:, 0]*x_t[:, 2]*(adj_t[:, 1]-adj_t[:, 0])
+                             t: Optional[jnp.ndarray]) -> jnp.ndarray:
+    char = 1 + 0.5 * self.k * x_t[:, 0] * x_t[:, 2] * (adj_t[:, 1] - adj_t[:, 0])
     char = char.reshape(-1, 1)
     return jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char))

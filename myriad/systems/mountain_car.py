@@ -1,19 +1,20 @@
-import jax.numpy as jnp
+# (c) 2021 Nikolaus Howe
 import jax
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
+import jax.numpy as jnp
 
+from typing import Optional
+
+from myriad.custom_types import Control, Cost, DState, Params, State, Timestep
 from myriad.systems.base import FiniteHorizonControlSystem
 
 
-def hill_function(x):
+def hill_function(x: float) -> float:
   # return jnp.max(jnp.array([-3 * x - jnp.pi, -1/3 * jnp.cos(3 * x), 3 * x]))
-  return x * x
+  return 0.5 * x * x
 
 
 class MountainCar(FiniteHorizonControlSystem):
-  def __init__(self, goal_velocity=0):
+  def __init__(self, power=0.0015, gravity=0.0025) -> None:
     """
     Continuous mountain-car, inspired by
     https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py
@@ -24,16 +25,20 @@ class MountainCar(FiniteHorizonControlSystem):
     self.min_position = -1.2
     self.max_position = 0.6
     self.max_speed = 0.07
+    self.start_position = -0.1
+    self.start_velocity = 0.
     self.goal_position = 0.45  # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
-    self.goal_velocity = goal_velocity
-    self.power = 0.0015
-    self.gravity = 0.0025
+    self.goal_velocity = 0
+    # self.power = 0.0015
+    # self.gravity = 0.0025
+    self.power = power
+    self.gravity = gravity
 
     super().__init__(
       # [self.np_random.uniform(low=-0.6, high=-0.4), 0]
-      x_0=jnp.array([-0.1, 0.]),  # Starting state: position, velocity
+      x_0=jnp.array([self.start_position, self.start_velocity]),  # Starting state: position, velocity
       x_T=jnp.array([self.goal_position, self.goal_velocity]),  # Ending state
-      T=600.,  # s duration (note, this is not in the original problem)
+      T=300.,  # s duration (note, this is not in the original problem)
       bounds=jnp.array([
         [self.min_position, self.max_position],  # Position bounds
         [-self.max_speed, self.max_speed],  # Velocity bounds
@@ -45,33 +50,31 @@ class MountainCar(FiniteHorizonControlSystem):
   # def _height(self, xs):
   #   return jnp.sin(3 * xs) * .45 + .55
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> jnp.ndarray:
-    # TODO: there is an error somewhere where the calculated state can go outside the boundaries
-    # print("input", x_t)
+  def dynamics(self, x_t: State, u_t: Control, t: Optional[Timestep] = None) -> DState:
     position, velocity = x_t
-    position = jnp.clip(position, a_min=self.min_position, a_max=self.max_position)
-    velocity = jnp.clip(velocity, a_min=-self.max_speed, a_max=self.max_speed)
     force = jnp.clip(u_t, a_min=self.min_action, a_max=self.max_action)
 
     d_position = velocity.squeeze()
     d_velocity = (force * self.power - self.gravity * jax.grad(hill_function)(position)).squeeze()
 
-    # Add in another velocity term that pushes towards the middle if we're too far to the left or right
-    # if position <= self.min_position:
-    #   d_position = 0.1
-    #   d_velocity = 0.
-    # elif position >= self.max_position:
-    #   d_position = -0.1
-    #   d_velocity = 0.
-
-    # d_velocity = force * self.power -self.gravity * jnp.sin(position)
-
-    # print("separate output", d_position, d_velocity)
-    # print("output", jnp.array([d_position, d_velocity]))
     return jnp.array([d_position, d_velocity])
 
-  def cost(self, x_t: jnp.ndarray, u_t: float, t: float = None) -> float:
-    return 0.1 * u_t ** 2
+  def parametrized_dynamics(self, params: Params, x_t: State, u_t: Control, t: Optional[Timestep] = None) -> DState:
+    position, velocity = x_t
+    power = params['power']
+    gravity = params['gravity']
+    force = jnp.clip(u_t, a_min=self.min_action, a_max=self.max_action)
+
+    d_position = velocity.squeeze()
+    d_velocity = (force * power - gravity * jax.grad(hill_function)(position)).squeeze()
+
+    return jnp.array([d_position, d_velocity])
+
+  def cost(self, x_t: State, u_t: Control, t: Optional[Timestep] = None) -> Cost:
+    return 10. * u_t ** 2
+
+  def parametrized_cost(self, params: Params, x_t: State, u_t: Control, t: Optional[Timestep] = None) -> Cost:
+    return self.cost(x_t, u_t, t)
 
   # def plot_solution(self, x: jnp.ndarray, u: jnp.ndarray) -> None:
   #   x = pd.DataFrame(x, columns=['q1', 'q2', 'q̈1', 'q̈2'])
