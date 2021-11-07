@@ -1,9 +1,7 @@
-from typing import Union, Optional
-
 import gin
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+from typing import Union, Optional
 
 from myriad.systems import IndirectFHCS
 

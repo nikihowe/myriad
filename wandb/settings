@@ -1,0 +1,5 @@
+[default]
+entity = nikihowe
+project = myriad
+base_url = https://api.wandb.ai
+

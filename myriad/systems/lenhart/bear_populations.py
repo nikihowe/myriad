@@ -1,7 +1,9 @@
-from typing import Union, Optional
 import gin
 import jax.numpy as jnp
 
+from typing import Union, Optional
+
+from myriad.custom_types import Params
 from myriad.systems import IndirectFHCS
 
 
@@ -10,7 +12,7 @@ class BearPopulations(IndirectFHCS):
   """
       Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 15, Lab 9)
       Additional reference can be found in R. A. Salinas, S. Lenhart, and L. J. Gross. Control of a metapopulation
-      harvesting model for black bears. Natural Resource Modeling, 18:307–21, 2005.
+      harvesting model for black bears. Natural Remyriad Modeling, 18:307–21, 2005.
 
       The model represents the metapopulation of black bears, i.e. a population consisting of multiple local
       populations, which can interact with each other. In this particular scenario, the author models the
@@ -30,6 +32,7 @@ class BearPopulations(IndirectFHCS):
         & && 0\\leq u_p(t) \\leq 1, \\; 0\\leq u_f(t) \\leq 1
         \\end{align}
       """
+
   def __init__(self, r=.1, K=.75, m_p=.5, m_f=.5, c_p=10_000,
                c_f=10, x_0=(.4, .2, 0.), T=25):
     super().__init__(
@@ -37,15 +40,15 @@ class BearPopulations(IndirectFHCS):
         x_0[0],
         x_0[1],
         x_0[2],
-      ]),                       # Starting state
-      x_T=None,                 # Terminal state, if any
-      T=T,                      # Duration of experiment
-      bounds=jnp.array([        # Bounds over the states (x_0, x_1 ...) are given first,
-        [0., jnp.inf],    # followed by bounds over controls (u_0,u_1,...)
-        [0., jnp.inf],
-        [0., jnp.inf],  # nh: I changed lower bound to 0., since population can't be negative
-        [0., 1.],
-        [0., 1.],
+      ]),  # Starting state
+      x_T=None,  # Terminal state, if any
+      T=T,  # Duration of experiment
+      bounds=jnp.array([  # Bounds over the states (x_0, x_1, ...) are given first,
+        [0., 2.],  # followed by bounds over controls (u_0, u_1, ...)
+        [0., 2.],
+        [0., 2.],  # nh: I changed the bounds to be reasonable amounts
+        [0., .2],
+        [0., .2],
       ]),
       terminal_cost=False,
       discrete=False,
@@ -67,44 +70,74 @@ class BearPopulations(IndirectFHCS):
 
   def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
                v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
-    k = self.r/self.K
-    k2 = self.r/self.K**2
+    k = self.r / self.K
+    k2 = self.r / self.K ** 2
     x_0, x_1, x_2 = x_t
     u_0, u_1 = u_t
 
     d_x = jnp.array([
-      self.r*x_0 - k*x_0**2 + k*self.m_f*(1-x_0/self.K)*x_1**2 - u_0*x_0,
-      self.r*x_1 - k*x_1**2 + k*self.m_p*(1-x_1/self.K)*x_0**2 - u_1*x_1,
-      k*(1-self.m_p)*x_0**2 + k*(1-self.m_f)*x_1**2 + k2*self.m_f*x_0*x_1**2 + k2*self.m_p*(x_0**2)*x_1,
-      ])
+      self.r * x_0 - k * x_0 ** 2 + k * self.m_f * (1 - x_0 / self.K) * x_1 ** 2 - u_0 * x_0,
+      self.r * x_1 - k * x_1 ** 2 + k * self.m_p * (1 - x_1 / self.K) * x_0 ** 2 - u_1 * x_1,
+      k * (1 - self.m_p) * x_0 ** 2 + k * (1 - self.m_f) * x_1 ** 2 + k2 * self.m_f * x_0 * x_1 ** 2 + k2 * self.m_p * (
+              x_0 ** 2) * x_1,
+    ])
+
+    return d_x
+
+  def parametrized_dynamics(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                            v_t: Optional[Union[float, jnp.ndarray]] = None,
+                            t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+    r = params['r']
+    K = params['K']
+    m_f = params['m_f']
+    m_p = params['m_p']
+
+    k = r / K
+    k2 = r / K ** 2
+    x_0, x_1, x_2 = x_t
+    u_0, u_1 = u_t
+
+    d_x = jnp.array([
+      r * x_0 - k * x_0 ** 2 + k * m_f * (1 - x_0 / K) * x_1 ** 2 - u_0 * x_0,
+      r * x_1 - k * x_1 ** 2 + k * m_p * (1 - x_1 / K) * x_0 ** 2 - u_1 * x_1,
+      k * (1 - m_p) * x_0 ** 2 + k * (1 - m_f) * x_1 ** 2 + k2 * m_f * x_0 * x_1 ** 2 + k2 * m_p * (
+              x_0 ** 2) * x_1,
+    ])
 
     return d_x
 
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
-    return x_t[2] + self.c_p*u_t[0]**2 + self.c_f*u_t[1]**2
+    return x_t[2] + self.c_p * u_t[0] ** 2 + self.c_f * u_t[1] ** 2
+
+  def parametrized_cost(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                        t: Optional[jnp.ndarray] = None) -> float:
+    # Not learning the cost function for now
+    return x_t[2] + self.c_p * u_t[0] ** 2 + self.c_f * u_t[1] ** 2
 
   def adj_ODE(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray], u_t: Optional[jnp.ndarray],
               t: Optional[jnp.ndarray]) -> jnp.ndarray:
     k = self.r / self.K
-    k2 = self.r / self.K**2
+    k2 = self.r / self.K ** 2
 
     return jnp.array([
-      adj_t[0]*(2*k*x_t[0] + k2*self.m_f*x_t[1]**2 + u_t[0] - self.r)
-      - adj_t[1]*(2*k*self.m_p*(1-x_t[1]/self.K)*x_t[0])
-      + adj_t[2]*(2*k*(self.m_p-1)*x_t[0] - k2*self.m_f*x_t[1]**2 - 2*k2*self.m_p*x_t[0]*x_t[1]),
-      adj_t[1]*(2*k*x_t[1] + k2*self.m_p*x_t[0]**2 + u_t[1] - self.r)
-      - adj_t[0]*(2*k*self.m_f*(1-x_t[0]/self.K)*x_t[1])
-      + adj_t[2]*(2*k*(self.m_f-1)*x_t[1] - 2*k2*self.m_f*x_t[0]*x_t[1] - k2*self.m_p*x_t[0]**2),
+      adj_t[0] * (2 * k * x_t[0] + k2 * self.m_f * x_t[1] ** 2 + u_t[0] - self.r)
+      - adj_t[1] * (2 * k * self.m_p * (1 - x_t[1] / self.K) * x_t[0])
+      + adj_t[2] * (
+              2 * k * (self.m_p - 1) * x_t[0] - k2 * self.m_f * x_t[1] ** 2 - 2 * k2 * self.m_p * x_t[0] * x_t[1]),
+      adj_t[1] * (2 * k * x_t[1] + k2 * self.m_p * x_t[0] ** 2 + u_t[1] - self.r)
+      - adj_t[0] * (2 * k * self.m_f * (1 - x_t[0] / self.K) * x_t[1])
+      + adj_t[2] * (
+              2 * k * (self.m_f - 1) * x_t[1] - 2 * k2 * self.m_f * x_t[0] * x_t[1] - k2 * self.m_p * x_t[0] ** 2),
       -1,
     ])
 
   def optim_characterization(self, adj_t: jnp.ndarray, x_t: Optional[jnp.ndarray],
                              t: Optional[jnp.ndarray]) -> jnp.ndarray:
-    char_0 = adj_t[:, 0]*x_t[:, 0]/(2*self.c_p)
+    char_0 = adj_t[:, 0] * x_t[:, 0] / (2 * self.c_p)
     char_0 = char_0.reshape(-1, 1)
     char_0 = jnp.minimum(self.bounds[-2, 1], jnp.maximum(self.bounds[-2, 0], char_0))
 
-    char_1 = adj_t[:, 1] * x_t[:, 1]/(2 * self.c_f)
+    char_1 = adj_t[:, 1] * x_t[:, 1] / (2 * self.c_f)
     char_1 = char_1.reshape(-1, 1)
     char_1 = jnp.minimum(self.bounds[-1, 1], jnp.maximum(self.bounds[-1, 0], char_1))
 

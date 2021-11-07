@@ -1,10 +1,11 @@
+# (c) 2021 Nikolaus Howe
 from abc import ABC
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Mapping, Optional
 
 import jax.numpy as jnp
 
-from myriad.custom_types import State, DState, States, Control, Controls, Cost
+from myriad.custom_types import Control, Controls, Cost, DState, Params, State, States
 
 
 @dataclass
@@ -28,7 +29,7 @@ class FiniteHorizonControlSystem(object):
   """Duration of trajectory"""
   bounds: jnp.ndarray
   """State and control bounds"""
-  terminal_cost: bool
+  terminal_cost: bool = False
   """Whether or not there is an additional cost added at the end of the trajectory"""
   discrete: bool = False
   """Whether or not the system is discrete"""
@@ -42,8 +43,6 @@ class FiniteHorizonControlSystem(object):
   #   assert self.T > 0
 
   def dynamics(self, x_t: State, u_t: Control) -> DState:
-    # TODO: nh: make this accept time-dependent dynamics. (actually, do we want to do this?
-    #  what kind of system would this be?)
     """ The set of equations defining the dynamics of the system. For continuous system, return the vector fields
      of the state variables \\(x\\) under the influence of the controls \\(u\\), i.e.:
      $$x'(t) = f(x,u,t)$$
@@ -56,6 +55,21 @@ class FiniteHorizonControlSystem(object):
      """
     raise NotImplementedError
 
+  def parametrized_dynamics(self, params: Params, x_t: State, u_t: Control):
+    """
+    Run the system with custom parameters. Override in individual system definition
+    if you want to use this.
+
+    Args:
+      params: (Params)
+      x_t: (State)
+      u_t: (Control)
+
+    Returns:
+      dx_t: (DState)
+    """
+    return self.dynamics(x_t, u_t)
+  
   def cost(self, x_t: State, u_t: Control, t: Optional[float]) -> Cost:
     """ The instantaneous time function that the system seeks to minimize.
 
@@ -68,6 +82,22 @@ class FiniteHorizonControlSystem(object):
     """
     raise NotImplementedError
 
+  def parametrized_cost(self, params: Params, x_t: State, u_t: Control, t: Optional[float]):
+    """
+    Run the cost with custom parameters. Override in individual system definition
+    if you want to use this
+    Args:
+      params: (Mapping)
+      x_t: (State)
+      u_t: (Control)
+      t: (optional float)
+
+    Returns:
+      cost: (Cost)
+    """
+    return self.cost(x_t, u_t, t)
+
+  # TODO: decide if this should also have a parametrized version
   def terminal_cost_fn(self, x_T: State, u_T: Control, T: Optional[float] = None) -> Cost:
     """ The cost function associated to the final state
 
@@ -80,15 +110,15 @@ class FiniteHorizonControlSystem(object):
     """
     return 0
 
-  def plot_solution(self, x: States, u: Controls) -> None:
-    """ The plotting tool for the current system
-
-    Args:
-      x: State array
-      u: Control array
-    """
-
-    raise NotImplementedError
+  # def plot_solution(self, x: States, u: Controls) -> None:
+  #   """ The plotting tool for the current system
+  #
+  #   Args:
+  #     x: State array
+  #     u: Control array
+  #   """
+  #
+  #   raise NotImplementedError
 
 
 @dataclass
