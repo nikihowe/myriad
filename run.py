@@ -61,7 +61,7 @@ def main(argv):
   ###########################################
   # Trajectory optimization with true model #
   ###########################################
-  # run_trajectory_opt(hp, cfg, save_as='bloop.pdf')
+  run_trajectory_opt(hp, cfg, 'bloop.pdf')
 
   ######################
   # MLE model learning #
@@ -70,7 +70,7 @@ def main(argv):
   # run_mle_sysid(hp, cfg)
 
   # NODE, MLE
-  run_node_mle_sysid(hp, cfg)
+  # run_node_mle_sysid(hp, cfg)
 
   #############################
   # End to end model learning #
