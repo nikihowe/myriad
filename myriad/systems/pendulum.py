@@ -3,13 +3,13 @@
 # inspired by https://github.com/openai/gym/blob/master/gym/envs/classic_control/pendulum.py
 # and https://github.com/locuslab/mpc.pytorch/blob/07f43da67581b783f4f230ca97b0efbc421773af/mpc/env_dx/pendulum.py
 
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
 
 from typing import Optional
 
 from myriad.systems.base import FiniteHorizonControlSystem
-from myriad.custom_types import State, DState, Control
+from myriad.custom_types import Control, DState, Params, State, Timestep
 
 
 # https://github.com/openai/gym/blob/ee5ee3a4a5b9d09219ff4c932a45c4a661778cd7/gym/envs/classic_control/pendulum.py#L101
@@ -19,32 +19,51 @@ def angle_normalize(x):
 
 
 class Pendulum(FiniteHorizonControlSystem):
-  def __init__(self, params: Optional[jnp.array] = None, simple: bool = True):
+  def __init__(self, g: float = 10., m: float = 1., length: float = 1.):
+    # Learnable parameters
+    self.g = g
+    self.m = m
+    self.length = length
+
+    # Fixed parameters
     self.max_speed = 8.
     self.max_torque = 2.
-
-    if params is None:
-      # gravity (g), mass (m), length (l)
-      self.params = jnp.array([10., 1., 1.])
-    else:
-      self.params = params
-
+    self.x_0 = jnp.array([0., 0.])
+    self.x_T = jnp.array([jnp.pi, 0.])
     self.ctrl_penalty = 0.001
 
     super().__init__(
-      x_0=jnp.array([0., 0.]),  # Starting state: position, velocity
-      x_T=jnp.array([jnp.pi, 0.]),  # Ending state
-      T=35,  # s duration (note, this is not in the original problem)
+      x_0=self.x_0,  # Starting state: position, velocity
+      x_T=self.x_T,  # Ending state
+      T=15,  # s duration (note, this is not in the original problem)
       bounds=jnp.array([
-        [-float('inf'), float('inf')],  # theta
+        [-jnp.pi, jnp.pi],  # theta
         [-self.max_speed, self.max_speed],  # dtheta
         [-self.max_torque, self.max_torque],  # Control bounds
       ]),
       terminal_cost=False,
     )
 
-  def dynamics(self, x: State, u: Control, t: Optional[float] = None) -> DState:
-    g, m, length = self.params
+  def parametrized_dynamics(self, params: Params, x: State, u: Control, t: Optional[Timestep] = None) -> DState:
+    u = jnp.clip(u, a_min=-self.max_torque, a_max=self.max_torque)
+
+    g = params['g']
+    m = params['m']
+    length = params['length']
+
+    theta, dot_theta = x
+    theta = angle_normalize(theta)
+    dot_theta = jnp.clip(dot_theta, a_min=-self.max_speed, a_max=self.max_speed)
+    # print("theta, dot_theta", x)
+
+    dot_dot_theta = (-3. * g / (2. * length) * jnp.sin(theta)
+                     + 3. * u / (m * length ** 2)).squeeze() * 0.05
+
+    # print("dot theta", dot_theta)
+    # print("dot dot", dot_dot_theta)
+    return jnp.array([dot_theta, dot_dot_theta])
+
+  def dynamics(self, x: State, u: Control, t: Optional[Timestep] = None) -> DState:
     u = jnp.clip(u, a_min=-self.max_torque, a_max=self.max_torque)
 
     theta, dot_theta = x
@@ -52,13 +71,18 @@ class Pendulum(FiniteHorizonControlSystem):
     dot_theta = jnp.clip(dot_theta, a_min=-self.max_speed, a_max=self.max_speed)
     # print("theta, dot_theta", x)
 
-    dot_dot_theta = (-3. * g / (2. * length) * jnp.sin(theta) + 3. * u / (m * length ** 2)).squeeze() * 0.01
+    dot_dot_theta = (-3. * self.g / (2. * self.length) * jnp.sin(theta)
+                     + 3. * u / (self.m * self.length ** 2)).squeeze() * 0.05
 
     # print("dot theta", dot_theta)
     # print("dot dot", dot_dot_theta)
     return jnp.array([dot_theta, dot_dot_theta])
 
-  def cost(self, x: State, u: Control, t: float) -> float:
+  def parametrized_cost(self, params: Params, x: State, u: Control, t: Timestep):
+    # Do nothing, for now
+    return self.cost(x, u, t)
+
+  def cost(self, x: State, u: Control, t: Timestep) -> float:
     # print("state is", x)
     assert len(x) == 2
 
