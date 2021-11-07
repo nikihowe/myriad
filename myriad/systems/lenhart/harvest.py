@@ -1,24 +1,24 @@
-from typing import Union, Optional
 import gin
-
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+from typing import Union, Optional
 
 from myriad.systems import IndirectFHCS
 
 
 @gin.configurable
-class FishHarvest(IndirectFHCS):
+class Harvest(IndirectFHCS):
   """
   Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 11, Lab 6)
   The model was was adapted from Wayne M. Getz. Optimal control and principles in population management.
   Proceedings of Symposia in Applied Mathematics, 30:63–82, 1984.
 
-  This environment models the population level (scaled) of a fish population to be harvested, which was
-  introduced into a fishery of some kind (so the initial level of population is known). The time before harvesting
-  is too small for reproduction to occur, but the average mass of the fish will grow over time following
-  \\(\\frac{kt}{t+1}\\). The state ( \\(x\\) ) is the population level, while the control ( \\(u\\) ) is the harvest rate.
+  This environment models the population level (scaled) of a population
+  (for example, of vegetables) to be harvested.
+  The time scale is too small for reproduction to occur, but the mass
+  of each member of the population will grow over time following
+  \\(\\frac{kt}{t+1}\\). The state ( \\(x\\) ) is the population level,
+  while the control ( \\(u\\) ) is the harvest rate.
   We are trying to maximize:
 
   .. math::
@@ -34,8 +34,8 @@ class FishHarvest(IndirectFHCS):
       x_0=jnp.array([x_0]),   # Starting state
       x_T=None,               # Terminal state, if any
       T=T,                    # Duration of experiment
-      bounds=jnp.array([      # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1,...)
+      bounds=jnp.array([      # Bounds over the states (x_0, x_1, ...) are given first,
+        [jnp.NINF, jnp.inf],  # followed by bounds over controls (u_0,u_1, ...)
         [0, M],
       ]),
       terminal_cost=False,
@@ -46,9 +46,9 @@ class FishHarvest(IndirectFHCS):
     self.A = A
     """Nonnegative weight parameter"""
     self.k = k
-    """Maximum mass of the fish species"""
+    """Maximum mass of the species"""
     self.m = m
-    """Natural death rate of the fish"""
+    """Natural death rate of the species"""
     self.M = M
     """Upper bound on harvesting that may represent physical limitations"""
 
