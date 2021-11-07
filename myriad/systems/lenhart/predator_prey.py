@@ -1,14 +1,15 @@
-from typing import Union, Optional
 import gin
-
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+from typing import Union, Optional
+
+from myriad.custom_types import Params
 from myriad.systems import IndirectFHCS
 
 
 @gin.configurable
 class PredatorPrey(IndirectFHCS):
+  # TODO: there is an error when trying to plot with PredatorPrey
   """
     Taken from: Optimal Control Applied to Biological Models, Lenhart & Workman (Chapter 22, Lab 13)
     The states evolution is base on a standard Lotka-Volterra model.
@@ -42,6 +43,7 @@ class PredatorPrey(IndirectFHCS):
     -----
     x_0: Initial density of the pest and prey population \\( (x_0, x_1) \\)
   """
+
   def __init__(self, d_1=.1, d_2=.1, A=1., B=5.,
                guess_a=-.52, guess_b=.5, M=1.,
                x_0=(10., 1., 0.), T=10.):
@@ -50,13 +52,13 @@ class PredatorPrey(IndirectFHCS):
         x_0[0],
         x_0[1],
         x_0[2]
-      ]),                                # Starting state
-      x_T=[None, None, B],               # Terminal state, if any
-      T=T,                               # Duration of experiment
-      bounds=jnp.array([                 # Bounds over the states (x_0, x_1 ...) are given first,
-        [jnp.NINF, jnp.inf],             # followed by bounds over controls (u_0,u_1,...)
-        [jnp.NINF, jnp.inf],
-        [jnp.NINF, jnp.inf],
+      ]),  # Starting state
+      x_T=[None, None, B],  # Terminal state, if any
+      T=T,  # Duration of experiment
+      bounds=jnp.array([  # Bounds over the states (x_0, x_1 ...) are given first,
+        [0., 11.],  # followed by bounds over controls (u_0, u_1, ...)
+        [0., 11.],
+        [0., 5.],
         [0, M]
       ]),
       terminal_cost=True,
@@ -91,8 +93,29 @@ class PredatorPrey(IndirectFHCS):
 
     return d_x
 
+  def parametrized_dynamics(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                            v_t: Optional[Union[float, jnp.ndarray]] = None,
+                            t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+    d_1 = params['d_1']
+    d_2 = params['d_2']
+    x_0, x_1, x_2 = x_t
+    if u_t.ndim > 0:
+      u_t, = u_t
+
+    d_x = jnp.array([
+      (1 - x_1) * x_0 - d_1 * x_0 * u_t,
+      (x_0 - 1) * x_1 - d_2 * x_1 * u_t,
+      u_t,
+    ])
+
+    return d_x
+
   def cost(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray], t: Optional[jnp.ndarray] = None) -> float:
     return self.A * 0.5 * u_t ** 2
+
+  def parametrized_cost(self, params: Params, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
+                        t: Optional[jnp.ndarray] = None) -> float:
+    return self.A * 0.5 * u_t ** 2  # Not learning cost for now
 
   def terminal_cost_fn(self, x_T: Optional[jnp.ndarray], u_T: Optional[jnp.ndarray],
                        T: Optional[jnp.ndarray] = None) -> float:

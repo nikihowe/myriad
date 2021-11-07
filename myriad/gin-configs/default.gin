@@ -7,17 +7,17 @@ SimpleCase.C = 4.0
 SimpleCase.x_0 = 1.0
 SimpleCase.T = 1
 
-# MoldFungicide parameters default values
-MoldFungicide.r = 0.3
-MoldFungicide.M = 10
-MoldFungicide.A = 1.0
-MoldFungicide.x_0 = 1.0
-MoldFungicide.T = 5
+# MouldFungicide parameters default values
+MouldFungicide.r = 0.3
+MouldFungicide.M = 10
+MouldFungicide.A = 1.0
+MouldFungicide.x_0 = 1.0
+MouldFungicide.T = 5
 
 # Bacteria parameters default values
 Bacteria.r = 1
 Bacteria.A = 1
-Bacteria.B = 12
+Bacteria.B = 1  # used to be 12
 Bacteria.C = 1
 Bacteria.x_0 = 1.0
 
@@ -29,20 +29,20 @@ SimpleCaseWithBounds.M_2 = 2
 SimpleCaseWithBounds.x_0 = 1.0
 SimpleCaseWithBounds.T = 1
 
-# Cancer parameters default values
-Cancer.r = 0.3
-Cancer.a = 3
-Cancer.delta = 0.45
-Cancer.x_0 = 0.975
-Cancer.T = 20
+# CancerTreatment parameters default values
+CancerTreatment.r = 0.3
+CancerTreatment.a = 3
+CancerTreatment.delta = 0.45
+CancerTreatment.x_0 = 0.975
+CancerTreatment.T = 20
 
-# FishHarvest parameters default value
-FishHarvest.A = 5.0
-FishHarvest.k = 10.0
-FishHarvest.m = 0.2
-FishHarvest.M = 1.0
-FishHarvest.x_0 = 0.4
-FishHarvest.T = 10
+# Harvest parameters default value
+Harvest.A = 5.0
+Harvest.k = 10.0
+Harvest.m = 0.2
+Harvest.M = 1.0
+Harvest.x_0 = 0.4
+Harvest.T = 10
 
 # EpidemicSEIRN parameters default value
 EpidemicSEIRN.A = 0.1
