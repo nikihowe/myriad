@@ -1,52 +1,66 @@
-import seaborn as sns
+# (c) 2021 Nikolaus Howe
 import jax.numpy as jnp
+import matplotlib
 import matplotlib.pyplot as plt
-from typing import Optional, Dict
+import numpy as np
 
-from .config import SystemType
+from matplotlib.offsetbox import AnchoredText
+from typing import Dict, Optional, Tuple
 
-state_descriptions = {
-  SystemType.CARTPOLE: [[0, 1, 2, 3], ["Position", "Angle", "Velocity", "Angular velocity"]],
-  SystemType.SEIR: [[0, 1, 2, 3], ["S", "E", "I", "N"]],
-  SystemType.TUMOUR: [[0, 1, 2], ["p", "q", "y"]],
-  SystemType.VANDERPOL: [[0, 1], ["x0", "x1"]],
-  SystemType.BACTERIA: [[0], ["Bacteria concentration"]],
-  SystemType.BEARPOPULATIONS: [[0, 1, 2], ["Park population", "Forest population", "Urban population"]],
-  SystemType.BIOREACTOR: [[0], ["Bacteria concentration"]],
-  SystemType.CANCER: [[0], ["Normalized tumour density"]],
-  SystemType.EPIDEMICSEIRN: [[2], ["Susceptible population", "Exposed population",
-                                   "Infectious population", "Total population"]],
-  SystemType.FISHHARVEST: [[0], ["Fish population"]],
-  SystemType.GLUCOSE: [[0, 1], ["Blood glucose", "Net hormonal concentration"]],
-  SystemType.HIVTREATMENT: [[0], ["Healthy cells", "Infected cells", "Viral charge"]],
-  SystemType.INVASIVEPLANT: [[0, 1, 2, 3, 4], ["Focus 1", "Focus 2", "Focus 3", "Focus 4", "Focus 5"]],
-  SystemType.MOLDFUNGICIDE: [[0], ["Mould population"]],
-  SystemType.PREDATORPREY: [[0, 1], ["Predator population", "Prey population"]],
-  SystemType.SIMPLECASE: [[0], ["State"]],
-  SystemType.SIMPLECASEWITHBOUNDS: [[0], ["State"]],
-  SystemType.TIMBERHARVEST: [[0], ["Cumulative timber harvested"]]
-}
+from myriad.config import SystemType, IntegrationMethod, OptimizerType, HParams
+from myriad.systems import state_descriptions, control_descriptions
+from myriad.systems import get_name
 
-# NOTE: the control descriptions are currently not used for plotting
-control_descriptions = {
-  SystemType.CARTPOLE: [[0], ["Force applied to cart"]],
-  SystemType.SEIR: [[0], ["Response intensity"]],
-  SystemType.TUMOUR: [[0], ["Drug strength"]],
-  SystemType.VANDERPOL: [[0], ["Control"]],
-  SystemType.BACTERIA: [[0], ["Amount of chemical nutrient"]],
-  SystemType.BEARPOPULATIONS: [[0, 1], ["Harvesting rate in park", "Harvesting rate in forest"]],
-  SystemType.BIOREACTOR: [[0], ["Amount of chemical nutrient"]],
-  SystemType.CANCER: [[0], ["Drug strength"]],
-  SystemType.EPIDEMICSEIRN: [[0], ["Vaccination rate"]],
-  SystemType.FISHHARVEST: [[0], ["Harvest rate"]],
-  SystemType.GLUCOSE: [[0], ["Insulin level"]],
-  SystemType.HIVTREATMENT: [[0], ["Drug intensity"]],
-  SystemType.MOLDFUNGICIDE: [[0], ["Fungicide level"]],
-  SystemType.PREDATORPREY: [[0], ["Pesticide level"]],
-  SystemType.SIMPLECASE: [[0], ["Control"]],
-  SystemType.SIMPLECASEWITHBOUNDS: [[0], ["Control"]],
-  SystemType.TIMBERHARVEST: [[0], ["Reinvestment level"]]
-}
+
+def plot_losses(hp, path_to_csv, save_as=None):
+  etv = np.genfromtxt(path_to_csv, delimiter=',')
+  if len(etv) == 10000:  # TODO: remove except for ne2e
+    print("clipping to 9999")
+    etv = etv[:-1]
+  epochs = etv[:, 0]
+  train = etv[:, 1]
+  val = etv[:, 2]
+  if save_as is not None and save_as.endswith(('pgf', 'pdf')):
+    matplotlib.use("pgf")
+    matplotlib.rcParams.update({
+      "pgf.texsystem": "pdflatex",
+      'font.family': 'serif',
+      'text.usetex': True,
+      'pgf.rcfonts': False,
+    })
+  title = get_name(hp)
+  print("title is", title)
+  plt.figure(figsize=(4.5, 3.5))
+
+  fixed_epochs = []
+  transitions = []
+  offset = 0
+  previous = 0
+  for i, epoch in enumerate(epochs):
+    if i > 0 and epoch == 0:
+      offset += previous
+      transitions.append(epoch + offset)
+    fixed_epochs.append(epoch + offset)
+    previous = epoch
+
+  plt.plot(fixed_epochs, train, label='train loss')
+  plt.plot(fixed_epochs, val, label='validation loss')
+  if title is not None:
+    plt.title(title)
+
+  for transition in transitions:
+    plt.axvline(transition, linestyle='dashed', color='grey')
+  plt.ylabel('loss')
+  plt.xlabel('epoch')
+  plt.grid()
+  plt.legend()
+  plt.tight_layout()
+  plt.yscale('log')
+  if save_as is not None:
+    plt.savefig(save_as, bbox_inches='tight')
+    plt.close()
+  else:
+    plt.show()
 
 
 def plot_result(result, hp, save_as=None):
@@ -65,10 +79,29 @@ def plot_result(result, hp, save_as=None):
 def plot(hp, system,
          data: Dict[str, jnp.ndarray],
          labels: Optional[Dict[str, str]] = None,
+         styles: Optional[Dict[str, str]] = None,
+         widths: Optional[Dict[str, float]] = None,
          title: Optional[str] = None,
-         save_as: Optional[str] = None) -> None:
+         save_as: Optional[str] = None,
+         figsize: Optional[Tuple[float, float]] = None) -> None:
+  if save_as is not None and save_as.endswith(('pgf', 'pdf')):  # comment out for the cluster
+    matplotlib.use("pgf")
+    matplotlib.rcParams.update({
+      "pgf.texsystem": "pdflatex",
+      'font.family': 'serif',
+      'text.usetex': True,
+      'pgf.rcfonts': False,
+    })
 
-  sns.set(style='darkgrid')
+  if styles is None:
+    styles = {}
+    for name in data:
+      styles[name] = '-'
+
+  if widths is None:
+    widths = {}
+    for name in data:
+      widths[name] = 1.
 
   # Separate plotting for the discrete-time system
   if hp.system == SystemType.INVASIVEPLANT:
@@ -78,15 +111,33 @@ def plot(hp, system,
   #   system.plot_solution(data['x'], data['u'])
   #   return
 
-  if 'adj' not in data:
-    height = 7
-    num_subplots = 2
+  if figsize is not None:
+    plt.figure(figsize=figsize)
   else:
-    height = 9
-    num_subplots = 3
-  plt.figure(figsize=(9, height))
-  if title:
+    # plt.rcParams["figure.figsize"] = (4, 3.3)
+    plt.figure(figsize=(4, 4))
+
+  # if 'adj' not in data:
+  #   height = 4#5.6
+  #   num_subplots = 2
+  # else:
+  #   height = 9
+  #   num_subplots = 3
+  # # plt.figure(figsize=(7, height))
+  # plt.figure(figsize=(5, height))
+  num_subplots = 2
+  title = get_name(hp)
+  if title is not None:
     plt.suptitle(title)
+  # else:
+  #   if hp.optimizer == OptimizerType.COLLOCATION:
+  #     plt.suptitle(
+  #       f'{hp.system.name}') # {hp.optimizer.name}:{hp.intervals} {hp.quadrature_rule.name} {hp.integration_method.name}')
+  #   else:
+  #     plt.suptitle(
+  #       f'{hp.system.name}') # {hp.optimizer.name}:{hp.intervals}x{hp.controls_per_interval} {hp.integration_method.name}')
+
+  order_multiplier = 2 if hp.integration_method == IntegrationMethod.RK4 else 1
 
   ts_x = jnp.linspace(0, system.T, data['x'].shape[0])
   ts_u = jnp.linspace(0, system.T, data['u'].shape[0])
@@ -97,30 +148,87 @@ def plot(hp, system,
   if hp.system in state_descriptions:
     for idx, x_i in enumerate(data['x'].T):
       if idx in state_descriptions[hp.system][0]:
-        plt.plot(ts_x, x_i, label=state_descriptions[hp.system][1][idx])
+        plt.plot(ts_x, x_i, styles['x'], lw=widths['x'],
+                 label=state_descriptions[hp.system][1][idx] + labels['x'])
         if 'other_x' in data:
-          plt.plot(ts_u, data['other_x'][:, idx], label=state_descriptions[hp.system][1][idx])
+          plt.plot(jnp.linspace(0, system.T, data['other_x'][:, idx].shape[0]),
+                   data['other_x'][:, idx], styles['other_x'], lw=widths['other_x'],
+                   label=state_descriptions[hp.system][1][idx] + labels['other_x'])
   else:
-    plt.plot(ts_x, data['x'], label=labels['x'])
+    plt.plot(ts_x, data['x'], styles['x'], lw=widths['x'], label=labels['x'])
     if 'other_x' in data:
-      plt.plot(ts_u, data['other_x'], label=labels['other_x'])
+      plt.plot(jnp.linspace(0, system.T, data['other_x'].shape[0]),
+               data['other_x'], styles['other_x'], lw=widths['other_x'], label=labels['other_x'])
   plt.ylabel("state (x)")
-  plt.legend()
+  plt.grid()
+  plt.legend(loc="upper left")
 
   # Same thing as above, but for the controls
-  plt.subplot(num_subplots, 1, 2)
+  ax = plt.subplot(num_subplots, 1, 2)
   if hp.system in control_descriptions:
     for idx, u_i in enumerate(data['u'].T):
       if idx in control_descriptions[hp.system][0]:
-        plt.plot(ts_u, u_i, label=control_descriptions[hp.system][1][idx])
-        if 'other_u' in data:
-          plt.plot(ts_u, data['other_u'][:, idx], label=control_descriptions[hp.system][1][idx])
+        plt.plot(ts_u, u_i, styles['u'], lw=widths['u'], label=control_descriptions[hp.system][1][idx] + labels['u'])
+        if 'other_u' in data and data['other_u'] is not None:
+          plt.plot(jnp.linspace(0, system.T, data['other_u'][:, idx].shape[0]),
+                   data['other_u'][:, idx], styles['other_u'], lw=widths['other_u'],
+                   label=control_descriptions[hp.system][1][idx] + labels['other_u'])
   else:
-    plt.plot(ts_u, data['u'], label=labels['u'])
+    plt.plot(ts_u, data['u'], styles['u'], lw=widths['u'], label=labels['u'])
     if 'other_u' in data:
-      plt.plot(ts_u, data['other_u'], label=labels['other_u'])
+      plt.plot(jnp.linspace(0, system.T, data['other_u'].shape[0]),
+               data['other_u'], styles['other_u'], lw=widths['other_u'], label=labels['other_u'])
   plt.ylabel("control (u)")
-  plt.legend()
+  plt.grid()
+  plt.legend(loc="upper left")
+
+  if 'cost' in data and 'other_cost' not in data:
+    cost_text = f"Cost: {data['cost']:.2f}"
+    if 'defect' in data and data['defect'] is not None:
+      for i, d in enumerate(data['defect']):
+        if i == 0:
+          cost_text += f"\nDefect: {d:.2f}"
+        else:
+          cost_text += f" {d:.2f}"
+
+    at = AnchoredText(cost_text,
+                      prop=dict(size=10), frameon=False,
+                      loc='upper right',
+                      )
+    # at.set_alpha(0.5)
+    # at.patch.set_alpha(0.5)
+
+    at.txt._text.set_bbox(dict(facecolor="#FFFFFF", edgecolor="#DBDBDB", alpha=0.7))
+    at.patch.set_boxstyle("round,pad=0.,rounding_size=0.2")
+    ax.add_artist(at, )
+
+  elif 'cost' in data and 'other_cost' in data:
+    cost_text = f"Optimal cost: {data['cost']:.2f}"
+    if 'defect' in data and data['defect'] is not None:
+      for i, d in enumerate(data['defect']):
+        if i == 0:
+          cost_text += f"\nOptimal defect: {d:.2f}"
+        else:
+          cost_text += f" {d:.2f}"
+
+    cost_text += f"\nAchieved cost: {data['other_cost']:.2f}"
+    if 'other_defect' in data and data['other_defect'] is not None:
+      for i, d in enumerate(data['other_defect']):
+        if i == 0:
+          cost_text += f"\nAchieved defect: {d:.2f}"
+        else:
+          cost_text += f"  {d:.2f}"
+
+    at = AnchoredText(cost_text,
+                      prop=dict(size=10), frameon=False,
+                      loc='upper right',
+                      )
+    # at.set_alpha(0.5)
+    # at.patch.set_alpha(0.5)
+
+    at.txt._text.set_bbox(dict(facecolor="#FFFFFF", edgecolor="#DBDBDB", alpha=0.7))
+    at.patch.set_boxstyle("round,pad=0.,rounding_size=0.2")
+    ax.add_artist(at, )
 
   if 'adj' in data:
     ts_adj = jnp.linspace(0, system.T, data['adj'].shape[0])
@@ -130,11 +238,20 @@ def plot(hp, system,
     else:
       plt.plot(ts_adj, data['adj'], label='Adjoint')
     plt.ylabel("adjoint (lambda)")
-    plt.legend()
+    plt.legend(loc="upper left")
 
   plt.xlabel('time (s)')
   plt.tight_layout()
   if save_as:
-    plt.savefig(save_as+".pdf")
+    plt.savefig(save_as, bbox_inches='tight')
+    plt.close()
   else:
     plt.show()
+
+
+if __name__ == "__main__":
+  hp = HParams()
+  path_to_csv = f'../losses/{hp.system.name}/1_1_1'
+  plot_losses(path_to_csv, save_as=f'../plots/{hp.system.name}/1_1_1/{hp.system.name}_train.pdf')
+  plot_losses(path_to_csv, save_as=f'../plots/{hp.system.name}/1_1_1/{hp.system.name}_train.pgf')
+  # plot_losses(path_to_csv)
