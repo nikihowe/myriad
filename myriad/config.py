@@ -63,7 +63,7 @@ class HParams:
   seed: int = 2019
   system: SystemType = SystemType.CANCERTREATMENT
   optimizer: OptimizerType = OptimizerType.SHOOTING
-  nlpsolver: NLPSolverType = NLPSolverType.IPOPT
+  nlpsolver: NLPSolverType = NLPSolverType.EXTRAGRADIENT
   integration_method: IntegrationMethod = IntegrationMethod.HEUN
   quadrature_rule: QuadratureRule = QuadratureRule.TRAPEZOIDAL
 

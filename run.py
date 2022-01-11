@@ -1,5 +1,6 @@
 # (c) 2021 Nikolaus Howe
 
+import jax.numpy as jnp
 import numpy as np
 import random
 
@@ -21,7 +22,9 @@ from myriad.experiments.node_e2e_sysid import run_node_endtoend
 from myriad.experiments.node_mle_sysid import run_node_mle_sysid
 from myriad.useful_scripts import run_setup, run_trajectory_opt, load_node_and_plan
 from myriad.probing_numerical_instability import probe, special_probe
-from myriad.utils import integrate_time_independent, yield_minibatches
+from myriad.utils import integrate_time_independent, yield_minibatches, get_state_trajectory_and_cost, get_defect
+from myriad.trajectory_optimizers.unconstrained_shooting import UnconstrainedShootingOptimizer
+from myriad.plotting import plot
 
 config.update("jax_enable_x64", True)
 
@@ -61,7 +64,7 @@ def main(argv):
   ###########################################
   # Trajectory optimization with true model #
   ###########################################
-  run_trajectory_opt(hp, cfg, 'bloop.pdf')
+  # run_trajectory_opt(hp, cfg)
 
   ######################
   # MLE model learning #
@@ -92,6 +95,33 @@ def main(argv):
   ##################
   # study_vector_field(hp, cfg, 'mle', 0)
   # study_vector_field(hp, cfg, 'e2e', 0, file_extension='pdf')
+
+  system = hp.system()
+  optimizer = UnconstrainedShootingOptimizer(hp, cfg, system)
+  solution = optimizer.unconstrained_solve()
+  # print("solution", solution)
+  u = jnp.array(solution.x)
+  # x = solution['x']
+  # u = solution['u']
+
+  true_system = hp.system()
+  opt_x, c = get_state_trajectory_and_cost(hp, true_system, true_system.x_0, u)
+  opt_x = opt_x.squeeze()
+  # defect = get_defect(true_system, opt_x)
+
+  plt.subplot(2, 1, 1)
+  plt.plot(opt_x)
+  plt.subplot(2, 1, 2)
+  plt.plot(u)
+  print("cost", c)
+  plt.show()
+
+  # plot(hp, true_system,
+  #      data={'x': opt_x, 'u': u, 'cost': c},
+  #      labels={'x': '', 'u': ''},
+  #      styles={'x': '-', 'u': '-'},
+  #      widths={'x': 2, 'u': 2},
+  #      save_as=None)
 
 
 if __name__ == '__main__':
