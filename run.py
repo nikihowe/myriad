@@ -107,6 +107,7 @@ def main(argv):
   true_system = hp.system()
   opt_x, c = get_state_trajectory_and_cost(hp, true_system, true_system.x_0, u)
   opt_x = opt_x.squeeze()
+  # print(u)
   # defect = get_defect(true_system, opt_x)
 
   plt.subplot(2, 1, 1)

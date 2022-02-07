@@ -1,11 +1,14 @@
 # (c) 2021 Nikolaus Howe
+import time
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 
 from jax.flatten_util import ravel_pytree
 
-from scipy.optimize import minimize
+# from scipy.optimize import minimize
+from jax.scipy.optimize import minimize
 
 from myriad.config import Config, HParams, IntegrationMethod
 from myriad.custom_types import Control, Params, Timestep, Controls
@@ -13,7 +16,6 @@ from myriad.systems import FiniteHorizonControlSystem
 from myriad.utils import integrate_in_parallel, integrate_time_independent, integrate_time_independent_in_parallel, \
   integrate
 from myriad.trajectory_optimizers.base import TrajectoryOptimizer
-
 
 
 class UnconstrainedShootingOptimizer(TrajectoryOptimizer):
@@ -52,19 +54,11 @@ class UnconstrainedShootingOptimizer(TrajectoryOptimizer):
 
       t = jnp.linspace(0., system.T, num=num_steps + 1)
 
-      starting_xs_and_costs = jnp.hstack([system.x_0, 0.])#.reshape(2, 1)
+      starting_xs_and_costs = jnp.hstack([system.x_0, 0.])  # .reshape(2, 1)
 
-      # Integrate cost
-      # print("integrating:")
-      # print("starting", starting_xs_and_costs)
-      # print("controls", reshaped_controls)
-      # print("controls per interval", hp.controls_per_interval)
-      # print("t", t)
       states_and_costs, _ = integrate(
         augmented_dynamics, starting_xs_and_costs, reshaped_controls,
         step_size, hp.controls_per_interval, t, hp.integration_method)
-
-      # print("the states and costs are", states_and_costs)
 
       costs = states_and_costs[-1]
       if system.terminal_cost:
@@ -74,7 +68,7 @@ class UnconstrainedShootingOptimizer(TrajectoryOptimizer):
       return costs
 
     def constraints(controls: Controls) -> jnp.ndarray:
-      return jnp.zeros((1, ))
+      return jnp.zeros((1,))
 
     ############################
     # State and Control Bounds #
@@ -108,19 +102,46 @@ class UnconstrainedShootingOptimizer(TrajectoryOptimizer):
 
   def unconstrained_solve(self):
     print("going to solve")
-    print("controls", self.guess.shape)
-    print("bounds", self.bounds.shape)
-    opt_inputs = {
-      'method': "BFGS",
-      'fun': jax.jit(self.objective),
-      'x0': self.guess,
-      'bounds': self.bounds,
-      'jac': jax.jit(jax.grad(self.objective)),
-      'options': {"maxiter": 1000}
-    }
+    # print("controls", self.guess.shape)
+    # print("bounds", self.bounds.shape)
+    # opt_inputs = {
+    #   'method': "BFGS",
+    #   'fun': jax.jit(self.objective),
+    #   'x0': self.guess.squeeze(),
+    #   # 'bounds': self.bounds,
+    #   # 'jac': jax.jit(jax.grad(self.objective)),
+    #   'options': {"maxiter": 1000}
+    # }
 
     # print("before minimizing, let's calculate the objective")
     # self.objective(self.guess)
     # raise SystemExit
-    return minimize(**opt_inputs)
+    # start = time.time()
+    # res = minimize(**opt_inputs)
+    # print("took", time.time() - start)
 
+    start = time.time()
+    res2 = self.constrained_gradient_descent()
+    print("took", time.time() - start)
+
+    return res2
+
+  def constrained_gradient_descent(self):
+    learning_rate = 0.01
+    max_iter = 5_000
+    jitted_objective = jax.jit(self.objective)
+    guess = jnp.array(self.guess)
+
+    @jax.jit
+    def update(guess):
+      return jnp.clip(guess - learning_rate * jax.grad(jitted_objective)(guess),
+                      a_min=self.bounds[:, :1], a_max=self.bounds[:, 1:])
+
+    for i in range(max_iter):
+      guess = update(guess)
+
+    class Res:
+      def __init__(self):
+        self.x = guess
+
+    return Res()
