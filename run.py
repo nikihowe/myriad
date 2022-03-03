@@ -79,7 +79,7 @@ def main(argv):
   # run_endtoend(hp, cfg)
 
   # NODE, end-to-end
-  # run_node_endtoend(hp, cfg)
+  run_node_endtoend(hp, cfg)
 
   ###############
   # Noise study #

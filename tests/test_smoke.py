@@ -4,8 +4,8 @@ import unittest
 import jax
 import numpy as np
 
-from myriad.config import Config, SystemType, HParams, OptimizerType, IntegrationOrder
-from myriad.optimizers import get_optimizer
+from myriad.config import Config, SystemType, HParams, OptimizerType
+from myriad.trajectory_optimizers import get_optimizer
 from myriad.systems import IndirectFHCS
 from myriad.plotting import plot_result
 
@@ -41,7 +41,7 @@ class SmokeTest(unittest.TestCase):
           continue
 
         with self.subTest(system=hp.system, optimizer=hp.optimizer):
-          cfg = Config(verbose=True, plot_results=True)
+          cfg = Config(verbose=True)
           random.seed(hp.seed)
           np.random.seed(hp.seed)
           _system = hp.system()

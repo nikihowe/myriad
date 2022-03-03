@@ -2,11 +2,11 @@
 import sys
 import unittest
 
-from source.config import IntegrationMethod, NLPSolverType, OptimizerType, SystemType
-from source.useful_scripts import run_setup
+from myriad.config import IntegrationMethod, NLPSolverType, OptimizerType, SystemType
+from myriad.useful_scripts import run_setup
 from run import run_trajectory_opt
 
-hp, cfg = run_setup(sys.argv, gin_path='../source/gin-configs/default.gin')
+hp, cfg = run_setup(sys.argv, gin_path='../myriad/gin-configs/default.gin')
 
 
 class SystemTests(unittest.TestCase):
