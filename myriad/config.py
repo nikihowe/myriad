@@ -88,7 +88,7 @@ class HParams:
   plot_progress_frequency: int = 10_000
   early_stop_threshold: int = 30_000  # 70 for cartpole, 1 for cancertreatment
   early_stop_check_frequency: int = 1000
-  hidden_layers: Tuple[int] = (50, 50)
+  hidden_layers: Tuple[int] = (100, 100)
   num_unrolled: int = 5
   eta_x: float = 1e-1
   eta_lmbda: float = 1e-3
