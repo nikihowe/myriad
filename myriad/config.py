@@ -73,7 +73,7 @@ class HParams:
   fbsm_intervals: int = 1000  # used by FBSM
 
   sampling_approach: SamplingApproach = SamplingApproach.RANDOM_WALK
-  train_size: int = 100
+  train_size: int = 100  # num trajectories per dataset
   val_size: int = 3
   test_size: int = 3
   sample_spread: float = 0.05
@@ -83,7 +83,7 @@ class HParams:
   learning_rate: float = 0.001
   minibatch_size: int = 16
   num_epochs: int = 1_000_001
-  num_experiments: int = 5
+  num_experiments: int = 5  # num datesets
   loss_recording_frequency: int = 1000
   plot_progress_frequency: int = 10_000
   early_stop_threshold: int = 30_000  # 70 for cartpole, 1 for cancertreatment
