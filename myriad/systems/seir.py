@@ -6,7 +6,7 @@ from .base import FiniteHorizonControlSystem
 class SEIR(FiniteHorizonControlSystem):
   def __init__(self):
     """
-    SEIR epidemic model,
+    SEIR epidemic model for COVID-19,
       from Perkins and Espana: https://link.springer.com/article/10.1007/s11538-020-00795-y
     """
     self.b = 0.525
