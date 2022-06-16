@@ -30,8 +30,8 @@ class RocketLanding(FiniteHorizonControlSystem):
 
     self.max_gimble = 20 * deg_to_rad
     self.min_gimble = -self.max_gimble
-    self.min_percent_thrust = 0.  # 0.4
-    self.max_percent_thrust = 3.  # 1.
+    self.min_percent_thrust = 0.4
+    self.max_percent_thrust = 1.
 
     # x[0] = x position (m)
     # x[1] = x velocity (m/s)

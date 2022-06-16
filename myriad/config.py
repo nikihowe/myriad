@@ -61,7 +61,7 @@ class QuadratureRule(Enum):
 class HParams:
   """The hyperparameters of the experiment. Modifying those should change the results"""
   seed: int = 2019
-  system: SystemType = SystemType.CANCERTREATMENT
+  system: SystemType = SystemType.SIMPLECASE
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   integration_method: IntegrationMethod = IntegrationMethod.HEUN
@@ -73,7 +73,7 @@ class HParams:
   fbsm_intervals: int = 1000  # used by FBSM
 
   sampling_approach: SamplingApproach = SamplingApproach.RANDOM_WALK
-  train_size: int = 10
+  train_size: int = 100
   val_size: int = 3
   test_size: int = 3
   sample_spread: float = 0.05
