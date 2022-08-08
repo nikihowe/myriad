@@ -37,11 +37,11 @@ class Bioreactor(IndirectFHCS):  # TODO: Add resolution for z state after optimi
     super().__init__(
       x_0=jnp.array([
         x_0[0],
-      ]),  # Starting state
-      x_T=None,  # Terminal state, if any
-      T=T,  # Duration of experiment
+      ]),                 # Starting state
+      x_T=None,           # Terminal state, if any
+      T=T,                # Duration of experiment
       bounds=jnp.array([  # Bounds over the states (x_0, x_1, ...) are given first,
-        [0., 1.],  # followed by bounds over controls (u_0, u_1, ...)
+        [0., 1.],         # followed by bounds over controls (u_0, u_1, ...)
         [0., M],
       ]),
       terminal_cost=False,
@@ -58,8 +58,10 @@ class Bioreactor(IndirectFHCS):  # TODO: Add resolution for z state after optimi
     self.M = M
     """Physical limitation into the application of the chemical nutrient"""
 
-  def dynamics(self, x_t: jnp.ndarray, u_t: Union[float, jnp.ndarray],
-               v_t: Optional[Union[float, jnp.ndarray]] = None, t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
+  def dynamics(self, x_t: jnp.ndarray,
+               u_t: Union[float, jnp.ndarray],
+               v_t: Optional[Union[float, jnp.ndarray]] = None,
+               t: Optional[jnp.ndarray] = None) -> jnp.ndarray:
     if u_t.ndim > 0:
       u_t, = u_t
     d_x = jnp.array([self.G * u_t * x_t[0] - self.D * x_t[0] ** 2])
