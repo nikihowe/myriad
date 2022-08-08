@@ -59,17 +59,17 @@ class QuadratureRule(Enum):
 # Hyperparameters which change experiment results
 @dataclass(eq=True, frozen=False)  # or frozen == False
 class HParams:
-  """The hyperparameters of the experiment. Modifying those should change the results"""
+  """The hyperparameters of the experiment. Modifying these should change the results"""
   seed: int = 2019
-  system: SystemType = SystemType.SIMPLECASE
+  system: SystemType = SystemType.SIMPLECASEWITHBOUNDS
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   integration_method: IntegrationMethod = IntegrationMethod.HEUN
   quadrature_rule: QuadratureRule = QuadratureRule.TRAPEZOIDAL
 
   max_iter: int = 1000  # maxiter for NLP solver (usually 1000)
-  intervals: int = 1  # used by COLLOCATION and SHOOTING
-  controls_per_interval: int = 100  # used by SHOOTING
+  intervals: int = 100  # used by COLLOCATION and SHOOTING
+  controls_per_interval: int = 1  # used by SHOOTING
   fbsm_intervals: int = 1000  # used by FBSM
 
   sampling_approach: SamplingApproach = SamplingApproach.RANDOM_WALK
@@ -82,7 +82,7 @@ class HParams:
   to_smooth: bool = False
   learning_rate: float = 0.001
   minibatch_size: int = 16
-  num_epochs: int = 1_000_001
+  num_epochs: int = 10_001
   num_experiments: int = 5  # num datesets
   loss_recording_frequency: int = 1000
   plot_progress_frequency: int = 10_000
