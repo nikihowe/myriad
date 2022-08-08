@@ -1,18 +1,7 @@
 # (c) 2021 Nikolaus Howe
-
 import numpy as np
 import random
 
-from absl import app
-from jax.config import config
-
-from pathlib import Path
-
-import matplotlib
-import matplotlib.pyplot as plt
-import pickle as pkl
-
-from absl import app
 from jax.config import config
 
 from myriad.experiments.e2e_sysid import run_endtoend
@@ -28,11 +17,12 @@ config.update("jax_enable_x64", True)
 run_buddy = False
 
 
-def main(argv):
+def main():
   #########
   # Setup #
   #########
-  hp, cfg = run_setup(argv)
+  print("got to main")
+  hp, cfg = run_setup()
   random.seed(hp.seed)
   np.random.seed(hp.seed)
 
@@ -61,7 +51,7 @@ def main(argv):
   ###########################################
   # Trajectory optimization with true model #
   ###########################################
-  run_trajectory_opt(hp, cfg, 'bloop.pdf')
+  run_trajectory_opt(hp, cfg, save_as='traj_opt_example.pdf')
 
   ######################
   # MLE model learning #
@@ -95,4 +85,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  main()

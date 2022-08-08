@@ -17,7 +17,7 @@ from typing import Tuple
 from myriad.config import HParams, Config
 from myriad.custom_types import Cost, Defect, Optional
 from myriad.neural_ode.create_node import NeuralODE
-from myriad.trajectory_optimizers import get_optimizer
+from myriad.trajectory_optimizers import get_optimizer, TrajectoryOptimizer
 from myriad.utils import get_defect, integrate_time_independent, get_state_trajectory_and_cost, plan_with_node_model
 from myriad.plotting import plot
 from myriad.systems import FiniteHorizonControlSystem
@@ -105,16 +105,18 @@ def run_node_trajectory_opt(hp: HParams, cfg: Config, save_as: str = None,
   return c, defect
 
 
-def run_setup(argv, gin_path='./myriad/gin-configs/default.gin'):
+def run_setup():
+  # def run_setup(gin_path='./myriad/gin-configs/default.gin'):  # note: no longer need Gin
+
   # Prepare experiment settings
-  # TODO: Migrate to only using a single parsing technique
   parser = simple_parsing.ArgumentParser()
   parser.add_arguments(HParams, dest="hparams")
   parser.add_arguments(Config, dest="config")
-  parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
+  # parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
 
   key_dict = HParams.__dict__.copy()
   key_dict.update(Config.__dict__)
+  print("the key dict is", key_dict)
   for key in key_dict.keys():
     if "__" not in key:
       flags.DEFINE_string(key, None,  # Parser arguments need to be accepted by the flags
@@ -124,9 +126,6 @@ def run_setup(argv, gin_path='./myriad/gin-configs/default.gin'):
     'gin_bindings', [],
     'Gin bindings to override the values set in the config files '
     '(e.g. "Lab1.A=1.0").')
-
-  FLAGS = flags.FLAGS
-  FLAGS(argv)
 
   jax.config.update("jax_enable_x64", True)
 
@@ -139,12 +138,6 @@ def run_setup(argv, gin_path='./myriad/gin-configs/default.gin'):
   # Set our seeds for reproducibility
   np.random.seed(hp.seed)
 
-  # Load config, then build system
-  gin_files = [gin_path]
-  gin_bindings = FLAGS.gin_bindings
-  gin.parse_config_files_and_bindings(gin_files,
-                                      bindings=gin_bindings,
-                                      skip_unknown=False)
   return hp, cfg
 
 
