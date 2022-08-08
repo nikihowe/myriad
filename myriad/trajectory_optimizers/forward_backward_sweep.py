@@ -2,7 +2,7 @@
 import jax.numpy as jnp
 
 from jax.flatten_util import ravel_pytree
-from jax.ops import index_update
+# from jax.ops import index_update
 # from ipopt import minimize_ipopt
 from scipy.optimize import minimize
 from dataclasses import dataclass
@@ -82,7 +82,8 @@ class FBSM(IndirectMethodOptimizer):  # Forward-Backward Sweep Method
       adj_guess = jnp.vstack((jnp.zeros((self.N, state_shape)), self.system.adj_T))
     else:
       adj_guess = jnp.zeros((self.N + 1, state_shape))
-    self.adj_guess = index_update(adj_guess, (-1, self.term_cdtion_state), a)
+    # self.adj_guess = index_update(adj_guess, (-1, self.term_cdtion_state), a)
+    self.adj_guess = adj_guess.at[(-1, self.term_cdtion_state)].set(a)
 
   def solve(self) -> Solution:
     """Solve the continuous optimal problem with the Forward-Backward Sweep Method"""

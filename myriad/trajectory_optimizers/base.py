@@ -11,7 +11,6 @@ import numpy as np
 
 from jax import vmap
 from jax.flatten_util import ravel_pytree
-from jax.ops import index_update
 # from ipopt import minimize_ipopt
 from scipy.optimize import minimize
 from dataclasses import dataclass
