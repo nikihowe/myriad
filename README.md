@@ -48,28 +48,25 @@ For implementation and usage details, see the [documentation](https://nikihowe.g
 ```
 
 ## Environment setup
-### IPOPT (Linux)
+
+### Install IPOPT
+#### Linux
 ```bash
 apt install coinor-libipopt-dev
 ```
 
-### IPOPT (Mac OS)
+#### Mac OS
 ```bash
-brew install ipopt
 brew install pkg-config
+brew install ipopt
 ```
 
+### Create a venv and install requirements
 ```bash
 python3 -m venv env
 source env/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
-```
-
-### Gin
-
-```bash
-pip install gin-config
 ```
 
 ## Running experiments
