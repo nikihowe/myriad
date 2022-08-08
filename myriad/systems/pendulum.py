@@ -87,7 +87,7 @@ class Pendulum(FiniteHorizonControlSystem):
     assert len(x) == 2
 
     theta, dot_theta = x
-    return angle_normalize(theta)**2 + 0.1 * dot_theta**2 + self.ctrl_penalty * u**2
+    return angle_normalize(theta) ** 2 + 0.1 * dot_theta ** 2 + self.ctrl_penalty * u ** 2
 
 
 if __name__ == "__main__":
