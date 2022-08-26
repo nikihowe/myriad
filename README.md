@@ -78,7 +78,7 @@ source env/bin/activate
 python run.py --system=SIMPLECASE --optimizer=SHOOTING
 python run.py --system=CARTPOLE --optimizer=COLLOCATION --intervals=100
 python run.py --system=VANDERPOL --optimizer=SHOOTING --intervals=1 --controls_per_interval=50
-python run.py --system=SEIR --optimizer=SHOOTING --max_iter=500
+python run.py --system=CANCERTREATMENT --optimizer=SHOOTING --max_iter=500
 ```
 
 ### 
