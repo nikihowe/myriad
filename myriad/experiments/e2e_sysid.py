@@ -148,24 +148,26 @@ def run_endtoend(hp, cfg, num_epochs=10_000):
     @jax.jit
     def many_steps_grad(xs_and_us: jnp.ndarray, lmbdas: jnp.ndarray, params: Params) -> DParams:
       zx = jac_x_p(xs_and_us, lmbdas, params)
-      zx = jax.tree_map(lambda x: x * 0., zx)
+      zx = jax.tree_util.tree_map(lambda x: x * 0., zx)
       zlmbda = jac_lmbda_p(xs_and_us, lmbdas, params)
-      zlmbda = jax.tree_map(lambda x: x * 0., zlmbda)
+      zlmbda = jax.tree_util.tree_map(lambda x: x * 0., zlmbda)
 
       @jax.jit
       def body_fun(i, vars):
         xs_and_us, lmbdas, zx, zlmbda = vars
 
         dx, dlmbda, dp = jac_x(xs_and_us, lmbdas, params)
-        x_part = jax.tree_map(lambda el: dx @ el, zx)
-        lmbda_part = jax.tree_map(lambda el: dlmbda @ el, zlmbda)
-        zx = jax.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        x_part = jax.tree_util.tree_map(lambda el: dx @ el, zx)
+        lmbda_part = jax.tree_util.tree_map(lambda el: dlmbda @ el, zlmbda)
+        zx = jax.tree_util.tree_map(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        # zx = jax.tree_util.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
         xs_and_us = step_x(xs_and_us, lmbdas, params)
 
         dx, dlmbda, dp = jac_lmbda(xs_and_us, lmbdas, params)
-        x_part = jax.tree_map(lambda el: dx @ el, zx)
-        lmbda_part = jax.tree_map(lambda el: dlmbda @ el, zlmbda)
-        zlmbda = jax.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        x_part = jax.tree_util.tree_map(lambda el: dx @ el, zx)
+        lmbda_part = jax.tree_util.tree_map(lambda el: dlmbda @ el, zlmbda)
+        zlmbda = jax.tree_util.tree_map(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        # zlmbda = jax.tree_util.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
         lmbdas = step_lmbda(xs_and_us, lmbdas, params)
 
         return xs_and_us, lmbdas, zx, zlmbda
@@ -209,7 +211,7 @@ def run_endtoend(hp, cfg, num_epochs=10_000):
                          xs_and_us: jnp.ndarray, lmbdas: jnp.ndarray, epoch: int) -> Tuple[Params, optax.OptState]:
       dx_dp = many_steps_grad(xs_and_us, lmbdas, params)
       dJ_dx = jax.grad(simple_imitation_loss)(xs_and_us, epoch)
-      dJdp = jax.tree_map(lambda x: dJ_dx @ x, dx_dp)
+      dJdp = jax.tree_util.tree_map(lambda x: dJ_dx @ x, dx_dp)
 
       updates, opt_state = opt.update(dJdp, opt_state)
       new_params = optax.apply_updates(params, updates)
@@ -262,7 +264,7 @@ def run_endtoend(hp, cfg, num_epochs=10_000):
       if epoch % record_things_time == 0:
         # Only have high-density recording around the start of each guess
         if epoch >= 10:
-          record_things_time = 10
+          record_things_time = 50
 
         # Save the current params
         ts.append(epoch)
@@ -332,9 +334,16 @@ def run_endtoend(hp, cfg, num_epochs=10_000):
   true_state_trajectory, optimal_cost = get_state_trajectory_and_cost(hp, true_system, true_system.x_0, true_opt_us)
 
   parallel_get_state_trajectory_and_cost = jax.vmap(get_state_trajectory_and_cost, in_axes=(None, None, None, 0))
-  parallel_unravel = jax.vmap(optimizer.unravel, in_axes=0)
   ar_primal_guesses = jnp.array(primal_guesses)
-  _, uus = parallel_unravel(ar_primal_guesses)
+  # parallel_unravel = jax.vmap(optimizer.unravel, in_axes=0)
+  # long_uus = jnp.array(long_uus)
+  # _, uus = parallel_unravel(ar_primal_guesses)
+  # NOTE: for some reason, the above approach stopped working with a jax update.
+  # Manually going through the loop works fine.
+  long_uus = []
+  for uu in ar_primal_guesses:
+    long_uus.append(optimizer.unravel(uu)[1])
+  uus = jnp.array(long_uus)
   xxs, cs = parallel_get_state_trajectory_and_cost(hp, true_system, true_system.x_0, uus)
 
   plt.axhline(optimal_cost, color='grey', linestyle='dashed')

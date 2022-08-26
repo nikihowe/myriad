@@ -139,24 +139,24 @@ def run_node_endtoend(hp, cfg, num_epochs=10_000, load_specific_epoch_params=Non
     @jax.jit
     def many_steps_grad(xs_and_us: jnp.ndarray, lmbdas: jnp.ndarray, params: Params) -> DParams:
       zx = jac_x_p(xs_and_us, lmbdas, params)
-      zx = jax.tree_map(lambda x: x * 0., zx)
+      zx = jax.tree_util.tree_map(lambda x: x * 0., zx)
       zlmbda = jac_lmbda_p(xs_and_us, lmbdas, params)
-      zlmbda = jax.tree_map(lambda x: x * 0., zlmbda)
+      zlmbda = jax.tree_util.tree_map(lambda x: x * 0., zlmbda)
 
       @jax.jit
       def body_fun(i, vars):
         xs_and_us, lmbdas, zx, zlmbda = vars
 
         dx, dlmbda, dp = jac_x(xs_and_us, lmbdas, params)
-        x_part = jax.tree_map(lambda el: jnp.tensordot(dx, el, axes=(1, 0)), zx)
-        lmbda_part = jax.tree_map(lambda el: jnp.tensordot(dlmbda, el, axes=(1, 0)), zlmbda)
-        zx = jax.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        x_part = jax.tree_util.tree_map(lambda el: jnp.tensordot(dx, el, axes=(1, 0)), zx)
+        lmbda_part = jax.tree_util.tree_map(lambda el: jnp.tensordot(dlmbda, el, axes=(1, 0)), zlmbda)
+        zx = jax.tree_util.tree_map(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)  # multimap
         xs_and_us = step_x(xs_and_us, lmbdas, params)
 
         dx, dlmbda, dp = jac_lmbda(xs_and_us, lmbdas, params)
-        x_part = jax.tree_map(lambda el: jnp.tensordot(dx, el, axes=(1, 0)), zx)
-        lmbda_part = jax.tree_map(lambda el: jnp.tensordot(dlmbda, el, axes=(1, 0)), zlmbda)
-        zlmbda = jax.tree_multimap(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)
+        x_part = jax.tree_util.tree_map(lambda el: jnp.tensordot(dx, el, axes=(1, 0)), zx)
+        lmbda_part = jax.tree_util.tree_map(lambda el: jnp.tensordot(dlmbda, el, axes=(1, 0)), zlmbda)
+        zlmbda = jax.tree_util.tree_map(lambda a, b, c: a + b + c, dp, x_part, lmbda_part)  # multimap
         lmbdas = step_lmbda(xs_and_us, lmbdas, params)
 
         return xs_and_us, lmbdas, zx, zlmbda
@@ -189,7 +189,7 @@ def run_node_endtoend(hp, cfg, num_epochs=10_000, load_specific_epoch_params=Non
                          lmbdas: jnp.ndarray, epoch: int) -> Tuple[Params, optax.OptState]:
       dloop_dp = many_steps_grad(xs_and_us, lmbdas, params)
       dx_dloop = jax.grad(simple_imitation_loss)(xs_and_us, epoch)
-      dJdp = jax.tree_map(lambda x: jnp.tensordot(dx_dloop, x, axes=(0, 0)), dloop_dp)
+      dJdp = jax.tree_util.tree_map(lambda x: jnp.tensordot(dx_dloop, x, axes=(0, 0)), dloop_dp)
 
       updates, opt_state = opt.update(dJdp, opt_state)
       new_params = optax.apply_updates(params, updates)
