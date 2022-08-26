@@ -31,6 +31,7 @@ def train(node: NeuralODE,
   def loss(params: hk.Params, minibatch: Batch) -> Cost:
     # assert jnp.isfinite(minibatch)  # had to comment out because of jitting
 
+    @jax.jit
     def apply_net(x, u):
       net_input = jnp.append(x, u)
       # print("net input", net_input)
