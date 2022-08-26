@@ -50,10 +50,9 @@ param_guesses = {
     'delta': 0.8  # 0.45
   },
   SystemType.GLUCOSE: {
- # true is 1, 1, 1
-    'a': 0.5,
-    'b': 0.4,
-    'c': 0.6
+    'a': 0.5,  # 1.
+    'b': 0.4,  # 1.
+    'c': 0.6   # 1.
   },
   SystemType.HIVTREATMENT: {
     'k': .000044,  # 0.000024
