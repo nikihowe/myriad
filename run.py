@@ -21,7 +21,6 @@ def main():
   #########
   # Setup #
   #########
-  print("got to main")
   hp, cfg = run_setup()
   random.seed(hp.seed)
   np.random.seed(hp.seed)

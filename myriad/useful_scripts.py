@@ -114,20 +114,20 @@ def run_setup():
   parser.add_arguments(Config, dest="config")
   # parser.add_argument("--gin_bindings", type=str)  # Needed for the parser to work in conjunction with absl.flags
 
-  key_dict = HParams.__dict__.copy()
-  key_dict.update(Config.__dict__)
-  print("the key dict is", key_dict)
-  for key in key_dict.keys():
-    if "__" not in key:
-      flags.DEFINE_string(key, None,  # Parser arguments need to be accepted by the flags
-                          'Backward compatibility with previous parser')
+  # key_dict = HParams.__dict__.copy()
+  # key_dict.update(Config.__dict__)
+  # print("the key dict is", key_dict)
+  # for key in key_dict.keys():
+  #   if "__" not in key:
+  #     flags.DEFINE_string(key, None,  # Parser arguments need to be accepted by the flags
+  #                         'Backward compatibility with previous parser')
 
-  flags.DEFINE_multi_string(
-    'gin_bindings', [],
-    'Gin bindings to override the values set in the config files '
-    '(e.g. "Lab1.A=1.0").')
+  # flags.DEFINE_multi_string(
+  #   'gin_bindings', [],
+  #   'Gin bindings to override the values set in the config files '
+  #   '(e.g. "Lab1.A=1.0").')
 
-  jax.config.update("jax_enable_x64", True)
+  # jax.config.update("jax_enable_x64", True)
 
   args = parser.parse_args()
   hp = args.hparams
