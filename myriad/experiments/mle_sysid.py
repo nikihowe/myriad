@@ -143,7 +143,7 @@ def run_mle_sysid(hp: HParams, cfg: Config) -> None:
     best_params = None
     check_frequency = 500
     count = 0
-    for epoch in range(10_000_000):
+    for epoch in range(hp.num_epochs * 10):
       if epoch % check_frequency == 0:
         cur_loss = loss(params, train_set, epoch)
         val_loss = loss(params, val_set, epoch)
