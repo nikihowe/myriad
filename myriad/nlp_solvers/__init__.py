@@ -66,8 +66,8 @@ def solve(hp: HParams, cfg: Config, opt_dict: Dict) -> Dict[str, jnp.ndarray]:
 
     system = hp.system()
     opt_x, c = get_state_trajectory_and_cost(hp, system, system.x_0, (opt_dict['unravel'](solution['x']))[1])
-    print('Cost from solver:', solution['fun'])
-    print("Integrated cost:", c)
+    print('Cost given by solver:', solution['fun'])
+    print("Cost given by integrating the control trajectory:", c)
     if system.x_T is not None:
       achieved_last_state = opt_x[-1]
       desired_last_state = system.x_T

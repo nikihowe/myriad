@@ -1,5 +1,7 @@
-"""This library implements in [JAX](https://github.com/google/jax) various systems and their associated OCP,
-together with different trajectory_optimizers for their resolution"""
+"""
+This library implements in [JAX](https://github.com/google/jax) various real-world environments,
+neural ODEs for system identification, and trajectory optimizers for solving the optimal control problem.
+"""
 from .config import *
 from .nlp_solvers import *
 from .trajectory_optimizers import *
