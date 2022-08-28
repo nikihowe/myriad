@@ -47,18 +47,7 @@
 <span>(</span><span>power=0.0015, gravity=0.0025)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Abstract class describing a finite-horizon control system. Model a problem of the form:</p>
-<p><span><span class="MathJax_Preview"> \begin{align}
-&amp;\min_u \quad &amp;&amp;g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
-&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = f(x,u,t) \\
-&amp; &amp;&amp; x(0)=x_0
-\end{align} </span><script type="math/tex; mode=display"> \begin{align}
-&\min_u \quad &&g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
-& \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t) \\
-& && x(0)=x_0
-\end{align} </script></span>
-Continuous mountain-car, inspired by
-<a href="https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py">https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py</a></p></div>
+<div class="desc"><p>Continuous Mountain Car environment, inspired by the <a href="https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py">OpenAI gym environment</a>.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

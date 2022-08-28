@@ -19,6 +19,10 @@ def angle_normalize(x):
 
 
 class Pendulum(FiniteHorizonControlSystem):
+  """
+  Continuous Pendulum environment, inspired by the [OpenAI gym environment](https://github.com/openai/gym/blob/ee5ee3a4a5b9d09219ff4c932a45c4a661778cd7/gym/envs/classic_control/pendulum.py).
+
+  """
   def __init__(self, g: float = 10., m: float = 1., length: float = 1.):
     # Learnable parameters
     self.g = g

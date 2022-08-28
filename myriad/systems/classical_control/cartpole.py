@@ -8,12 +8,11 @@ from myriad.custom_types import Control, Cost, DState, Params, State, Timestep
 
 
 class CartPole(FiniteHorizonControlSystem):
-  def __init__(self, g: float = 9.81, m1: float = 1., m2: float = .3, length: float = 0.5):
-    """
-    Cart-pole swing-up,
-      from https://epubs.siam.org/doi/10.1137/16M1062569
-    """
+  """
+  Cart-pole swing-up, from [(Kelly, 2017)](https://epubs.siam.org/doi/10.1137/16M1062569).
+  """
 
+  def __init__(self, g: float = 9.81, m1: float = 1., m2: float = .3, length: float = 0.5):
     # Physical parameters for the cart-pole example (Table 3)
     self.m1 = m1  # kg mass of cart
     self.m2 = m2  # kg mass of pole

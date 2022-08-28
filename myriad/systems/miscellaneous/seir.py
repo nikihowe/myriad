@@ -4,11 +4,11 @@ from myriad.systems import FiniteHorizonControlSystem
 
 
 class SEIR(FiniteHorizonControlSystem):
+  """
+  SEIR epidemic model for COVID-19, inspired by [Perkins and Espana](https://link.springer.com/article/10.1007/s11538-020-00795-y).
+  """
+
   def __init__(self):
-    """
-    SEIR epidemic model for COVID-19,
-      from Perkins and Espana: https://link.springer.com/article/10.1007/s11538-020-00795-y
-    """
     self.b = 0.525
     self.d = 0.5
     self.c = 0.0001

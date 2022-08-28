@@ -8,11 +8,11 @@ from myriad.systems import FiniteHorizonControlSystem
 
 
 class VanDerPol(FiniteHorizonControlSystem):
+  """
+  Driven Van der Pol oscillator, from [CasADi](http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html).
+  """
+
   def __init__(self, a=1.):
-    """
-    Driven Van der Pol oscillator,
-      from http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html
-    """
     self.a = a
 
     super().__init__(

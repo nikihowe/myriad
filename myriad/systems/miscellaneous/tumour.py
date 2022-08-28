@@ -10,8 +10,7 @@ from myriad.systems import FiniteHorizonControlSystem
 class Tumour(FiniteHorizonControlSystem):
   def __init__(self, xi=0.084, b=5.85, d=0.00873, G=0.15, mu=0.02):
     """
-    Tumour anti-angiogenesis model,
-      from Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)
+    Tumour anti-angiogenesis model, from [Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)](https://my.siam.org/Store/Product/viewproduct/?ProductId=31657301).
     """
     # Learnable parameters
     self.xi = xi  # per day (tumour growth)

@@ -14,12 +14,11 @@ def hill_function(x: float) -> float:
 
 
 class MountainCar(FiniteHorizonControlSystem):
-  def __init__(self, power=0.0015, gravity=0.0025) -> None:
-    """
-    Continuous mountain-car, inspired by
-    https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py
-    """
+  """
+  Continuous Mountain Car environment, inspired by the [OpenAI gym environment](https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py).
+  """
 
+  def __init__(self, power=0.0015, gravity=0.0025) -> None:
     self.min_action = -1.0
     self.max_action = 1.0
     self.min_position = -1.2
