@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>myriad.systems.lenhart.predator_prey API documentation</title>
+<title>myriad.systems.lenhart.cancer_treatment API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -20,7 +20,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>myriad.systems.lenhart.predator_prey</code></h1>
+<h1 class="title">Module <code>myriad.systems.lenhart.cancer_treatment</code></h1>
 </header>
 <section id="section-intro">
 </section>
@@ -33,36 +33,36 @@
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="myriad.systems.lenhart.predator_prey.PredatorPrey"><code class="flex name class">
-<span>class <span class="ident">PredatorPrey</span></span>
-<span>(</span><span>d_1=0.1, d_2=0.1, A=1.0, B=5.0, guess_a=-0.52, guess_b=0.5, M=1.0, x_0=(10.0, 1.0, 0.0), T=10.0)</span>
+<dt id="myriad.systems.lenhart.cancer_treatment.CancerTreatment"><code class="flex name class">
+<span>class <span class="ident">CancerTreatment</span></span>
+<span>(</span><span>r=0.3, a=3.0, delta=0.45, x_0=0.975, T=20)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 22, Lab 13)
-The states evolution is base on a standard Lotka-Volterra model.
-This particular environment is inspired from Bean San Goh, George Leitmann, and Thomas L. Vincent.
-Optimal control of a prey-predator system. Mathematical Biosciences, 19, 1974.</p>
-<p>This environment models the evolution of a pest (prey) population ( <span><span class="MathJax_Preview">x_0(t)</span><script type="math/tex">x_0(t)</script></span> ) and a predator population ( <span><span class="MathJax_Preview">x_1(t) </span><script type="math/tex">x_1(t) </script></span>) in
-the presence of a pesticide ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) that affects both the pest and predator populations. The objective in mind is
-to minimize the final pest population, while limiting the usage of the pesticide. Thus:</p>
+<div class="desc"><p>Taken from: Optimal Control Applied to Biological Models, Lenhart &amp; Workman (Chapter 10, Lab 5)
+The model was originally described in K. Renee Fister and John Carl Panetta. Optimal control applied to
+competing chemotherapeutic cell-kill strategies. SIAM Journal of Applied Mathematics, 63(6):1954–71, 2003.</p>
+<p>The tumour is assumed to Gompertzian growth and the model follows a Skipper's log-kill hypothesis, that is, the
+cell-kill due to the chemotherapy treatment is proportional to the tumour population.</p>
+<p>This environment models the normalized density of a cancerous tumour undergoing chemotherapy.
+The state ( <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> ) is the
+normalized density of the tumour, while the control ( <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> ) is the strength of the drug used for chemotherapy.
+We are trying to minimize:</p>
+<p>An important note about this system: due to the log of the reciprocal of the state in the
+dynamics equation, special care must be taken to ensure that your numerical integration
+scheme doesn't take a step into the negative values for x. As such, it is recommended
+to either take small steps, or to always clip the state to [0., inf] during
+integration.</p>
 <p><span><span class="MathJax_Preview"> \begin{align}
-&amp; \min_{u} \quad &amp;&amp; x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
-&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
-&amp; &amp;&amp; x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
-&amp; &amp;&amp; 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
+&amp;\min_u \quad &amp;&amp; \int_0^T ax^2(t) + u^2(t) dt \\
+&amp; \; \mathrm{s.t.}\quad
+&amp;&amp;x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
+&amp; &amp;&amp; x(0)=x_0, \; u(t) \geq 0
 \end{align} </span><script type="math/tex; mode=display"> \begin{align}
-& \min_{u} \quad && x_0(T) + \frac{A}{2}\int_0^T u(t)^2 dt \\
-& \; \mathrm{s.t.}\quad && x_0'(t) = (1 - x_1(t))x_0(t) - d_1x_0(t)u(t) \\
-& && x_1'(t) = (x_0(t) - 1)x_1(t) - d_2x_1(t)(t)u(t) \\
-& && 0 \leq u(t) \leq M, \quad \int_0^T u(t) dt = B
-\end{align} </script></span>
-The particularity here is that the total amount of pesticide to be applied is fixed. To take into account this
-constraint, a virtual state variable ( <span><span class="MathJax_Preview">z(t)</span><script type="math/tex">z(t)</script></span> ) is added where:</p>
-<p><span><span class="MathJax_Preview"> z'(t) = u(t), \; z(0) = 0, \; z(T) = B </span><script type="math/tex; mode=display"> z'(t) = u(t), \; z(0) = 0, \; z(T) = B </script></span>
-Finally, note that <code>guess_a</code> and <code>guess_b</code> have been carefully chosen in the study cases to allow for fast iteration
-and ensure convergence.</p>
-<h2 id="notes">Notes</h2>
-<p>x_0: Initial density of the pest and prey population <span><span class="MathJax_Preview"> (x_0, x_1) </span><script type="math/tex"> (x_0, x_1) </script></span></p></div>
+&\min_u \quad && \int_0^T ax^2(t) + u^2(t) dt \\
+& \; \mathrm{s.t.}\quad
+&&x'(t) = rx(t)\ln \big( \frac{1}{x(t)} \big) - u(t)\delta x(t) \\
+& && x(0)=x_0, \; u(t) \geq 0
+\end{align} </script></span></p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.IndirectFHCS" href="../base.html#myriad.systems.base.IndirectFHCS">IndirectFHCS</a></li>
@@ -71,21 +71,17 @@ and ensure convergence.</p>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="myriad.systems.lenhart.predator_prey.PredatorPrey.d_1"><code class="name">var <span class="ident">d_1</span></code></dt>
+<dt id="myriad.systems.lenhart.cancer_treatment.CancerTreatment.r"><code class="name">var <span class="ident">r</span></code></dt>
 <dd>
-<div class="desc"><p>Impact of the pesticide on the pest population</p></div>
+<div class="desc"><p>Growth rate of the tumour</p></div>
 </dd>
-<dt id="myriad.systems.lenhart.predator_prey.PredatorPrey.d_2"><code class="name">var <span class="ident">d_2</span></code></dt>
+<dt id="myriad.systems.lenhart.cancer_treatment.CancerTreatment.a"><code class="name">var <span class="ident">a</span></code></dt>
 <dd>
-<div class="desc"><p>Impact of the pesticide on the prey population</p></div>
+<div class="desc"><p>Positive weight parameter</p></div>
 </dd>
-<dt id="myriad.systems.lenhart.predator_prey.PredatorPrey.A"><code class="name">var <span class="ident">A</span></code></dt>
+<dt id="myriad.systems.lenhart.cancer_treatment.CancerTreatment.delta"><code class="name">var <span class="ident">delta</span></code></dt>
 <dd>
-<div class="desc"><p>Weight parameter balancing the cost</p></div>
-</dd>
-<dt id="myriad.systems.lenhart.predator_prey.PredatorPrey.M"><code class="name">var <span class="ident">M</span></code></dt>
-<dd>
-<div class="desc"><p>Bound on pesticide application at a given time</p></div>
+<div class="desc"><p>Magnitude of the dose administered</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -129,7 +125,7 @@ and ensure convergence.</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="myriad.systems.lenhart.predator_prey.PredatorPrey" href="#myriad.systems.lenhart.predator_prey.PredatorPrey">PredatorPrey</a></code></h4>
+<h4><code><a title="myriad.systems.lenhart.cancer_treatment.CancerTreatment" href="#myriad.systems.lenhart.cancer_treatment.CancerTreatment">CancerTreatment</a></code></h4>
 </li>
 </ul>
 </li>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>myriad.config API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -47,15 +47,45 @@
 <dl>
 <dt id="myriad.config.OptimizerType.COLLOCATION"><code class="name">var <span class="ident">COLLOCATION</span></code></dt>
 <dd>
-<div class="desc"><p>Collocation method, select with <code>--optimizer=COLLOCATION</code></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.OptimizerType.SHOOTING"><code class="name">var <span class="ident">SHOOTING</span></code></dt>
 <dd>
-<div class="desc"><p>Shooting method (single and multi), select with <code>--optimizer=SHOOTING</code></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.OptimizerType.FBSM"><code class="name">var <span class="ident">FBSM</span></code></dt>
 <dd>
-<div class="desc"><p>Forward-Backward Sweep method (indirect), select with <code>--optimizer=FBSM</code></p></div>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="myriad.config.SamplingApproach"><code class="flex name class">
+<span>class <span class="ident">SamplingApproach</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="myriad.config.SamplingApproach.UNIFORM"><code class="name">var <span class="ident">UNIFORM</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.SamplingApproach.TRUE_OPTIMAL"><code class="name">var <span class="ident">TRUE_OPTIMAL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.SamplingApproach.RANDOM_WALK"><code class="name">var <span class="ident">RANDOM_WALK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.SamplingApproach.CURRENT_OPTIMAL"><code class="name">var <span class="ident">CURRENT_OPTIMAL</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
@@ -89,8 +119,8 @@
 </dd>
 </dl>
 </dd>
-<dt id="myriad.config.IntegrationOrder"><code class="flex name class">
-<span>class <span class="ident">IntegrationOrder</span></span>
+<dt id="myriad.config.IntegrationMethod"><code class="flex name class">
+<span>class <span class="ident">IntegrationMethod</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
@@ -101,15 +131,41 @@
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="myriad.config.IntegrationOrder.CONSTANT"><code class="name">var <span class="ident">CONSTANT</span></code></dt>
+<dt id="myriad.config.IntegrationMethod.EULER"><code class="name">var <span class="ident">EULER</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="myriad.config.IntegrationOrder.LINEAR"><code class="name">var <span class="ident">LINEAR</span></code></dt>
+<dt id="myriad.config.IntegrationMethod.HEUN"><code class="name">var <span class="ident">HEUN</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="myriad.config.IntegrationOrder.QUADRATIC"><code class="name">var <span class="ident">QUADRATIC</span></code></dt>
+<dt id="myriad.config.IntegrationMethod.MIDPOINT"><code class="name">var <span class="ident">MIDPOINT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.IntegrationMethod.RK4"><code class="name">var <span class="ident">RK4</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="myriad.config.QuadratureRule"><code class="flex name class">
+<span>class <span class="ident">QuadratureRule</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="myriad.config.QuadratureRule.TRAPEZOIDAL"><code class="name">var <span class="ident">TRAPEZOIDAL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.QuadratureRule.HERMITE_SIMPSON"><code class="name">var <span class="ident">HERMITE_SIMPSON</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -117,49 +173,141 @@
 </dd>
 <dt id="myriad.config.HParams"><code class="flex name class">
 <span>class <span class="ident">HParams</span></span>
-<span>(</span><span>system=SystemType.EPIDEMICSEIRN, optimizer=OptimizerType.SHOOTING, nlpsolver=NLPSolverType.SLSQP, order=IntegrationOrder.LINEAR, max_iter=1000, intervals=1, controls_per_interval=100, fbsm_intervals=1000)</span>
+<span>(</span><span>seed=2019, system=SystemType.CANCERTREATMENT, optimizer=OptimizerType.SHOOTING, nlpsolver=NLPSolverType.IPOPT, integration_method=IntegrationMethod.HEUN, quadrature_rule=QuadratureRule.TRAPEZOIDAL, max_iter=1000, intervals=1, controls_per_interval=100, fbsm_intervals=1000, sampling_approach=SamplingApproach.RANDOM_WALK, train_size=100, val_size=3, test_size=3, sample_spread=0.05, start_spread=0.1, noise_level=0.0, to_smooth=False, learning_rate=0.001, minibatch_size=16, num_epochs=10001, num_experiments=1, loss_recording_frequency=10, plot_progress_frequency=10, early_stop_threshold=30, early_stop_check_frequency=20, hidden_layers=(50, 50), num_unrolled=5, eta_x=0.1, eta_lmbda=0.001, adam_lr=0.0001)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The hyperparameters of the experiment. Modifying those should slightly change the results</p></div>
+<div class="desc"><p>The hyperparameters of the experiment. Modifying these should change the results</p></div>
 <h3>Class variables</h3>
 <dl>
+<dt id="myriad.config.HParams.seed"><code class="name">var <span class="ident">seed</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="myriad.config.HParams.system"><code class="name">var <span class="ident">system</span></code></dt>
 <dd>
-<div class="desc"><p>The system to run the experiment on; set with <code>system=&lt;SystemType&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/systems/index.html#myriad.systems.SystemType">SystemType</a></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.optimizer"><code class="name">var <span class="ident">optimizer</span></code></dt>
 <dd>
-<div class="desc"><p>The optimizer to solve the OCP. Select from <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.OptimizerType">OptimizerType</a></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.nlpsolver"><code class="name">var <span class="ident">nlpsolver</span></code></dt>
 <dd>
-<div class="desc"><p>The NLP solver to use during optimization; set with <code>nlpsolver=&lt;NLPSolverType&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.NLPSolverType">NLPSolverType</a></p></div>
+<div class="desc"></div>
 </dd>
-<dt id="myriad.config.HParams.order"><code class="name">var <span class="ident">order</span></code></dt>
+<dt id="myriad.config.HParams.integration_method"><code class="name">var <span class="ident">integration_method</span></code></dt>
 <dd>
-<div class="desc"><p>Order when integrating; set with <code>order=&lt;IntegrationOrder&gt;</code>. Value can be any of <a href="https://simonduflab.github.io/optimal-control/html/myriad/config.html#myriad.config.IntegrationOrder">IntegrationOrder</a></p></div>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.quadrature_rule"><code class="name">var <span class="ident">quadrature_rule</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.max_iter"><code class="name">var <span class="ident">max_iter</span></code></dt>
 <dd>
-<div class="desc"><p>Maximum iteration for NLP solvers; set wit <code>max_iter=&lt;int&gt;</code></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.intervals"><code class="name">var <span class="ident">intervals</span></code></dt>
 <dd>
-<div class="desc"><p>Number of intervals to use for optimizer, used by <code>COLLOCATION</code> and <code>SHOOTING</code> methods; set with <code>intervals=&lt;int&gt;</code></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.controls_per_interval"><code class="name">var <span class="ident">controls_per_interval</span></code></dt>
 <dd>
-<div class="desc"><p>Number of controls per interval, used by <code>SHOOTING</code> (multiple) method; set with <code>controls_per_interval=&lt;int&gt;</code></p></div>
+<div class="desc"></div>
 </dd>
 <dt id="myriad.config.HParams.fbsm_intervals"><code class="name">var <span class="ident">fbsm_intervals</span></code></dt>
 <dd>
-<div class="desc"><p>Used by <code>FBSM</code> method; set with <code>fbsm_intervals=&lt;int&gt;</code></p></div>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.sampling_approach"><code class="name">var <span class="ident">sampling_approach</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.train_size"><code class="name">var <span class="ident">train_size</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.val_size"><code class="name">var <span class="ident">val_size</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.test_size"><code class="name">var <span class="ident">test_size</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.sample_spread"><code class="name">var <span class="ident">sample_spread</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.start_spread"><code class="name">var <span class="ident">start_spread</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.noise_level"><code class="name">var <span class="ident">noise_level</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.to_smooth"><code class="name">var <span class="ident">to_smooth</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.learning_rate"><code class="name">var <span class="ident">learning_rate</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.minibatch_size"><code class="name">var <span class="ident">minibatch_size</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.num_epochs"><code class="name">var <span class="ident">num_epochs</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.num_experiments"><code class="name">var <span class="ident">num_experiments</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.loss_recording_frequency"><code class="name">var <span class="ident">loss_recording_frequency</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.plot_progress_frequency"><code class="name">var <span class="ident">plot_progress_frequency</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.early_stop_threshold"><code class="name">var <span class="ident">early_stop_threshold</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.early_stop_check_frequency"><code class="name">var <span class="ident">early_stop_check_frequency</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.hidden_layers"><code class="name">var <span class="ident">hidden_layers</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.num_unrolled"><code class="name">var <span class="ident">num_unrolled</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.eta_x"><code class="name">var <span class="ident">eta_x</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.eta_lmbda"><code class="name">var <span class="ident">eta_lmbda</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.HParams.adam_lr"><code class="name">var <span class="ident">adam_lr</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
 <dt id="myriad.config.Config"><code class="flex name class">
 <span>class <span class="ident">Config</span></span>
-<span>(</span><span>verbose=True, jit=True, plot_results=True)</span>
+<span>(</span><span>verbose=True, jit=True, plot=True, pretty_plotting=True, load_params_if_saved=True, figsize=(8, 6), file_extension='png')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Secondary configurations that should not change experiment results
@@ -174,9 +322,25 @@ and should be largely used for debugging</p></div>
 <dd>
 <div class="desc"><p>Enable <a href="https://jax.readthedocs.io/en/latest/notebooks/quickstart.html#using-jit-to-speed-up-functions"><code>@jit</code></a> compilation; default to <code>True</code></p></div>
 </dd>
-<dt id="myriad.config.Config.plot_results"><code class="name">var <span class="ident">plot_results</span></code></dt>
+<dt id="myriad.config.Config.plot"><code class="name">var <span class="ident">plot</span></code></dt>
 <dd>
-<div class="desc"><p>Plot results after running the experiment; default to <code>True</code></p></div>
+<div class="desc"><p>Plot progress during (and results after) the experiment; default to <code>True</code></p></div>
+</dd>
+<dt id="myriad.config.Config.pretty_plotting"><code class="name">var <span class="ident">pretty_plotting</span></code></dt>
+<dd>
+<div class="desc"><p>Only plot the true trajectory, ignoring the solver state output</p></div>
+</dd>
+<dt id="myriad.config.Config.load_params_if_saved"><code class="name">var <span class="ident">load_params_if_saved</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.Config.figsize"><code class="name">var <span class="ident">figsize</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="myriad.config.Config.file_extension"><code class="name">var <span class="ident">file_extension</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
@@ -200,10 +364,16 @@ and should be largely used for debugging</p></div>
 <h4><code><a title="myriad.config.OptimizerType" href="#myriad.config.OptimizerType">OptimizerType</a></code></h4>
 </li>
 <li>
+<h4><code><a title="myriad.config.SamplingApproach" href="#myriad.config.SamplingApproach">SamplingApproach</a></code></h4>
+</li>
+<li>
 <h4><code><a title="myriad.config.NLPSolverType" href="#myriad.config.NLPSolverType">NLPSolverType</a></code></h4>
 </li>
 <li>
-<h4><code><a title="myriad.config.IntegrationOrder" href="#myriad.config.IntegrationOrder">IntegrationOrder</a></code></h4>
+<h4><code><a title="myriad.config.IntegrationMethod" href="#myriad.config.IntegrationMethod">IntegrationMethod</a></code></h4>
+</li>
+<li>
+<h4><code><a title="myriad.config.QuadratureRule" href="#myriad.config.QuadratureRule">QuadratureRule</a></code></h4>
 </li>
 <li>
 <h4><code><a title="myriad.config.HParams" href="#myriad.config.HParams">HParams</a></code></h4>
@@ -217,7 +387,7 @@ and should be largely used for debugging</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

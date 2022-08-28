@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>myriad.systems.tumour API documentation</title>
+<title>myriad.experiments.node_e2e_sysid API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -20,7 +20,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>myriad.systems.tumour</code></h1>
+<h1 class="title">Module <code>myriad.experiments.node_e2e_sysid</code></h1>
 </header>
 <section id="section-intro">
 </section>
@@ -29,51 +29,17 @@
 <section>
 </section>
 <section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="myriad.systems.tumour.Tumour"><code class="flex name class">
-<span>class <span class="ident">Tumour</span></span>
-<span>(</span><span>xi=0.084, b=5.85, d=0.00873, G=0.15, mu=0.02)</span>
+<dt id="myriad.experiments.node_e2e_sysid.run_node_endtoend"><code class="name flex">
+<span>def <span class="ident">run_node_endtoend</span></span>(<span>hp, cfg, num_epochs=10000, load_specific_epoch_params=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Abstract class describing a finite-horizon control system. Model a problem of the form:</p>
-<p><span><span class="MathJax_Preview"> \begin{align}
-&amp;\min_u \quad &amp;&amp;g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
-&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = f(x,u,t) \\
-&amp; &amp;&amp; x(0)=x_0
-\end{align} </span><script type="math/tex; mode=display"> \begin{align}
-&\min_u \quad &&g_T(x_T,u_T,T) + \int_0^T g(x,u,t) dt \\
-& \; \mathrm{s.t.}\quad && x'(t) = f(x,u,t) \\
-& && x(0)=x_0
-\end{align} </script></span>
-Tumour anti-angiogenesis model,
-from Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)</p></div>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="myriad.systems.base.FiniteHorizonControlSystem" href="base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></b></code>:
-<ul class="hlist">
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.T" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.T">T</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.bounds" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.bounds">bounds</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.cost" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.cost">cost</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.discrete" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.discrete">discrete</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.dynamics" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.dynamics">dynamics</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.parametrized_cost" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.parametrized_cost">parametrized_cost</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.parametrized_dynamics" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.parametrized_dynamics">parametrized_dynamics</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.terminal_cost">terminal_cost</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.terminal_cost_fn">terminal_cost_fn</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.x_0" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.x_0">x_0</a></code></li>
-<li><code><a title="myriad.systems.base.FiniteHorizonControlSystem.x_T" href="base.html#myriad.systems.base.FiniteHorizonControlSystem.x_T">x_T</a></code></li>
-</ul>
-</li>
-</ul>
+<div class="desc"></div>
 </dd>
 </dl>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -84,14 +50,12 @@ from Practical Methods for Optimal Control Using Nonlinear Programming (Third Ed
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="myriad.systems" href="index.html">myriad.systems</a></code></li>
+<li><code><a title="myriad.experiments" href="index.html">myriad.experiments</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="myriad.systems.tumour.Tumour" href="#myriad.systems.tumour.Tumour">Tumour</a></code></h4>
-</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="myriad.experiments.node_e2e_sysid.run_node_endtoend" href="#myriad.experiments.node_e2e_sysid.run_node_endtoend">run_node_endtoend</a></code></li>
 </ul>
 </li>
 </ul>
