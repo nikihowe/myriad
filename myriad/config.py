@@ -61,7 +61,7 @@ class QuadratureRule(Enum):
 class HParams:
   """The hyperparameters of the experiment. Modifying these should change the results"""
   seed: int = 2019
-  system: SystemType = SystemType.CARTPOLE
+  system: SystemType = SystemType.CANCERTREATMENT
   optimizer: OptimizerType = OptimizerType.SHOOTING
   nlpsolver: NLPSolverType = NLPSolverType.IPOPT
   integration_method: IntegrationMethod = IntegrationMethod.HEUN

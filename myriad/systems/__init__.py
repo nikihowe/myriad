@@ -3,27 +3,27 @@ from enum import Enum
 from typing import Union
 
 from .base import FiniteHorizonControlSystem, IndirectFHCS
-from systems.classical_control.cartpole import CartPole
-from systems.classical_control.mountain_car import MountainCar
-from systems.classical_control.pendulum import Pendulum
-from systems.miscellaneous.rocket_landing import RocketLanding
-from systems.miscellaneous.seir import SEIR
-from systems.miscellaneous.tumour import Tumour
-from systems.miscellaneous.van_der_pol import VanDerPol
-from .lenhart.bacteria import Bacteria
-from .lenhart.bear_populations import BearPopulations
-from .lenhart.bioreactor import Bioreactor
-from .lenhart.cancer_treatment import CancerTreatment
-from .lenhart.epidemic_seirn import EpidemicSEIRN
-from .lenhart.harvest import Harvest
-from .lenhart.glucose import Glucose
-from .lenhart.hiv_treatment import HIVTreatment
-from .lenhart.invasive_plant import InvasivePlant
-from .lenhart.mould_fungicide import MouldFungicide
-from .lenhart.predator_prey import PredatorPrey
-from .lenhart.simple_case import SimpleCase
-from .lenhart.simple_case_with_bounds import SimpleCaseWithBounds
-from .lenhart.timber_harvest import TimberHarvest
+from myriad.systems.classical_control.cartpole import CartPole
+from myriad.systems.classical_control.mountain_car import MountainCar
+from myriad.systems.classical_control.pendulum import Pendulum
+from myriad.systems.miscellaneous.rocket_landing import RocketLanding
+from myriad.systems.miscellaneous.seir import SEIR
+from myriad.systems.miscellaneous.tumour import Tumour
+from myriad.systems.miscellaneous.van_der_pol import VanDerPol
+from myriad.systems.lenhart.bacteria import Bacteria
+from myriad.systems.lenhart.bear_populations import BearPopulations
+from myriad.systems.lenhart.bioreactor import Bioreactor
+from myriad.systems.lenhart.cancer_treatment import CancerTreatment
+from myriad.systems.lenhart.epidemic_seirn import EpidemicSEIRN
+from myriad.systems.lenhart.harvest import Harvest
+from myriad.systems.lenhart.glucose import Glucose
+from myriad.systems.lenhart.hiv_treatment import HIVTreatment
+from myriad.systems.lenhart.invasive_plant import InvasivePlant
+from myriad.systems.lenhart.mould_fungicide import MouldFungicide
+from myriad.systems.lenhart.predator_prey import PredatorPrey
+from myriad.systems.lenhart.simple_case import SimpleCase
+from myriad.systems.lenhart.simple_case_with_bounds import SimpleCaseWithBounds
+from myriad.systems.lenhart.timber_harvest import TimberHarvest
 
 
 class SystemType(Enum):

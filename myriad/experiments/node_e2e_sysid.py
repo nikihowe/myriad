@@ -16,7 +16,7 @@ from myriad.neural_ode.create_node import NeuralODE
 from myriad.custom_types import Params, DParams
 from myriad.trajectory_optimizers import get_optimizer
 from myriad.plotting import plot
-from systems.neural_ode.node_system import NodeSystem
+from myriad.systems.neural_ode.node_system import NodeSystem
 from myriad.systems import get_name
 from myriad.utils import integrate_time_independent, get_state_trajectory_and_cost, get_defect
 

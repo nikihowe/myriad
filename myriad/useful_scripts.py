@@ -17,7 +17,7 @@ from myriad.neural_ode.create_node import NeuralODE
 from myriad.trajectory_optimizers import get_optimizer
 from myriad.utils import get_defect, integrate_time_independent, get_state_trajectory_and_cost, plan_with_node_model
 from myriad.plotting import plot
-from systems.neural_ode.node_system import NodeSystem
+from myriad.systems.neural_ode.node_system import NodeSystem
 from myriad.config import OptimizerType
 
 config.update("jax_enable_x64", True)
