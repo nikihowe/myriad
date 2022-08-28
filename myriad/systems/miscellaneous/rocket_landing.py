@@ -9,11 +9,11 @@ from myriad.systems import FiniteHorizonControlSystem
 
 
 class RocketLanding(FiniteHorizonControlSystem):
+  """
+  Simulate a starship landing! Inspired by Thomas Godden's [medium post](https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b).
+  """
   # TODO: think about this http://larsblackmore.com/losslessconvexification.htm
   def __init__(self, g: float = 9.8, m: float = 100_000, length: float = 50, width: float = 10) -> None:
-    """
-    Simulate a starship landing! Inspired by Thomas Godden's [medium post](https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b).
-    """
     self.g = g  # m/s^2
     self.m = m  # kg
     self.length = length  # m
