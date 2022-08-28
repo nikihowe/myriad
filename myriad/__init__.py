@@ -15,4 +15,10 @@ __pdoc__ = {'trajectory_optimizers.IndirectMethodOptimizer.require_adj': False,
             'trajectory_optimizers.TrapezoidalCollocationOptimizer.require_adj': False,
             'trajectory_optimizers.HermiteSimpsonCollocationOptimizer.require_adj': False,
             'trajectory_optimizers.MultipleShootingOptimizer.require_adj': False,
-            'trajectory_optimizers.IndirectMethodOptimizer.solve': False}
+            'trajectory_optimizers.IndirectMethodOptimizer.solve': False,
+            'custom_types': False,
+            'defaults': False,
+            'probing_numerical_instability': False,
+            'study_scripts': False,
+            }
+

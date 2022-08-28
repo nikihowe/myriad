@@ -18,7 +18,7 @@ real-world problems.
 
 For an overview of the motivation and capabilities of Myriad, see https://arxiv.org/abs/2202.10600.
 
-For implementation and usage details, see the [documentation](https://nikihowe.github.io/optimal-control/html/myriad/index.html).
+For implementation and usage details, see the [documentation](https://nikihowe.github.io/myriad/html/myriad/index.html).
 
 ## Directory structure
 ```
