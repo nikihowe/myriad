@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from .base import FiniteHorizonControlSystem
+from myriad.systems import FiniteHorizonControlSystem
 
 
 class SEIR(FiniteHorizonControlSystem):

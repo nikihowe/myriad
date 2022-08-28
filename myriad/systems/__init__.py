@@ -3,13 +3,13 @@ from enum import Enum
 from typing import Union
 
 from .base import FiniteHorizonControlSystem, IndirectFHCS
-from .cartpole import CartPole
-from .mountain_car import MountainCar
-from .pendulum import Pendulum
-from .rocket_landing import RocketLanding
-from .seir import SEIR
-from .tumour import Tumour
-from .van_der_pol import VanDerPol
+from systems.classical_control.cartpole import CartPole
+from systems.classical_control.mountain_car import MountainCar
+from systems.classical_control.pendulum import Pendulum
+from systems.miscellaneous.rocket_landing import RocketLanding
+from systems.miscellaneous.seir import SEIR
+from systems.miscellaneous.tumour import Tumour
+from systems.miscellaneous.van_der_pol import VanDerPol
 from .lenhart.bacteria import Bacteria
 from .lenhart.bear_populations import BearPopulations
 from .lenhart.bioreactor import Bioreactor

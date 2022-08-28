@@ -1,14 +1,11 @@
 # (c) 2021 Nikolaus Howe
 from __future__ import annotations
 
-import gin
-import jax
 import jax.numpy as jnp
 import numpy as np
 import pickle as pkl
 import simple_parsing
 
-from absl import flags
 from jax.flatten_util import ravel_pytree
 from jax.config import config
 from pathlib import Path
@@ -17,11 +14,10 @@ from typing import Tuple
 from myriad.config import HParams, Config
 from myriad.custom_types import Cost, Defect, Optional
 from myriad.neural_ode.create_node import NeuralODE
-from myriad.trajectory_optimizers import get_optimizer, TrajectoryOptimizer
+from myriad.trajectory_optimizers import get_optimizer
 from myriad.utils import get_defect, integrate_time_independent, get_state_trajectory_and_cost, plan_with_node_model
 from myriad.plotting import plot
-from myriad.systems import FiniteHorizonControlSystem
-from myriad.systems.node_system import NodeSystem
+from systems.neural_ode.node_system import NodeSystem
 from myriad.config import OptimizerType
 
 config.update("jax_enable_x64", True)

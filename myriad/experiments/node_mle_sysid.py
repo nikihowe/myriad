@@ -14,7 +14,7 @@ from myriad.neural_ode.create_node import NeuralODE
 from myriad.neural_ode.node_training import train
 from myriad.trajectory_optimizers import get_optimizer
 from myriad.plotting import plot, plot_losses
-from myriad.systems.node_system import NodeSystem
+from systems.neural_ode.node_system import NodeSystem
 from myriad.utils import get_state_trajectory_and_cost, integrate_time_independent, sample_x_init
 
 

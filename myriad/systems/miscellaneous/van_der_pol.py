@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from .base import FiniteHorizonControlSystem
-from ..custom_types import Params
+from myriad.custom_types import Params
+from myriad.systems import FiniteHorizonControlSystem
 
 
 class VanDerPol(FiniteHorizonControlSystem):

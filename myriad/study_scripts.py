@@ -12,7 +12,7 @@ from myriad.neural_ode.create_node import NeuralODE
 from myriad.experiments.mle_sysid import run_mle_sysid
 from myriad.experiments.node_mle_sysid import run_node_mle_sysid
 from myriad.trajectory_optimizers import get_optimizer
-from myriad.systems.node_system import NodeSystem
+from systems.neural_ode.node_system import NodeSystem
 from myriad.systems import get_name
 from myriad.useful_scripts import run_trajectory_opt, run_node_trajectory_opt
 from myriad.utils import get_state_trajectory_and_cost

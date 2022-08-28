@@ -8,15 +8,15 @@ import optax
 import pickle as pkl
 
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple
 
-from myriad.config import HParams, Config, SystemType, NLPSolverType
+from myriad.config import HParams, Config, NLPSolverType
 from myriad.defaults import learning_rates, param_guesses
 from myriad.neural_ode.create_node import NeuralODE
-from myriad.custom_types import Control, Params, State, Timestep, DParams
+from myriad.custom_types import Params, DParams
 from myriad.trajectory_optimizers import get_optimizer
 from myriad.plotting import plot
-from myriad.systems.node_system import NodeSystem
+from systems.neural_ode.node_system import NodeSystem
 from myriad.systems import get_name
 from myriad.utils import integrate_time_independent, get_state_trajectory_and_cost, get_defect
 
