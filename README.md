@@ -8,10 +8,9 @@ in [JAX](https://github.com/google/jax), and as such can be easily integrated in
 The environments and tools in Myriad can be used for trajectory optimization, system identification, 
 imitation learning, and reinforcement learning.
 
-It is our hope that Myriad will
-serve as a stepping stone towards the increased development
-of machine learning algorithms with the goal of addressing
-impactful real-world challenges.
+We hope Myriad will help foster increased interest within
+machine learning community for developing and applying learning algorithms in
+impactful real-world settings.
 
 For an overview of the motivation and capabilities of Myriad, see our [arXiv preprint](https://arxiv.org/abs/2202.10600).
 
