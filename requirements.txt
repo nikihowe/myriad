@@ -14,7 +14,6 @@ tqdm~=4.60.0
 tensorboardX~=2.2
 dm-haiku>=0.0.3
 cyipopt
--e git+https://github.com/gehring/fax.git@62fba3856143745390c9b3aea069e5a28d6a6cf9#egg=fax
 
 aiohttp==3.7.4.post0
 async-timeout==3.0.1
