@@ -47,7 +47,36 @@
 <span>(</span><span>g=10.0, m=1.0, length=1.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Continuous Pendulum environment, inspired by the <a href="https://github.com/openai/gym/blob/ee5ee3a4a5b9d09219ff4c932a45c4a661778cd7/gym/envs/classic_control/pendulum.py">OpenAI gym environment</a>.</p></div>
+<div class="desc"><p>Continuous Pendulum environment, inspired by the <a href="https://github.com/openai/gym/blob/master/gym/envs/classic_control/pendulum.py">OpenAI gym environment</a>.</p>
+<p>This environment model the movement of a pendulum upon which a torque ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) is applied upon the extremity
+moving freely. The goal is to generate a movement such that the pendulum will balance in an upright position.</p>
+<p>It can be modeled as:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^T \theta(t)^2 + 0.1 * \theta(t)' + C_p u(t)
+dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; \theta''(t) = -\frac{g \sin(\theta(t))}{2 l}
++ \frac{u(t)}{m l^2}\\
+&amp; &amp;&amp; \theta(0) = \pi ,\; \theta'(0)=0 \\
+&amp; &amp;&amp; \theta(T) = 0 ,\; \theta'(T)=0 \\
+&amp; &amp;&amp; -u_M &lt;= u(t) &lt;= u_M
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^T \theta(t)^2 + 0.1 * \theta(t)' + C_p u(t)
+dt \\
+& \; \mathrm{s.t.}\quad && \theta''(t) = -\frac{g \sin(\theta(t))}{2 l}
++ \frac{u(t)}{m l^2}\\
+& && \theta(0) = \pi ,\; \theta'(0)=0 \\
+& && \theta(T) = 0 ,\; \theta'(T)=0 \\
+& && -u_M <= u(t) <= u_M
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">\theta</span><script type="math/tex">\theta</script></span>: Pendulum's angle </p>
+<p><span><span class="MathJax_Preview">\theta'</span><script type="math/tex">\theta'</script></span>: Angular velocity </p>
+<p><span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span>: The torque applied to the pendulum </p>
+<p><span><span class="MathJax_Preview">l</span><script type="math/tex">l</script></span>: Length of the rope holding the pendulum </p>
+<p><span><span class="MathJax_Preview">g</span><script type="math/tex">g</script></span>: Gravity force </p>
+<p><span><span class="MathJax_Preview">u_M</span><script type="math/tex">u_M</script></span>: Maximum torque that can be applied </p>
+<p><span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span>: The horizon</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

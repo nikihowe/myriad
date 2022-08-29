@@ -20,7 +20,33 @@ def angle_normalize(x):
 
 class Pendulum(FiniteHorizonControlSystem):
   """
-  Continuous Pendulum environment, inspired by the [OpenAI gym environment](https://github.com/openai/gym/blob/ee5ee3a4a5b9d09219ff4c932a45c4a661778cd7/gym/envs/classic_control/pendulum.py).
+  Continuous Pendulum environment, inspired by the [OpenAI gym environment](https://github.com/openai/gym/blob/master/gym/envs/classic_control/pendulum.py).
+
+  This environment model the movement of a pendulum upon which a torque ( \\(u(t)\\) ) is applied upon the extremity
+  moving freely. The goal is to generate a movement such that the pendulum will balance in an upright position.
+
+  It can be modeled as:
+
+  .. math::
+
+      \\begin{align}
+      & \\min_{u} \\quad && \\int_0^T \\theta(t)^2 + 0.1 * \\theta(t)' + C_p u(t)  dt \\\\
+      & \\; \\mathrm{s.t.}\\quad && \\theta''(t) = -\\frac{g \\sin(\\theta(t))}{2 l}
+                     + \\frac{u(t)}{m l^2}\\\\
+      & && \\theta(0) = \\pi ,\\; \\theta'(0)=0 \\\\
+      & && \\theta(T) = 0 ,\\; \\theta'(T)=0 \\\\
+      & && -u_M <= u(t) <= u_M
+      \\end{align}
+
+  Notes
+  -----
+  \\(\\theta\\): Pendulum's angle \n
+  \\(\\theta'\\): Angular velocity \n
+  \\(u\\): The torque applied to the pendulum \n
+  \\(l\\): Length of the rope holding the pendulum \n
+  \\(g\\): Gravity force \n
+  \\(u_M\\): Maximum torque that can be applied \n
+  \\(T\\): The horizon
 
   """
   def __init__(self, g: float = 10., m: float = 1., length: float = 1.):

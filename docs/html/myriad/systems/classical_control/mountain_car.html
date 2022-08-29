@@ -47,7 +47,39 @@
 <span>(</span><span>power=0.0015, gravity=0.0025)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Continuous Mountain Car environment, inspired by the <a href="https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py">OpenAI gym environment</a>.</p></div>
+<div class="desc"><p>Continuous Mountain Car environment, inspired by the <a href="https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py">OpenAI gym environment</a>.
+Model was originally described in <a href="https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-209.pdf">Andrew Moore's PhD Thesis (1990)</a>.</p>
+<p>This environment model a unidimensional car located between two hills, while the goal is often to make it to the top
+of one of the hill. Usually, this environment is made challenging by limiting the force ( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) the car can
+generate, making it unable to climb directly to the desired steep hill top. In this scenario, the solution
+is to first climb the opposite hill in order to generate enough potential energy to make it on top of the desired hill.</p>
+<p>The system can formally be described as:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^T u(t)^2
+dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x'(t) = p u(t) - g h'(x) \\
+&amp; &amp;&amp; x(0) = x_i ,\; x'(0) = v_i \\
+&amp; &amp;&amp; x(T) = x_f ,\; x'(T) = v_f \\
+&amp; &amp;&amp; -1 &lt;= u(t) &lt;= 1
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^T u(t)^2
+dt \\
+& \; \mathrm{s.t.}\quad && x'(t) = p u(t) - g h'(x) \\
+& && x(0) = x_i ,\; x'(0) = v_i \\
+& && x(T) = x_f ,\; x'(T) = v_f \\
+& && -1 <= u(t) <= 1
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span>: Position of the car </p>
+<p><span><span class="MathJax_Preview">x'</span><script type="math/tex">x'</script></span>: Velocity of the car </p>
+<p><span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span>: Maximal power that the car engine can output </p>
+<p><span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span>: The force applied to the car, as a fraction of <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> </p>
+<p><span><span class="MathJax_Preview">g</span><script type="math/tex">g</script></span>: Gravity force </p>
+<p><span><span class="MathJax_Preview">h(x)</span><script type="math/tex">h(x)</script></span>: Function describing the hill landscape </p>
+<p><span><span class="MathJax_Preview">x_i, v_i</span><script type="math/tex">x_i, v_i</script></span>: Initial position and speed </p>
+<p><span><span class="MathJax_Preview">x_f, v_f</span><script type="math/tex">x_f, v_f</script></span>: Goal position and speed </p>
+<p><span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span>: The horizon</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

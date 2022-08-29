@@ -16,6 +16,40 @@ def hill_function(x: float) -> float:
 class MountainCar(FiniteHorizonControlSystem):
   """
   Continuous Mountain Car environment, inspired by the [OpenAI gym environment](https://github.com/openai/gym/blob/master/gym/envs/classic_control/continuous_mountain_car.py).
+  Model was originally described in [Andrew Moore's PhD Thesis (1990)](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-209.pdf).
+
+  This environment model a unidimensional car located between two hills, while the goal is often to make it to the top
+  of one of the hill. Usually, this environment is made challenging by limiting the force ( \\(u(t)\\) ) the car can
+  generate, making it unable to climb directly to the desired steep hill top. In this scenario, the solution
+  is to first climb the opposite hill in order to generate enough potential energy to make it on top of the desired hill.
+
+  The system can formally be described as:
+
+  .. math::
+
+    \\begin{align}
+    & \\min_{u} \\quad && \\int_0^T u(t)^2  dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && x'(t) = p u(t) - g h'(x) \\\\
+    & && x(0) = x_i ,\\; x'(0) = v_i \\\\
+    & && x(T) = x_f ,\\; x'(T) = v_f \\\\
+    & && -1 <= u(t) <= 1
+    \\end{align}
+
+  Notes
+    -----
+    \\(x\\): Position of the car \n
+    \\(x'\\): Velocity of the car \n
+    \\(p\\): Maximal power that the car engine can output \n
+    \\(u\\): The force applied to the car, as a fraction of \\(p\\) \n
+    \\(g\\): Gravity force \n
+    \\(h(x)\\): Function describing the hill landscape \n
+    \\(x_i, v_i\\): Initial position and speed \n
+    \\(x_f, v_f\\): Goal position and speed \n
+    \\(T\\): The horizon
+
+
+
+
   """
 
   def __init__(self, power=0.0015, gravity=0.0025) -> None:
