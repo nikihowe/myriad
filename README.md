@@ -85,6 +85,20 @@ python run.py --system=CANCERTREATMENT --optimizer=SHOOTING --max_iter=500
 Uncomment relevant line in `run.py` (60, 63, 69, 72). Then
 do the same as above.
 
+## Running the example jupyter notebooks
+To run the jupyter notebooks, we must first install jupyter notebooks and myriad by running
+```bash
+pip install notebook
+python setup.py build
+python setup.py install
+```
+
+Then we can run the notebooks by running
+```bash
+jupyter notebook
+```
+and navigating to the notebooks in the `examples` directory.
+
 ## References
 - [Lenhart et Workman, *Optimal Control Applied to Biological Models*. Chapman and Hall/CRC, 2007.](https://www.taylorfrancis.com/books/9780429138058)
 - [Betts, *Practical Methods for Optimal Control and Estimation Using Nonlinear Pcrogramming*. SIAM Advances in Design and Control, 2010.](https://epubs.siam.org/doi/book/10.1137/1.9780898718577)
