@@ -10,6 +10,41 @@ from myriad.custom_types import Control, Cost, DState, Params, State, Timestep
 class CartPole(FiniteHorizonControlSystem):
   """
   Cart-pole swing-up, from [(Kelly, 2017)](https://epubs.siam.org/doi/10.1137/16M1062569).
+
+  This environment models a cart moving in a unidimensional direction with a pendulum hanging freely from it.
+  The usually associated task is to move the cart in such a way that the pendulum swings up to the non-stationary
+  equilibrium point above the cart.
+
+  The goal is to find the cart velocity ( \\(q_1'(t)\\) ) that will impede
+  an angular velocity of the pendulum ( \\(q_2'(t)\\) ) that achieves the task, while minimising the force
+  ( \\(u(t)\\) ) needed to generate such a movement. The system to solve is:
+
+  .. math::
+
+      \\begin{align}
+      & \\min_{u} \\quad && \\int_0^T u(t)^2  dt \\\\
+      & \\; \\mathrm{s.t.}\\quad && q_1''(t) = \\frac{l m_2 \\sin(q_2(t)) q_2^2(t)' + u(t) + m_2 g \\cos(q_2(t)) \\sin(q_2(t))}
+      {m_1 + m_2 (1-\\cos^2 (q_2(t)))}\\\\
+      & && q_2''(t) = - \\frac{l m_2 \\cos(q_2(t))\\sin(q_2(t)) q_2^2(t) + u(t) \\cos(q_2(t))
+      + (m_1 +m_2)g \\sin(q_2(t))}{l m_1 + l m_2 (1 - \\cos^2(q_2(t))} \\\\
+      & && q_1(0)=q_2(0)=q_1'(0)=q_2'(0)=0 \\\\
+      & && q_1(T) = d ,\\; q_2(T) = \\pi ,\\; q_1'(T)=q_2'(T)=0 \\\\
+      & && -d_M <= q_1(t) <= d_M ,\\; -u_M <= u(t) <= u_M
+      \\end{align}
+
+  Notes
+    -----
+    \\(q_1\\): Position of the cart \n
+    \\(q_2\\): Angle of the pole \n
+    \\(q_1'\\): Velocity of the cart \n
+    \\(q_2'\\): Angular velocity of the pole \n
+    \\(m_1\\): Mass of the cart \n
+    \\(m_2\\): Mass of the pendulum \n
+    \\(l\\): Length of the pole \n
+    \\(g\\): Gravity force \n
+    \\(d_M\\): Maximal distance that can be traveled by the cart \n
+    \\(u_M\\): Maximal force that can be applied to the motor \n
+    \\(T\\): The horizon
   """
 
   def __init__(self, g: float = 9.81, m1: float = 1., m2: float = .3, length: float = 0.5):

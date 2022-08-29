@@ -38,7 +38,47 @@
 <span>(</span><span>g=9.81, m1=1.0, m2=0.3, length=0.5)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Cart-pole swing-up, from <a href="https://epubs.siam.org/doi/10.1137/16M1062569">(Kelly, 2017)</a>.</p></div>
+<div class="desc"><p>Cart-pole swing-up, from <a href="https://epubs.siam.org/doi/10.1137/16M1062569">(Kelly, 2017)</a>.</p>
+<p>This environment models a cart moving in a unidimensional direction with a pendulum hanging freely from it.
+The usually associated task is to move the cart in such a way that the pendulum swings up to the non-stationary
+equilibrium point above the cart.</p>
+<p>The goal is to find the cart velocity ( <span><span class="MathJax_Preview">q_1'(t)</span><script type="math/tex">q_1'(t)</script></span> ) that will impede
+an angular velocity of the pendulum ( <span><span class="MathJax_Preview">q_2'(t)</span><script type="math/tex">q_2'(t)</script></span> ) that achieves the task, while minimising the force
+( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) needed to generate such a movement. The system to solve is:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^T u(t)^2
+dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; q_1''(t) = \frac{l m_2 \sin(q_2(t)) q_2^2(t)' + u(t) + m_2 g \cos(q_2(t)) \sin(q_2(t))}
+{m_1 + m_2 (1-\cos^2 (q_2(t)))}\\
+&amp; &amp;&amp; q_2''(t) = - \frac{l m_2 \cos(q_2(t))\sin(q_2(t)) q_2^2(t) + u(t) \cos(q_2(t))
++ (m_1 +m_2)g \sin(q_2(t))}{l m_1 + l m_2 (1 - \cos^2(q_2(t))} \\
+&amp; &amp;&amp; q_1(0)=q_2(0)=q_1'(0)=q_2'(0)=0 \\
+&amp; &amp;&amp; q_1(T) = d ,\; q_2(T) = \pi ,\; q_1'(T)=q_2'(T)=0 \\
+&amp; &amp;&amp; -d_M &lt;= q_1(t) &lt;= d_M ,\; -u_M &lt;= u(t) &lt;= u_M
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^T u(t)^2
+dt \\
+& \; \mathrm{s.t.}\quad && q_1''(t) = \frac{l m_2 \sin(q_2(t)) q_2^2(t)' + u(t) + m_2 g \cos(q_2(t)) \sin(q_2(t))}
+{m_1 + m_2 (1-\cos^2 (q_2(t)))}\\
+& && q_2''(t) = - \frac{l m_2 \cos(q_2(t))\sin(q_2(t)) q_2^2(t) + u(t) \cos(q_2(t))
++ (m_1 +m_2)g \sin(q_2(t))}{l m_1 + l m_2 (1 - \cos^2(q_2(t))} \\
+& && q_1(0)=q_2(0)=q_1'(0)=q_2'(0)=0 \\
+& && q_1(T) = d ,\; q_2(T) = \pi ,\; q_1'(T)=q_2'(T)=0 \\
+& && -d_M <= q_1(t) <= d_M ,\; -u_M <= u(t) <= u_M
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">q_1</span><script type="math/tex">q_1</script></span>: Position of the cart </p>
+<p><span><span class="MathJax_Preview">q_2</span><script type="math/tex">q_2</script></span>: Angle of the pole </p>
+<p><span><span class="MathJax_Preview">q_1'</span><script type="math/tex">q_1'</script></span>: Velocity of the cart </p>
+<p><span><span class="MathJax_Preview">q_2'</span><script type="math/tex">q_2'</script></span>: Angular velocity of the pole </p>
+<p><span><span class="MathJax_Preview">m_1</span><script type="math/tex">m_1</script></span>: Mass of the cart </p>
+<p><span><span class="MathJax_Preview">m_2</span><script type="math/tex">m_2</script></span>: Mass of the pendulum </p>
+<p><span><span class="MathJax_Preview">l</span><script type="math/tex">l</script></span>: Length of the pole </p>
+<p><span><span class="MathJax_Preview">g</span><script type="math/tex">g</script></span>: Gravity force </p>
+<p><span><span class="MathJax_Preview">d_M</span><script type="math/tex">d_M</script></span>: Maximal distance that can be traveled by the cart </p>
+<p><span><span class="MathJax_Preview">u_M</span><script type="math/tex">u_M</script></span>: Maximal force that can be applied to the motor </p>
+<p><span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span>: The horizon</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
