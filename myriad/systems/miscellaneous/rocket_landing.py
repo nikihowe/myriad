@@ -13,7 +13,7 @@ class RocketLanding(FiniteHorizonControlSystem):
   Simulate a starship landing! Inspired by Thomas Godden's [medium post](https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b).
 
   This environment models a rocket trying to land vertically on a flat surface, in a similar fashion to how [SpaceX are
-  landing their reusable rockets](https://tenor.com/search/rocket-landing-gifs). Usually, the rocket is free-falling
+  landing their reusable rockets](https://youtu.be/Aq7rDQx9jns?t=20). Usually, the rocket is free-falling
   from an initial horizontal position and must uses its thruster ( \\(u_0(t), u_1(t)\\) ) to both rotate the craft and
   slow down the fall. The goal is to achieve the desired end state while minimizing the fuel usage (minimizing thrust)
   and the angular velocity in order to limit the strain on the vehicle.
