@@ -5,7 +5,43 @@ from myriad.systems import FiniteHorizonControlSystem
 
 class SEIR(FiniteHorizonControlSystem):
   """
-  SEIR epidemic model for COVID-19, inspired by [Perkins and Espana](https://link.springer.com/article/10.1007/s11538-020-00795-y).
+  SEIR epidemic model for COVID-19, inspired by [Perkins and Espana, 2020](https://link.springer.com/article/10.1007/s11538-020-00795-y).
+
+  This model is an adaptation of SEIR models, specifically tailored to COVID-19 epidemic trying to limit the spread
+  via non-pharmaceutical interventions (example: reducing contacts between individuals). As such, the control variable
+  ( \\(u(t)\\) ) is a reduction in the transmission coefficient ( \\( \\beta\\) ) resulting from all societal measures
+  that allow to control the virus spread. The goal of the model is to help decision-maker quantify the impact of
+  policies limiting the spread.
+
+  The formal model is given by:
+
+  .. math::
+
+    \\begin{align}
+    & \\min_{u} \\quad && \\int_0^T D(t)^2 + cu(t)^2 dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && S'(t) = \\mu - (\\delta + \\beta(1-u(t))(\\alpha A(t) + I(t) + H(t))
+     + \\iota + \\nu)S(t) \\\\
+    & && E'(t) = ( \\beta(1-u(t))(\\alpha A(t) + I(t) + H(t))) (S(t) + (1-\\epsilon)V(t)) + \\iota S(t)
+     - (\\delta + \\rho) E(t) \\\\
+    & && A'(t) = (1-\\sigma)\\rho E(t) - (\\delta + \\gamma) A(t) \\\\
+    & && I'(t) = \\sigma \\rho E(t) - (\\delta + \\gamma)I(t) \\\\
+    & && H'(t) = \\gamma \\kappa I(t) - (\\delta + \\eta) H(t) \\\\
+    & && V'(t) = \\nu S(t) - (\\delta + \\beta(1 -u(t))(\\alpha A(t) + I(t) + H(t)) (1-\\epsilon)) V(t) \\\\
+    & && S(0) = S_0 ,\\; E(0) = E_0 ,\\; A(0) = A_0 ,\\; I(0) = I_0  ,\\; H(0) = H_0 ,\\; V(0)=V_0 \\\\
+    \\end{align}
+
+  Notes
+  -----
+  \\(D(t)\\): Population death from covid-19, estimated as a ratio of hospitalized population \\(H(t)\\) \n
+  \\(u(t)\\): Cumulative impact of societal measures (reduction) on the transmission coefficient \n
+  \\(c\\) : Parameter weighting the cost of societal measures relative to the death toll \n
+  \\(S(t)\\): Population susceptible to infection \n
+  \\(E(t)\\): Exposed population but not yet infectious \n
+  \\(A(t)\\): Infected population but asymptomatic \n
+  \\(I(t)\\): Infected population and symptomatic \n
+  \\(H(t)\\): Hospitalized population \n
+  \\(V(t)\\): Vaccinated population that has not been infected \n
+  Other constants: See table 2 page 4 of [Perkins and Espana, 2020](https://link.springer.com/content/pdf/10.1007/s11538-020-00795-y.pdf)
   """
 
   def __init__(self):

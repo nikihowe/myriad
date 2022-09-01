@@ -37,7 +37,50 @@
 <span>class <span class="ident">SEIR</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>SEIR epidemic model for COVID-19, inspired by <a href="https://link.springer.com/article/10.1007/s11538-020-00795-y">Perkins and Espana</a>.</p></div>
+<div class="desc"><p>SEIR epidemic model for COVID-19, inspired by <a href="https://link.springer.com/article/10.1007/s11538-020-00795-y">Perkins and Espana, 2020</a>.</p>
+<p>This model is an adaptation of SEIR models, specifically tailored to COVID-19 epidemic trying to limit the spread
+via non-pharmaceutical interventions (example: reducing contacts between individuals). As such, the control variable
+( <span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span> ) is a reduction in the transmission coefficient ( <span><span class="MathJax_Preview"> \beta</span><script type="math/tex"> \beta</script></span> ) resulting from all societal measures
+that allow to control the virus spread. The goal of the model is to help decision-maker quantify the impact of
+policies limiting the spread.</p>
+<p>The formal model is given by:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^T D(t)^2 + cu(t)^2 dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; S'(t) = \mu - (\delta + \beta(1-u(t))(\alpha A(t) + I(t) + H(t))
++ \iota + \nu)S(t) \\
+&amp; &amp;&amp; E'(t) = ( \beta(1-u(t))(\alpha A(t) + I(t) + H(t))) (S(t) + (1-\epsilon)V(t)) + \iota S(t)
+- (\delta + \rho) E(t) \\
+&amp; &amp;&amp; A'(t) = (1-\sigma)\rho E(t) - (\delta + \gamma) A(t) \\
+&amp; &amp;&amp; I'(t) = \sigma \rho E(t) - (\delta + \gamma)I(t) \\
+&amp; &amp;&amp; H'(t) = \gamma \kappa I(t) - (\delta + \eta) H(t) \\
+&amp; &amp;&amp; V'(t) = \nu S(t) - (\delta + \beta(1 -u(t))(\alpha A(t) + I(t) + H(t)) (1-\epsilon)) V(t) \\
+&amp; &amp;&amp; S(0) = S_0 ,\; E(0) = E_0 ,\; A(0) = A_0 ,\; I(0) = I_0
+,\; H(0) = H_0 ,\; V(0)=V_0 \\
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^T D(t)^2 + cu(t)^2 dt \\
+& \; \mathrm{s.t.}\quad && S'(t) = \mu - (\delta + \beta(1-u(t))(\alpha A(t) + I(t) + H(t))
++ \iota + \nu)S(t) \\
+& && E'(t) = ( \beta(1-u(t))(\alpha A(t) + I(t) + H(t))) (S(t) + (1-\epsilon)V(t)) + \iota S(t)
+- (\delta + \rho) E(t) \\
+& && A'(t) = (1-\sigma)\rho E(t) - (\delta + \gamma) A(t) \\
+& && I'(t) = \sigma \rho E(t) - (\delta + \gamma)I(t) \\
+& && H'(t) = \gamma \kappa I(t) - (\delta + \eta) H(t) \\
+& && V'(t) = \nu S(t) - (\delta + \beta(1 -u(t))(\alpha A(t) + I(t) + H(t)) (1-\epsilon)) V(t) \\
+& && S(0) = S_0 ,\; E(0) = E_0 ,\; A(0) = A_0 ,\; I(0) = I_0
+,\; H(0) = H_0 ,\; V(0)=V_0 \\
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">D(t)</span><script type="math/tex">D(t)</script></span>: Population death from covid-19, estimated as a ratio of hospitalized population <span><span class="MathJax_Preview">H(t)</span><script type="math/tex">H(t)</script></span> </p>
+<p><span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span>: Cumulative impact of societal measures (reduction) on the transmission coefficient </p>
+<p><span><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> : Parameter weighting the cost of societal measures relative to the death toll </p>
+<p><span><span class="MathJax_Preview">S(t)</span><script type="math/tex">S(t)</script></span>: Population susceptible to infection </p>
+<p><span><span class="MathJax_Preview">E(t)</span><script type="math/tex">E(t)</script></span>: Exposed population but not yet infectious </p>
+<p><span><span class="MathJax_Preview">A(t)</span><script type="math/tex">A(t)</script></span>: Infected population but asymptomatic </p>
+<p><span><span class="MathJax_Preview">I(t)</span><script type="math/tex">I(t)</script></span>: Infected population and symptomatic </p>
+<p><span><span class="MathJax_Preview">H(t)</span><script type="math/tex">H(t)</script></span>: Hospitalized population </p>
+<p><span><span class="MathJax_Preview">V(t)</span><script type="math/tex">V(t)</script></span>: Vaccinated population that has not been infected </p>
+<p>Other constants: See table 2 page 4 of <a href="https://link.springer.com/content/pdf/10.1007/s11538-020-00795-y.pdf">Perkins and Espana, 2020</a></p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
