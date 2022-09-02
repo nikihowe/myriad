@@ -9,7 +9,36 @@ from myriad.systems import FiniteHorizonControlSystem
 
 class Tumour(FiniteHorizonControlSystem):
   """
-  Tumour anti-angiogenesis model, from [Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)](https://my.siam.org/Store/Product/viewproduct/?ProductId=31657301).
+  Tumour anti-angiogenesis model, from [Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 10.70)](https://my.siam.org/Store/Product/viewproduct/?ProductId=31657301).
+  More details can be found in [Ledzewicz and Schattler](https://www.siue.edu/~uledzew/papers/angioMTNS.pdf)
+
+  The model describes the growth of a tumor that needs its own blood vessels to continue to grow. Endothelial cells
+  provide lining for newly forming blood vessels and as such, can be inhibited to reduce the tumor growth. The model can
+  be described as:
+
+  .. math::
+
+    \\begin{align}
+    & \\min_{u} \\quad && p(T) \\\\
+    & \\; \\mathrm{s.t.}\\quad && p'(t) = -\\xi p \\ln(\\frac{p}{q}) \\\\
+    & && q'(t) = bp - (\\mu + dp^{\\frac{2}{3}}) q - G u q \\\\
+    & && y'(t) = u \\\\
+    & && p(0) = p_0 ,\\; q(0) = q_0 ,\\; y(0) = 0  \\\\
+    & && 0 <= p(t) ,\\; 0 <= q(t) ,\\; 0 <= y(t) <= A ,\\; 0 <= u(t) <= a \\\\
+    \\end{align}
+
+  Notes
+  -----
+  \\(p(t)\\): The size of the tumor \n
+  \\(q(t)\\): The amount of vascular endothelial cells \n
+  \\(u(t)\\): Angionesic dose rate; an external inhibitor decreasing \\(q(t)\\) \n
+  \\(y(t)\\) : A measure of the total amount of external inhibitor used \n
+  \\(a\\): Instantaneous limit over the inhibitor that can be administered \n
+  \\(A\\): Total limit over the inhibitor that can be administered \n
+  \\(\\xi\\): Tumor growth parameter \n
+  \\(\\mu\\): Loss rate of endothelial cells from natural causes \n
+  \\(b\\): Birth rate of endothelial cells from stimulation by the tumor \n
+  \\(d\\): Death rate of endothelial cells from inhibition by the tumor
   """
 
   def __init__(self, xi=0.084, b=5.85, d=0.00873, G=0.15, mu=0.02):

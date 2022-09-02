@@ -36,7 +36,7 @@ class Glucose(IndirectFHCS):
 
     Notes
     -----
-    x_0: Initial blood glucose level and insulin level \\((x_0,x_1)\\) \n
+    x(0): Initial blood glucose level and insulin level \\((x_0(0),x_1(0))\\) \n
     T: The horizon should be kept under 0.45
   """
 

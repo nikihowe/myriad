@@ -10,6 +10,20 @@ from myriad.systems import FiniteHorizonControlSystem
 class VanDerPol(FiniteHorizonControlSystem):
   """
   Driven Van der Pol oscillator, from [CasADi](http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html).
+
+  This model tries to drive a [Van de Pol oscillator](https://arxiv.org/pdf/0803.1658.pdf) to the origin and can
+  formally described as:
+
+  .. math::
+
+    \\begin{align}
+    & \\min_{u} \\quad && \\int_0^{10} x_0(t)^2 + x_1(t)^2 + u(t)^2 dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && x_0'(t) = a (1 - x_1(t)^2) x_0(t) - x_1(t) + u(t) \\\\
+    & && x_1'(t) = x_0(t) \\\\
+    & && x_0(0) = 0 ,\\; x_1(0) = 1 \\\\
+    & && x_0(10) = x_1(10) = 0 \\\\
+    & && -0.75 <= u_0(t) <= 1.0 \\\\
+    \\end{align}
   """
 
   def __init__(self, a=1.):
