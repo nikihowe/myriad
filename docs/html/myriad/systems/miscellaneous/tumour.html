@@ -38,7 +38,40 @@
 <span>(</span><span>xi=0.084, b=5.85, d=0.00873, G=0.15, mu=0.02)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Tumour anti-angiogenesis model, from <a href="https://my.siam.org/Store/Product/viewproduct/?ProductId=31657301">Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 6.17)</a>.</p></div>
+<div class="desc"><p>Tumour anti-angiogenesis model, from <a href="https://my.siam.org/Store/Product/viewproduct/?ProductId=31657301">Practical Methods for Optimal Control Using Nonlinear Programming (Third Edition, Chapter 10.70)</a>.
+More details can be found in <a href="https://www.siue.edu/~uledzew/papers/angioMTNS.pdf">Ledzewicz and Schattler</a></p>
+<p>The model describes the growth of a tumor that needs its own blood vessels to continue to grow. Endothelial cells
+provide lining for newly forming blood vessels and as such, can be inhibited to reduce the tumor growth. The model can
+be described as:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; p(T) \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; p'(t) = -\xi p \ln(\frac{p}{q}) \\
+&amp; &amp;&amp; q'(t) = bp - (\mu + dp^{\frac{2}{3}}) q - G u q \\
+&amp; &amp;&amp; y'(t) = u \\
+&amp; &amp;&amp; p(0) = p_0 ,\; q(0) = q_0 ,\; y(0) = 0
+\\
+&amp; &amp;&amp; 0 &lt;= p(t) ,\; 0 &lt;= q(t) ,\; 0 &lt;= y(t) &lt;= A ,\; 0 &lt;= u(t) &lt;= a \\
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && p(T) \\
+& \; \mathrm{s.t.}\quad && p'(t) = -\xi p \ln(\frac{p}{q}) \\
+& && q'(t) = bp - (\mu + dp^{\frac{2}{3}}) q - G u q \\
+& && y'(t) = u \\
+& && p(0) = p_0 ,\; q(0) = q_0 ,\; y(0) = 0
+\\
+& && 0 <= p(t) ,\; 0 <= q(t) ,\; 0 <= y(t) <= A ,\; 0 <= u(t) <= a \\
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">p(t)</span><script type="math/tex">p(t)</script></span>: The size of the tumor </p>
+<p><span><span class="MathJax_Preview">q(t)</span><script type="math/tex">q(t)</script></span>: The amount of vascular endothelial cells </p>
+<p><span><span class="MathJax_Preview">u(t)</span><script type="math/tex">u(t)</script></span>: Angionesic dose rate; an external inhibitor decreasing <span><span class="MathJax_Preview">q(t)</span><script type="math/tex">q(t)</script></span> </p>
+<p><span><span class="MathJax_Preview">y(t)</span><script type="math/tex">y(t)</script></span> : A measure of the total amount of external inhibitor used </p>
+<p><span><span class="MathJax_Preview">a</span><script type="math/tex">a</script></span>: Instantaneous limit over the inhibitor that can be administered </p>
+<p><span><span class="MathJax_Preview">A</span><script type="math/tex">A</script></span>: Total limit over the inhibitor that can be administered </p>
+<p><span><span class="MathJax_Preview">\xi</span><script type="math/tex">\xi</script></span>: Tumor growth parameter </p>
+<p><span><span class="MathJax_Preview">\mu</span><script type="math/tex">\mu</script></span>: Loss rate of endothelial cells from natural causes </p>
+<p><span><span class="MathJax_Preview">b</span><script type="math/tex">b</script></span>: Birth rate of endothelial cells from stimulation by the tumor </p>
+<p><span><span class="MathJax_Preview">d</span><script type="math/tex">d</script></span>: Death rate of endothelial cells from inhibition by the tumor</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

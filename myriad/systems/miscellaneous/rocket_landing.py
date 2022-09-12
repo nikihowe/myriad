@@ -11,6 +11,45 @@ from myriad.systems import FiniteHorizonControlSystem
 class RocketLanding(FiniteHorizonControlSystem):
   """
   Simulate a starship landing! Inspired by Thomas Godden's [medium post](https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b).
+
+  This environment models a rocket trying to land vertically on a flat surface, in a similar fashion to how [SpaceX are
+  landing their reusable rockets](https://youtu.be/Aq7rDQx9jns?t=20). Usually, the rocket is free-falling
+  from an initial horizontal position and must uses its thruster ( \\(u_0(t), u_1(t)\\) ) to both rotate the craft and
+  slow down the fall. The goal is to achieve the desired end state while minimizing the fuel usage (minimizing thrust)
+  and the angular velocity in order to limit the strain on the vehicle.
+
+  A simplified version of this task form can be modeled as:
+
+  .. math::
+
+    \\begin{align}
+    & \\min_{u} \\quad && \\int_0^T u_0(t)^2 + u_1(t)^2 + \\phi'(t)^2 dt \\\\
+    & \\; \\mathrm{s.t.}\\quad && x_0''(t) = \\frac{F_v * u_0(t) * \\sin(u_1(t) + \\phi)}{m} \\\\
+    & && x_1''(t) = \\frac{F_v * u_0(t) * \\cos(u_1(t) + \\phi)}{m} - g \\\\
+    & && \\phi''(t) = \\frac{-6}{F_v * u_0(t) * \\sin(u_1(t)) * m * l} \\\\
+    & && x_0(0) = x_0'(0) = 0 ,\\; x_1(0) = h_i ,\\; x_1'(0) = v_i  ,\\; \\phi(0) = -\\pi/2 ,\\; \\phi'(0)=0\\\\
+    & && x_0(T) = x_0'(T) = x_1(T) = x_1'(T) = \\phi(T) = \\phi'(T) = 0 \\\\
+    & && -1 <= u_0(t) <= 1 \\\\
+    & && -F_g <= u_1(t) <= F_g
+    \\end{align}
+
+  Notes
+  -----
+  \\(x_0\\): Horizontal position of the rocket \n
+  \\(x_0'\\): Horizontal velocity of the rocket \n
+  \\(x_1\\): Height of the rocket \n
+  \\(x_1'\\): Falling velocity of the rocket \n
+  \\(\\phi\\): Angle of the rocket \n
+  \\(\\phi'\\): Angular velocity of the rocket \n
+  \\(u_0\\): The vertical thrust, as a ratio of the maximal thrust \\(F_v\\) \n
+  \\(u_1\\): The [gimbaled thrust](https://en.wikipedia.org/wiki/Gimbaled_thrust) \n
+  \\(F_v\\): Maximal thrust \n
+  \\(F_g\\): Maximal gimbaled thrust \n
+  \\(g\\): Gravity force \n
+  \\(m\\): Total mass of the rocket \n
+  \\(l\\): Length of the rocket \n
+  \\(h_i, v_i\\): Initial height and falling speed \n
+  \\(T\\): The horizon
   """
   # TODO: think about this http://larsblackmore.com/losslessconvexification.htm
   def __init__(self, g: float = 9.8, m: float = 100_000, length: float = 50, width: float = 10) -> None:

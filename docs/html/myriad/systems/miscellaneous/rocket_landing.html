@@ -38,7 +38,51 @@
 <span>(</span><span>g=9.8, m=100000, length=50, width=10)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Simulate a starship landing! Inspired by Thomas Godden's <a href="https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b">medium post</a>.</p></div>
+<div class="desc"><p>Simulate a starship landing! Inspired by Thomas Godden's <a href="https://thomas-godden.medium.com/how-spacex-lands-starship-sort-of-ee96cdde650b">medium post</a>.</p>
+<p>This environment models a rocket trying to land vertically on a flat surface, in a similar fashion to how <a href="https://youtu.be/Aq7rDQx9jns?t=20">SpaceX are
+landing their reusable rockets</a>. Usually, the rocket is free-falling
+from an initial horizontal position and must uses its thruster ( <span><span class="MathJax_Preview">u_0(t), u_1(t)</span><script type="math/tex">u_0(t), u_1(t)</script></span> ) to both rotate the craft and
+slow down the fall. The goal is to achieve the desired end state while minimizing the fuel usage (minimizing thrust)
+and the angular velocity in order to limit the strain on the vehicle.</p>
+<p>A simplified version of this task form can be modeled as:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^T u_0(t)^2 + u_1(t)^2 + \phi'(t)^2 dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0''(t) = \frac{F_v * u_0(t) * \sin(u_1(t) + \phi)}{m} \\
+&amp; &amp;&amp; x_1''(t) = \frac{F_v * u_0(t) * \cos(u_1(t) + \phi)}{m} - g \\
+&amp; &amp;&amp; \phi''(t) = \frac{-6}{F_v * u_0(t) * \sin(u_1(t)) * m * l} \\
+&amp; &amp;&amp; x_0(0) = x_0'(0) = 0 ,\; x_1(0) = h_i ,\; x_1'(0) = v_i
+,\; \phi(0) = -\pi/2 ,\; \phi'(0)=0\\
+&amp; &amp;&amp; x_0(T) = x_0'(T) = x_1(T) = x_1'(T) = \phi(T) = \phi'(T) = 0 \\
+&amp; &amp;&amp; -1 &lt;= u_0(t) &lt;= 1 \\
+&amp; &amp;&amp; -F_g &lt;= u_1(t) &lt;= F_g
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^T u_0(t)^2 + u_1(t)^2 + \phi'(t)^2 dt \\
+& \; \mathrm{s.t.}\quad && x_0''(t) = \frac{F_v * u_0(t) * \sin(u_1(t) + \phi)}{m} \\
+& && x_1''(t) = \frac{F_v * u_0(t) * \cos(u_1(t) + \phi)}{m} - g \\
+& && \phi''(t) = \frac{-6}{F_v * u_0(t) * \sin(u_1(t)) * m * l} \\
+& && x_0(0) = x_0'(0) = 0 ,\; x_1(0) = h_i ,\; x_1'(0) = v_i
+,\; \phi(0) = -\pi/2 ,\; \phi'(0)=0\\
+& && x_0(T) = x_0'(T) = x_1(T) = x_1'(T) = \phi(T) = \phi'(T) = 0 \\
+& && -1 <= u_0(t) <= 1 \\
+& && -F_g <= u_1(t) <= F_g
+\end{align} </script></span>
+Notes</p>
+<hr>
+<p><span><span class="MathJax_Preview">x_0</span><script type="math/tex">x_0</script></span>: Horizontal position of the rocket </p>
+<p><span><span class="MathJax_Preview">x_0'</span><script type="math/tex">x_0'</script></span>: Horizontal velocity of the rocket </p>
+<p><span><span class="MathJax_Preview">x_1</span><script type="math/tex">x_1</script></span>: Height of the rocket </p>
+<p><span><span class="MathJax_Preview">x_1'</span><script type="math/tex">x_1'</script></span>: Falling velocity of the rocket </p>
+<p><span><span class="MathJax_Preview">\phi</span><script type="math/tex">\phi</script></span>: Angle of the rocket </p>
+<p><span><span class="MathJax_Preview">\phi'</span><script type="math/tex">\phi'</script></span>: Angular velocity of the rocket </p>
+<p><span><span class="MathJax_Preview">u_0</span><script type="math/tex">u_0</script></span>: The vertical thrust, as a ratio of the maximal thrust <span><span class="MathJax_Preview">F_v</span><script type="math/tex">F_v</script></span> </p>
+<p><span><span class="MathJax_Preview">u_1</span><script type="math/tex">u_1</script></span>: The <a href="https://en.wikipedia.org/wiki/Gimbaled_thrust">gimbaled thrust</a> </p>
+<p><span><span class="MathJax_Preview">F_v</span><script type="math/tex">F_v</script></span>: Maximal thrust </p>
+<p><span><span class="MathJax_Preview">F_g</span><script type="math/tex">F_g</script></span>: Maximal gimbaled thrust </p>
+<p><span><span class="MathJax_Preview">g</span><script type="math/tex">g</script></span>: Gravity force </p>
+<p><span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>: Total mass of the rocket </p>
+<p><span><span class="MathJax_Preview">l</span><script type="math/tex">l</script></span>: Length of the rocket </p>
+<p><span><span class="MathJax_Preview">h_i, v_i</span><script type="math/tex">h_i, v_i</script></span>: Initial height and falling speed </p>
+<p><span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span>: The horizon</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>

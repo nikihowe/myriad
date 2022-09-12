@@ -38,7 +38,24 @@
 <span>(</span><span>a=1.0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Driven Van der Pol oscillator, from <a href="http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html">CasADi</a>.</p></div>
+<div class="desc"><p>Driven Van der Pol oscillator, from <a href="http://casadi.sourceforge.net/v1.8.0/users_guide/html/node8.html">CasADi</a>.</p>
+<p>This model tries to drive a <a href="https://arxiv.org/pdf/0803.1658.pdf">Van de Pol oscillator</a> to the origin and can
+formally described as:</p>
+<p><span><span class="MathJax_Preview"> \begin{align}
+&amp; \min_{u} \quad &amp;&amp; \int_0^{10} x_0(t)^2 + x_1(t)^2 + u(t)^2 dt \\
+&amp; \; \mathrm{s.t.}\quad &amp;&amp; x_0'(t) = a (1 - x_1(t)^2) x_0(t) - x_1(t) + u(t) \\
+&amp; &amp;&amp; x_1'(t) = x_0(t) \\
+&amp; &amp;&amp; x_0(0) = 0 ,\; x_1(0) = 1 \\
+&amp; &amp;&amp; x_0(10) = x_1(10) = 0 \\
+&amp; &amp;&amp; -0.75 &lt;= u_0(t) &lt;= 1.0 \\
+\end{align} </span><script type="math/tex; mode=display"> \begin{align}
+& \min_{u} \quad && \int_0^{10} x_0(t)^2 + x_1(t)^2 + u(t)^2 dt \\
+& \; \mathrm{s.t.}\quad && x_0'(t) = a (1 - x_1(t)^2) x_0(t) - x_1(t) + u(t) \\
+& && x_1'(t) = x_0(t) \\
+& && x_0(0) = 0 ,\; x_1(0) = 1 \\
+& && x_0(10) = x_1(10) = 0 \\
+& && -0.75 <= u_0(t) <= 1.0 \\
+\end{align} </script></span></p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="myriad.systems.base.FiniteHorizonControlSystem" href="../base.html#myriad.systems.base.FiniteHorizonControlSystem">FiniteHorizonControlSystem</a></li>
