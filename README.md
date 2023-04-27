@@ -129,8 +129,10 @@ corresponding code in the `experiments` directory.
 ```
 @article{howe2022myriad,
   title={Myriad: a real-world testbed to bridge trajectory optimization and deep learning},
-  author={Howe, Nikolaus HR and Dufort-Labb{\'e}, Simon and Rajkumar, Nitarshan and Bacon, Pierre-Luc},
-  journal={arXiv preprint arXiv:2202.10600},
+  author={Howe, Nikolaus and Dufort-Labb{\'e}, Simon and Rajkumar, Nitarshan and Bacon, Pierre-Luc},
+  journal={Advances in Neural Information Processing Systems},
+  volume={35},
+  pages={29801--29815},
   year={2022}
 }
 ```
