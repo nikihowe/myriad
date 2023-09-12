@@ -71,7 +71,7 @@ state_descriptions = {
   SystemType.MOULDFUNGICIDE: [[0], ["Mould population"]],
   SystemType.MOUNTAINCAR: [[0, 1], ["Position", "Velocity"]],
   SystemType.PENDULUM: [[0, 1], ["Angle", "Angular velocity"]],
-  SystemType.PREDATORPREY: [[0, 1], ["Predator population", "Prey population"]],
+  SystemType.PREDATORPREY: [[0, 1], ["Prey population", "Predator population"]],
   SystemType.ROCKETLANDING: [[0, 1, 2, 3, 4, 5], ["x", "dot x", "y", "dot y", "theta", "dot theta"]],
   SystemType.SIMPLECASE: [[0], ["State"]],
   SystemType.SIMPLECASEWITHBOUNDS: [[0], ["State"]],
